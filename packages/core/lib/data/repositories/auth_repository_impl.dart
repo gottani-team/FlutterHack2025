@@ -13,19 +13,61 @@ import '../datasources/firebase_auth_service.dart';
 ///
 /// FirebaseAuthServiceを使用して認証機能を提供する。
 /// エラーハンドリングを行い、Result型で結果を返す。
+///
+/// **キャッシュ機能**:
+/// - セッション情報をメモリにキャッシュ
+/// - `requireUserId()` はキャッシュを優先使用
+/// - 認証状態変更時に自動的にキャッシュを更新
 class AuthRepositoryImpl implements AuthRepository {
   AuthRepositoryImpl({
     required FirebaseAuthService authService,
-  }) : _authService = authService;
+  }) : _authService = authService {
+    // 認証状態の変更を監視してキャッシュを更新
+    _authService.authStateChanges().listen((userModel) {
+      if (userModel != null) {
+        _cachedSession = userModel.toUserSession();
+        dev.log('[AuthRepo] Cache updated: userId=${_cachedSession?.id}');
+      } else {
+        _cachedSession = null;
+        dev.log('[AuthRepo] Cache cleared');
+      }
+    });
+  }
+
   final FirebaseAuthService _authService;
+
+  /// キャッシュされたセッション情報
+  UserSession? _cachedSession;
+
+  @override
+  String? get cachedUserId => _cachedSession?.id;
+
+  @override
+  Future<Result<String>> requireUserId() async {
+    // キャッシュがあればそれを使用
+    if (_cachedSession != null) {
+      return Result.success(_cachedSession!.id);
+    }
+
+    // キャッシュがなければ取得してキャッシュを更新
+    final result = await getCurrentSession();
+    switch (result) {
+      case Success(value: final session):
+        return Result.success(session.id);
+      case Failure(error: final failure):
+        return Result.failure(failure);
+    }
+  }
 
   @override
   Future<Result<UserSession>> signInAnonymously() async {
     dev.log('[AuthRepo] signInAnonymously: Starting anonymous sign in');
     try {
       final userModel = await _authService.signInAnonymously();
-      dev.log('[AuthRepo] signInAnonymously: Success, userId=${userModel.id}');
-      return Result.success(userModel.toUserSession());
+      final session = userModel.toUserSession();
+      _cachedSession = session; // キャッシュを更新
+      dev.log('[AuthRepo] signInAnonymously: Success, userId=${session.id}');
+      return Result.success(session);
     } on firebase_auth.FirebaseAuthException catch (e) {
       dev.log('[AuthRepo] signInAnonymously: FirebaseAuthException code=${e.code}, message=${e.message}');
       return Result.failure(
@@ -57,8 +99,10 @@ class AuthRepositoryImpl implements AuthRepository {
     dev.log('[AuthRepo] getCurrentSession: Getting current session');
     try {
       final userModel = await _authService.getCurrentUser();
-      dev.log('[AuthRepo] getCurrentSession: Success, userId=${userModel.id}');
-      return Result.success(userModel.toUserSession());
+      final session = userModel.toUserSession();
+      _cachedSession = session; // キャッシュを更新
+      dev.log('[AuthRepo] getCurrentSession: Success, userId=${session.id}');
+      return Result.success(session);
     } on StateError {
       dev.log('[AuthRepo] getCurrentSession: No authenticated user');
       return Result.failure(
@@ -114,6 +158,7 @@ class AuthRepositoryImpl implements AuthRepository {
     dev.log('[AuthRepo] signOut: Starting sign out');
     try {
       await _authService.signOut();
+      _cachedSession = null; // キャッシュをクリア
       dev.log('[AuthRepo] signOut: Success');
       return Result.success(null);
     } on firebase_auth.FirebaseAuthException catch (e) {

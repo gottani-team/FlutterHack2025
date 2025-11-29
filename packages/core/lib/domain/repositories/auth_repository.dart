@@ -5,7 +5,38 @@ import '../common/result.dart';
 ///
 /// Feature層はこのインターフェースのみに依存し、実装の詳細は知らない。
 /// Data層の `AuthRepositoryImpl` がこのインターフェースを実装する。
+///
+/// **キャッシュ機能**:
+/// - セッション情報はキャッシュされ、同一セッション中は再取得不要
+/// - `requireUserId()` で現在のユーザーIDを効率的に取得可能
 abstract class AuthRepository {
+  /// 現在のユーザーIDを取得（キャッシュ使用）
+  ///
+  /// 認証済みの場合はキャッシュからユーザーIDを返す。
+  /// キャッシュがない場合はFirebase Authから取得してキャッシュを更新。
+  /// 未認証の場合はCoreFailure.authを返す。
+  ///
+  /// **使用例**:
+  /// ```dart
+  /// final result = await authRepository.requireUserId();
+  /// switch (result) {
+  ///   case Success(value: final userId):
+  ///     // userIdを使用
+  ///   case Failure(error: final failure):
+  ///     // 未認証エラー処理
+  /// }
+  /// ```
+  Future<Result<String>> requireUserId();
+
+  /// 現在のユーザーIDを同期的に取得（キャッシュのみ）
+  ///
+  /// キャッシュにセッションがある場合のみユーザーIDを返す。
+  /// キャッシュがない場合やセッションが無効な場合はnullを返す。
+  ///
+  /// **注意**: 初回アクセス時はnullになる可能性があるため、
+  /// 確実にユーザーIDが必要な場合は `requireUserId()` を使用すること。
+  String? get cachedUserId;
+
   /// 匿名認証を実行し、UserSessionを返す
   ///
   /// **使用例**:

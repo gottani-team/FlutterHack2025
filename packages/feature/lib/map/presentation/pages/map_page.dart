@@ -8,6 +8,7 @@ import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 
 import '../../domain/entities/crystal_entity.dart';
 import '../../domain/entities/crystallization_area_entity.dart';
+import '../../../repository_test/presentation/pages/repository_test_page.dart';
 import '../providers/map_providers.dart';
 import '../state/map_view_state.dart';
 import '../widgets/error_banner.dart';
@@ -140,6 +141,27 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
             ),
           ),
 
+          // Debug Menu Button
+          Positioned(
+            bottom: 100,
+            left: 16,
+            child: FloatingActionButton.small(
+              heroTag: 'debug',
+              onPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (context) => const _DebugRepositoryTestPage(),
+                  ),
+                );
+              },
+              backgroundColor: Colors.grey.shade800,
+              child: const Icon(
+                Icons.bug_report,
+                color: Colors.white70,
+              ),
+            ),
+          ),
+
           // GPS Warning Banner
           if (mapState.shouldShowGpsWarning)
             Positioned(
@@ -197,6 +219,21 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
               backgroundColor: const Color(0xFF9C27B0),
               child: const Icon(
                 Icons.radar,
+                color: Colors.white,
+              ),
+            ),
+          ),
+
+          // Crystal Sublimation Button
+          Positioned(
+            bottom: 240,
+            right: 16,
+            child: FloatingActionButton(
+              heroTag: 'crystal-sublimation',
+              onPressed: () => context.push('/memory-burial'),
+              backgroundColor: const Color(0xFF00BCD4),
+              child: const Icon(
+                Icons.auto_awesome,
                 color: Colors.white,
               ),
             ),
@@ -962,5 +999,15 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
         _isProgrammaticCameraUpdate = false;
       });
     }
+  }
+}
+
+/// Debug page wrapper that imports and displays the repository test page
+class _DebugRepositoryTestPage extends ConsumerWidget {
+  const _DebugRepositoryTestPage();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return const RepositoryTestPage();
   }
 }

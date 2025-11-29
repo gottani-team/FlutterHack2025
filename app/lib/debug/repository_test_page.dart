@@ -18,7 +18,8 @@ class _RepositoryTestPageState extends ConsumerState<RepositoryTestPage> {
 
   void _log(String message) {
     setState(() {
-      _logs.add('[${DateTime.now().toIso8601String().substring(11, 19)}] $message');
+      _logs.add(
+          '[${DateTime.now().toIso8601String().substring(11, 19)}] $message');
     });
     debugPrint(message);
   }
@@ -37,50 +38,40 @@ class _RepositoryTestPageState extends ConsumerState<RepositoryTestPage> {
       final deciphermentRepo = ref.read(deciphermentRepositoryProvider);
       final journalRepo = ref.read(journalRepositoryProvider);
 
-      // テスト用ユーザーID（実際のアプリでは認証後のUID）
-      const creatorUserId = 'test-creator-user';
-      const decipherUserId = 'test-decipher-user';
-
       _log('=== 解読フロー統合テスト開始 ===');
 
-      // 1. 作成者ユーザーを準備
-      _log('1. 作成者ユーザーを準備...');
-      final creatorResult = await userRepo.getOrCreateUser(
-        userId: creatorUserId,
-        initialKarma: 0,
-      );
-      switch (creatorResult) {
-        case Success(value: final user):
-          _log('   ✅ 作成者: karma=${user.currentKarma}');
+      // 1. 認証（匿名認証を使用）
+      _log('1. 認証を実行...');
+      final authRepo = ref.read(authRepositoryProvider);
+      final authResult = await authRepo.signInAnonymously();
+      switch (authResult) {
+        case Success(value: final session):
+          _log('   ✅ 認証成功: userId=${session.id}');
         case Failure(error: final e):
-          _log('   ❌ 作成者準備失敗: $e');
+          _log('   ❌ 認証失敗: $e');
           return;
       }
 
-      // 2. 解読者ユーザーを準備（カルマ100で開始）
-      _log('2. 解読者ユーザーを準備 (初期カルマ=100)...');
-      // ユーザーを作成
-      final decipherCreateResult = await userRepo.getOrCreateUser(
-        userId: decipherUserId,
+      // 2. ユーザーを準備（カルマ100で開始）
+      _log('2. ユーザーを準備 (初期カルマ=100)...');
+      final userCreateResult = await userRepo.getOrCreateCurrentUser(
         initialKarma: 0,
       );
-      // カルマを100に設定
-      switch (decipherCreateResult) {
+      switch (userCreateResult) {
         case Success(value: final user):
           final neededKarma = 100 - user.currentKarma;
           if (neededKarma > 0) {
-            await userRepo.addKarma(userId: decipherUserId, amount: neededKarma);
+            await userRepo.addKarma(amount: neededKarma);
+          }
+          final karmaResult = await userRepo.getKarma();
+          switch (karmaResult) {
+            case Success(value: final karma):
+              _log('   ✅ ユーザー準備完了: karma=$karma');
+            case Failure(error: final e):
+              _log('   ⚠️ カルマ取得失敗: $e');
           }
         case Failure(error: final e):
-          _log('   ❌ 解読者作成失敗: $e');
-          return;
-      }
-      final decipherUserResult = await userRepo.getUser(decipherUserId);
-      switch (decipherUserResult) {
-        case Success(value: final user):
-          _log('   ✅ 解読者: karma=${user?.currentKarma ?? 0}');
-        case Failure(error: final e):
-          _log('   ❌ 解読者準備失敗: $e');
+          _log('   ❌ ユーザー作成失敗: $e');
           return;
       }
 
@@ -93,7 +84,8 @@ class _RepositoryTestPageState extends ConsumerState<RepositoryTestPage> {
       late String crystalId;
       switch (evalResult) {
         case Success(value: final eval):
-          _log('   ✅ 評価完了: ${eval.aiMetadata.emotionType.displayName}, score=${eval.aiMetadata.score}');
+          _log(
+              '   ✅ 評価完了: ${eval.aiMetadata.emotionType.displayName}, score=${eval.aiMetadata.score}');
           _log('   ✅ レアリティ: ${eval.aiMetadata.rarityDisplayName}');
           _log('   ✅ 画像URL: ${eval.imageUrl}');
 
@@ -101,13 +93,13 @@ class _RepositoryTestPageState extends ConsumerState<RepositoryTestPage> {
           final confirmResult = await sublimationRepo.confirm(
             secretText: secretText,
             evaluation: eval,
-            userId: creatorUserId,
             nickname: 'テスト作成者',
           );
           switch (confirmResult) {
             case Success(value: final result):
               crystalId = result.crystal.id;
-              _log('   ✅ クリスタル作成: id=$crystalId, karma獲得=${result.karmaAwarded}');
+              _log(
+                  '   ✅ クリスタル作成: id=$crystalId, karma獲得=${result.karmaAwarded}');
             case Failure(error: final e):
               _log('   ❌ クリスタル作成失敗: $e');
               return;
@@ -124,17 +116,18 @@ class _RepositoryTestPageState extends ConsumerState<RepositoryTestPage> {
         case Success(value: final crystals):
           _log('   ✅ 取得件数: ${crystals.length}');
           for (final c in crystals) {
-            _log('      - ${c.id}: status=${c.status}, karma=${c.karmaValue}, emotion=${c.aiMetadata.emotionType.displayName}');
+            _log(
+                '      - ${c.id}: status=${c.status}, karma=${c.karmaValue}, emotion=${c.aiMetadata.emotionType.displayName}');
           }
         case Failure(error: final e):
           _log('   ❌ クリスタル取得失敗: $e');
       }
 
       // 5. 解読を実行
+      // Note: 自分が作成したクリスタルを自分で解読するテスト
       _log('5. クリスタルを解読...');
       final decipherResult = await deciphermentRepo.decipher(
         crystalId: crystalId,
-        userId: decipherUserId,
       );
       switch (decipherResult) {
         case Success(value: final result):
@@ -153,7 +146,8 @@ class _RepositoryTestPageState extends ConsumerState<RepositoryTestPage> {
       switch (afterResult) {
         case Success(value: final crystal):
           if (crystal != null) {
-            _log('   ✅ status=${crystal.status}, decipheredBy=${crystal.decipheredBy}');
+            _log(
+                '   ✅ status=${crystal.status}, decipheredBy=${crystal.decipheredBy}');
           } else {
             _log('   ⚠️ クリスタルが見つかりません');
           }
@@ -165,7 +159,6 @@ class _RepositoryTestPageState extends ConsumerState<RepositoryTestPage> {
       _log('7. 再度解読を試みる（失敗確認）...');
       final reDecipherResult = await deciphermentRepo.decipher(
         crystalId: crystalId,
-        userId: decipherUserId,
       );
       switch (reDecipherResult) {
         case Success(value: _):
@@ -177,22 +170,22 @@ class _RepositoryTestPageState extends ConsumerState<RepositoryTestPage> {
       // 8. ジャーナルを確認
       _log('8. ジャーナル（収集クリスタル）を確認...');
       final journalResult = await journalRepo.getCollectedCrystals(
-        userId: decipherUserId,
         limit: 10,
       );
       switch (journalResult) {
         case Success(value: final collected):
           _log('   ✅ 収集件数: ${collected.length}');
           for (final c in collected) {
-            _log('      - ${c.id}: "${c.secretText.substring(0, 20)}...", cost=${c.karmaCost}');
+            _log(
+                '      - ${c.id}: "${c.secretText.substring(0, 20)}...", cost=${c.karmaCost}');
           }
         case Failure(error: final e):
           _log('   ❌ ジャーナル取得失敗: $e');
       }
 
-      // 9. 解読者のカルマ残高を確認
-      _log('9. 解読者のカルマ残高を確認...');
-      final karmaResult = await userRepo.getKarma(decipherUserId);
+      // 9. カルマ残高を確認
+      _log('9. カルマ残高を確認...');
+      final karmaResult = await userRepo.getKarma();
       switch (karmaResult) {
         case Success(value: final karma):
           _log('   ✅ 残高: $karma');
@@ -203,30 +196,29 @@ class _RepositoryTestPageState extends ConsumerState<RepositoryTestPage> {
       // 10. カルマ不足テスト
       _log('10. カルマ不足テスト...');
       // カルマを消費して0にする（現在の残高を取得して減算）
-      final currentKarmaResult = await userRepo.getKarma(decipherUserId);
+      final currentKarmaResult = await userRepo.getKarma();
       switch (currentKarmaResult) {
         case Success(value: final currentKarma):
           if (currentKarma > 0) {
-            await userRepo.subtractKarma(userId: decipherUserId, amount: currentKarma);
+            await userRepo.subtractKarma(amount: currentKarma);
           }
         case Failure(error: _):
           break;
       }
       // 新しいクリスタルを作成
-      final eval2 = await sublimationRepo.evaluate(secretText: 'もう一つのテスト秘密です。これも誰にも言えません。');
+      final eval2 = await sublimationRepo.evaluate(
+          secretText: 'もう一つのテスト秘密です。これも誰にも言えません。');
       switch (eval2) {
         case Success(value: final e):
           final confirm2 = await sublimationRepo.confirm(
             secretText: 'もう一つのテスト秘密です。これも誰にも言えません。',
             evaluation: e,
-            userId: creatorUserId,
             nickname: 'テスト作成者2',
           );
           switch (confirm2) {
             case Success(value: final r):
               final insufficientResult = await deciphermentRepo.decipher(
                 crystalId: r.crystal.id,
-                userId: decipherUserId,
               );
               switch (insufficientResult) {
                 case Success(value: _):

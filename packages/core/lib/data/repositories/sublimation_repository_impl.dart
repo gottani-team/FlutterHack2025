@@ -9,17 +9,28 @@ import '../../domain/entities/crystal.dart';
 import '../../domain/entities/crystal_status.dart';
 import '../../domain/entities/emotion_type.dart';
 import '../../domain/failures/core_failure.dart';
+import '../../domain/repositories/auth_repository.dart';
 import '../../domain/repositories/sublimation_repository.dart';
+import '../datasources/karma_evaluation_service.dart';
 import '../models/ai_metadata_model.dart';
 import '../models/crystal_model.dart';
 
 /// 昇華リポジトリの実装
 ///
-/// ダミーAIロジックを使用してテキストを評価し、クリスタルを作成する。
+/// Firebase AI Logic を使用してテキストを評価し、クリスタルを作成する。
+/// AI評価が失敗した場合はフォールバックとしてダミーロジックを使用。
 class SublimationRepositoryImpl implements SublimationRepository {
-  SublimationRepositoryImpl(this._firestore);
+  SublimationRepositoryImpl(
+    this._firestore, {
+    required AuthRepository authRepository,
+    KarmaEvaluationService? karmaEvaluationService,
+  })  : _authRepository = authRepository,
+        _karmaEvaluationService =
+            karmaEvaluationService ?? KarmaEvaluationService();
 
   final FirebaseFirestore _firestore;
+  final AuthRepository _authRepository;
+  final KarmaEvaluationService _karmaEvaluationService;
   final _random = Random();
 
   CollectionReference<Map<String, dynamic>> get _crystalsRef =>
@@ -46,15 +57,27 @@ class SublimationRepositoryImpl implements SublimationRepository {
         );
       }
 
-      // ダミーAIロジック: テキストから感情タイプとスコアを算出
-      final emotionType = _analyzeEmotion(secretText);
-      final score = _calculateScore(secretText);
+      // Firebase AI Logic で評価を試行、失敗時はフォールバック
+      AIMetadata aiMetadata;
+      try {
+        dev.log('[SublimationRepo] evaluate: Calling Firebase AI...');
+        aiMetadata = await _karmaEvaluationService.evaluate(secretText);
+        dev.log('[SublimationRepo] evaluate: AI evaluation success');
+      } catch (e) {
+        dev.log(
+          '[SublimationRepo] evaluate: AI evaluation failed, using fallback: $e',
+        );
+        // フォールバック: ダミーAIロジック
+        final emotionType = _analyzeEmotion(secretText);
+        final score = _calculateScore(secretText);
+        aiMetadata = AIMetadata(
+          emotionType: emotionType,
+          score: score,
+        );
+      }
 
-      dev.log('[SublimationRepo] evaluate: emotion=$emotionType, score=$score');
-
-      final aiMetadata = AIMetadata(
-        emotionType: emotionType,
-        score: score,
+      dev.log(
+        '[SublimationRepo] evaluate: emotion=${aiMetadata.emotionType}, score=${aiMetadata.score}',
       );
 
       return Result.success(
@@ -76,79 +99,91 @@ class SublimationRepositoryImpl implements SublimationRepository {
   Future<Result<SublimationResult>> confirm({
     required String secretText,
     required EvaluationResult evaluation,
-    required String userId,
     required String nickname,
   }) async {
-    try {
-      dev.log('[SublimationRepo] confirm: userId=$userId, nickname=$nickname');
+    // 認証済みユーザーIDを取得
+    final userIdResult = await _authRepository.requireUserId();
+    switch (userIdResult) {
+      case Failure(error: final failure):
+        return Result.failure(failure);
+      case Success(value: final userId):
+        try {
+          dev.log(
+            '[SublimationRepo] confirm: userId=$userId, nickname=$nickname',
+          );
 
-      // クリスタルを作成
-      final docRef = _crystalsRef.doc();
-      dev.log('[SublimationRepo] confirm: Creating crystal with ID=${docRef.id}');
-      final now = Timestamp.now();
+          // クリスタルを作成
+          final docRef = _crystalsRef.doc();
+          dev.log(
+            '[SublimationRepo] confirm: Creating crystal with ID=${docRef.id}',
+          );
+          final now = Timestamp.now();
 
-      final crystalModel = CrystalModel(
-        id: docRef.id,
-        status: CrystalStatus.available.toJson(),
-        karmaValue: evaluation.aiMetadata.score,
-        aiMetadata: AIMetadataModel.fromEntity(evaluation.aiMetadata),
-        createdAt: now,
-        secretText: secretText,
-        createdBy: userId,
-        creatorNickname: nickname,
-      );
+          final crystalModel = CrystalModel(
+            id: docRef.id,
+            status: CrystalStatus.available.toJson(),
+            karmaValue: evaluation.aiMetadata.score,
+            aiMetadata: AIMetadataModel.fromEntity(evaluation.aiMetadata),
+            createdAt: now,
+            secretText: secretText,
+            createdBy: userId,
+            creatorNickname: nickname,
+          );
 
-      // トランザクションでクリスタル作成とカルマ加算を行う
-      final karmaToAdd = evaluation.karmaToEarn;
+          // トランザクションでクリスタル作成とカルマ加算を行う
+          final karmaToAdd = evaluation.karmaToEarn;
 
-      await _firestore.runTransaction((transaction) async {
-        // 1. まずすべてのreadを実行
-        final userDocRef = _usersRef.doc(userId);
-        final userDoc = await transaction.get(userDocRef);
+          await _firestore.runTransaction((transaction) async {
+            // 1. まずすべてのreadを実行
+            final userDocRef = _usersRef.doc(userId);
+            final userDoc = await transaction.get(userDocRef);
 
-        // 2. 次にすべてのwriteを実行
-        // クリスタルを作成
-        transaction.set(docRef, crystalModel.toFirestore());
+            // 2. 次にすべてのwriteを実行
+            // クリスタルを作成
+            transaction.set(docRef, crystalModel.toFirestore());
 
-        // ユーザーのカルマを加算
-        if (userDoc.exists) {
-          final currentKarma =
-              (userDoc.data()?['current_karma'] as num?)?.toInt() ?? 0;
-          transaction
-              .update(userDocRef, {'current_karma': currentKarma + karmaToAdd});
+            // ユーザーのカルマを加算
+            if (userDoc.exists) {
+              final currentKarma =
+                  (userDoc.data()?['current_karma'] as num?)?.toInt() ?? 0;
+              transaction.update(
+                userDocRef,
+                {'current_karma': currentKarma + karmaToAdd},
+              );
+            }
+          });
+
+          final crystal = Crystal(
+            id: docRef.id,
+            status: CrystalStatus.available,
+            karmaValue: evaluation.aiMetadata.score,
+            aiMetadata: evaluation.aiMetadata,
+            createdAt: now.toDate(),
+            secretText: secretText,
+            createdBy: userId,
+            creatorNickname: nickname,
+          );
+
+          return Result.success(
+            SublimationResult(
+              crystal: crystal,
+              karmaAwarded: karmaToAdd,
+            ),
+          );
+        } on FirebaseException catch (e) {
+          return Result.failure(
+            CoreFailure.network(
+              message: e.message ?? 'Failed to create crystal',
+              code: e.code,
+            ),
+          );
+        } catch (e) {
+          return Result.failure(
+            CoreFailure.unknown(
+              message: 'Failed to confirm sublimation: ${e.toString()}',
+            ),
+          );
         }
-      });
-
-      final crystal = Crystal(
-        id: docRef.id,
-        status: CrystalStatus.available,
-        karmaValue: evaluation.aiMetadata.score,
-        aiMetadata: evaluation.aiMetadata,
-        createdAt: now.toDate(),
-        secretText: secretText,
-        createdBy: userId,
-        creatorNickname: nickname,
-      );
-
-      return Result.success(
-        SublimationResult(
-          crystal: crystal,
-          karmaAwarded: karmaToAdd,
-        ),
-      );
-    } on FirebaseException catch (e) {
-      return Result.failure(
-        CoreFailure.network(
-          message: e.message ?? 'Failed to create crystal',
-          code: e.code,
-        ),
-      );
-    } catch (e) {
-      return Result.failure(
-        CoreFailure.unknown(
-          message: 'Failed to confirm sublimation: ${e.toString()}',
-        ),
-      );
     }
   }
 
