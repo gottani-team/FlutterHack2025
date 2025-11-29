@@ -58,7 +58,7 @@ class _RepositoryTestPageState extends ConsumerState<RepositoryTestPage> {
     if (_currentUserId == null) return;
 
     final userRepo = ref.read(userRepositoryProvider);
-    final result = await userRepo.getKarma(_currentUserId!);
+    final result = await userRepo.getKarma();
 
     switch (result) {
       case Success(value: final karma):
@@ -460,7 +460,6 @@ class _RepositoryTestPageState extends ConsumerState<RepositoryTestPage> {
           final confirmResult = await sublimationRepo.confirm(
             secretText: secretText,
             evaluation: evaluation,
-            userId: _currentUserId!,
             nickname: 'Debug_${_selectedEmotion.name}',
           );
 
@@ -551,7 +550,7 @@ class _RepositoryTestPageState extends ConsumerState<RepositoryTestPage> {
     }
 
     final repo = ref.read(userRepositoryProvider);
-    final result = await repo.getUser(_currentUserId!);
+    final result = await repo.getCurrentUser();
 
     switch (result) {
       case Success(value: final user):
@@ -575,7 +574,7 @@ class _RepositoryTestPageState extends ConsumerState<RepositoryTestPage> {
     }
 
     final repo = ref.read(userRepositoryProvider);
-    final result = await repo.getKarma(_currentUserId!);
+    final result = await repo.getKarma();
 
     switch (result) {
       case Success(value: final karma):
@@ -595,10 +594,7 @@ class _RepositoryTestPageState extends ConsumerState<RepositoryTestPage> {
     }
 
     final repo = ref.read(userRepositoryProvider);
-    final result = await repo.addKarma(
-      userId: _currentUserId!,
-      amount: 10,
-    );
+    final result = await repo.addKarma(amount: 10);
 
     switch (result) {
       case Success(value: final newKarma):
@@ -618,10 +614,7 @@ class _RepositoryTestPageState extends ConsumerState<RepositoryTestPage> {
     }
 
     final repo = ref.read(userRepositoryProvider);
-    final result = await repo.subtractKarma(
-      userId: _currentUserId!,
-      amount: 5,
-    );
+    final result = await repo.subtractKarma(amount: 5);
 
     switch (result) {
       case Success(value: final newKarma):
@@ -677,7 +670,6 @@ class _RepositoryTestPageState extends ConsumerState<RepositoryTestPage> {
     final result = await repo.confirm(
       secretText: _lastSecretText!,
       evaluation: _lastEvaluationResult!,
-      userId: _currentUserId!,
       nickname: 'TestNickname${DateTime.now().millisecondsSinceEpoch}',
     );
 
@@ -731,10 +723,7 @@ class _RepositoryTestPageState extends ConsumerState<RepositoryTestPage> {
     }
 
     final repo = ref.read(crystalRepositoryProvider);
-    final result = await repo.getCreatedCrystals(
-      userId: _currentUserId!,
-      limit: 10,
-    );
+    final result = await repo.getCreatedCrystals(limit: 10);
 
     switch (result) {
       case Success(value: final crystals):
@@ -823,10 +812,7 @@ class _RepositoryTestPageState extends ConsumerState<RepositoryTestPage> {
     _addLog('🔓 解読対象: $targetCrystalId (Karma: $targetKarmaValue)');
 
     final repo = ref.read(deciphermentRepositoryProvider);
-    final result = await repo.decipher(
-      crystalId: targetCrystalId,
-      userId: _currentUserId!,
-    );
+    final result = await repo.decipher(crystalId: targetCrystalId);
 
     switch (result) {
       case Success(value: final decipherment):
@@ -851,10 +837,7 @@ class _RepositoryTestPageState extends ConsumerState<RepositoryTestPage> {
     }
 
     final repo = ref.read(journalRepositoryProvider);
-    final result = await repo.getCollectedCrystals(
-      userId: _currentUserId!,
-      limit: 10,
-    );
+    final result = await repo.getCollectedCrystals(limit: 10);
 
     switch (result) {
       case Success(value: final crystals):
@@ -876,7 +859,7 @@ class _RepositoryTestPageState extends ConsumerState<RepositoryTestPage> {
     }
 
     final repo = ref.read(journalRepositoryProvider);
-    final result = await repo.getCollectedCount(userId: _currentUserId!);
+    final result = await repo.getCollectedCount();
 
     switch (result) {
       case Success(value: final count):
