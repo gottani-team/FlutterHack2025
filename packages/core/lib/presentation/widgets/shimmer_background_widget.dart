@@ -38,49 +38,37 @@ class _ShimmerBackgroundWidgetState extends State<ShimmerBackgroundWidget>
   List<_ShimmerDot>? _dots;
   final Random _random = Random();
   Size? _lastSize;
+  AnimationController? _controller;
 
   @override
   void dispose() {
-    _disposeDots();
+    _controller?.dispose();
     super.dispose();
   }
 
-  void _disposeDots() {
-    if (_dots != null) {
-      for (final dot in _dots!) {
-        dot.controller.dispose();
-      }
-    }
-  }
-
   void _initDots(Size screenSize) {
-    // Dispose old dots if reinitializing
-    _disposeDots();
+    // Dispose old controller if reinitializing
+    _controller?.dispose();
 
     final cols = (screenSize.width / widget.dotSpacing).floor();
     final rows = (screenSize.height / widget.dotSpacing).floor();
 
+    // Create a single animation controller
+    _controller = AnimationController(
+      duration: const Duration(milliseconds: 2000),
+      vsync: this,
+    )..repeat(reverse: true);
+
+    // Create all dots with phase offsets (no controllers needed!)
     _dots = [];
     for (int row = 0; row < rows; row++) {
       for (int col = 0; col < cols; col++) {
-        final controller = AnimationController(
-          duration: Duration(milliseconds: 1500 + _random.nextInt(2500)),
-          vsync: this,
-        );
-
-        // Stagger the start times
-        Future.delayed(Duration(milliseconds: _random.nextInt(3000)), () {
-          if (mounted) {
-            controller.repeat(reverse: true);
-          }
-        });
-
         _dots!.add(
           _ShimmerDot(
             x: col * widget.dotSpacing,
             y: row * widget.dotSpacing,
             maxOpacity: 0.1 + _random.nextDouble() * 0.2,
-            controller: controller,
+            phaseOffset: _random.nextDouble(), // Offset between 0 and 1
           ),
         );
       }
@@ -109,16 +97,20 @@ class _ShimmerBackgroundWidgetState extends State<ShimmerBackgroundWidget>
       child: Stack(
         children: [
           // Grid of shimmer dots
-          if (_dots != null)
+          if (_dots != null && _controller != null)
             ..._dots!.map((dot) {
               return Positioned(
                 left: dot.x,
                 top: dot.y,
                 child: AnimatedBuilder(
-                  animation: dot.controller,
+                  animation: _controller!,
                   builder: (context, child) {
+                    // Calculate opacity using sin wave with phase offset
+                    // This creates a smooth fade in/out effect
+                    final phase = (_controller!.value + dot.phaseOffset) % 1.0;
+                    final opacity = (sin(phase * pi * 2) + 1) / 2; // 0 to 1
                     return Opacity(
-                      opacity: dot.controller.value * dot.maxOpacity,
+                      opacity: opacity * dot.maxOpacity,
                       child: Container(
                         width: widget.dotSize,
                         height: widget.dotSize,
@@ -145,11 +137,11 @@ class _ShimmerDot {
     required this.x,
     required this.y,
     required this.maxOpacity,
-    required this.controller,
+    required this.phaseOffset,
   });
 
   final double x;
   final double y;
   final double maxOpacity;
-  final AnimationController controller;
+  final double phaseOffset; // Phase offset between 0 and 1 for animation timing
 }

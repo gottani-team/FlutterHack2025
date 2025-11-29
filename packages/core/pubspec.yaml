@@ -32,6 +32,9 @@ dependencies:
   equatable: ^2.0.5
   logger: ^2.0.2+1
 
+  # UI
+  gradient_borders: ^1.0.1
+  
   # Audio (for sensory feedback)
   audioplayers: ^6.1.0
 
