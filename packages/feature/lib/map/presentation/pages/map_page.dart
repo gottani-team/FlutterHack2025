@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 
@@ -199,6 +200,21 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
                   fontSize: 14,
                   fontWeight: FontWeight.bold,
                 ),
+              ),
+            ),
+          ),
+
+          // Debug Menu Button
+          Positioned(
+            top: 60,
+            right: 16,
+            child: FloatingActionButton.small(
+              heroTag: 'debug_menu',
+              onPressed: () => context.pushNamed('repository-test'),
+              backgroundColor: Colors.black54,
+              child: const Icon(
+                Icons.bug_report,
+                color: Colors.white,
               ),
             ),
           ),
