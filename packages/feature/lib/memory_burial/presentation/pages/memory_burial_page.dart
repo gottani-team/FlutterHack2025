@@ -48,6 +48,11 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
   bool _isConfirming = false;
 
   late AnimationController _ringAnimationController;
+  late AnimationController _ptAnimationController;
+  int _displayedPtValue = 0;
+
+  /// PTカウントアップアニメーションを有効にするか
+  static const bool _enablePtAnimation = true;
 
   @override
   void initState() {
@@ -57,6 +62,11 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
       vsync: this,
       duration: const Duration(seconds: 8),
     )..repeat();
+
+    _ptAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
 
     // 画面表示後にニックネーム欄にフォーカス
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -71,6 +81,7 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
     _nicknameFocusNode.dispose();
     _textFocusNode.dispose();
     _ringAnimationController.dispose();
+    _ptAnimationController.dispose();
     super.dispose();
   }
 
@@ -123,6 +134,8 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
             setState(() {
               _evaluationResult = result;
             });
+            // PTカウントアップアニメーション開始
+            _startPtAnimation(result.karmaToEarn);
           }
           break;
         case Failure(error: final failure):
@@ -147,6 +160,28 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
         });
       }
     });
+  }
+
+  /// PTカウントアップアニメーション開始
+  void _startPtAnimation(int targetValue) {
+    if (_enablePtAnimation) {
+      // アニメーションで表示
+      _ptAnimationController.reset();
+      _ptAnimationController.addListener(() {
+        if (mounted) {
+          setState(() {
+            _displayedPtValue =
+                (targetValue * _ptAnimationController.value).round();
+          });
+        }
+      });
+      _ptAnimationController.forward();
+    } else {
+      // 即座に表示（従来の動作）
+      setState(() {
+        _displayedPtValue = targetValue;
+      });
+    }
   }
 
   /// 埋めるボタンを押した時の処理
@@ -198,12 +233,14 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
     ref.read(memoryTextProvider.notifier).clear();
     _nicknameController.clear();
     _textController.clear();
+    _ptAnimationController.reset();
 
     setState(() {
       _phase = _ScreenPhase.input;
       _animatingText = '';
       _evaluationResult = null;
       _isConfirming = false;
+      _displayedPtValue = 0;
     });
 
     // キーボードを再表示
@@ -377,8 +414,8 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
           right: 0,
           bottom: _phase == _ScreenPhase.animating
               ? -86.0 // エフェクト用にさらに下に
-              : (MediaQuery.of(context).viewInsets.bottom - 100)
-                  .clamp(14.0, double.infinity),
+              : (MediaQuery.of(context).viewInsets.bottom - 200)
+                  .clamp(-200.0, double.infinity),
           child: Center(
             child: AnimatedBurialButton(
               phase: buttonPhase,
@@ -491,10 +528,24 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
     );
   }
 
+  /// PT値をフォーマット（カンマ区切り）
+  String _formatPtValue(int value) {
+    if (value == 0) return '000,000';
+    final str = value.toString();
+    final buffer = StringBuffer();
+    for (var i = 0; i < str.length; i++) {
+      if (i > 0 && (str.length - i) % 3 == 0) {
+        buffer.write(',');
+      }
+      buffer.write(str[i]);
+    }
+    return buffer.toString();
+  }
+
   /// クリスタル表示画面
   Widget _buildCrystalScreen() {
     final isLoading = _evaluationResult == null;
-    final ptValue = isLoading ? '000,000' : '${_evaluationResult!.karmaToEarn}';
+    final ptValue = isLoading ? '000,000' : _formatPtValue(_displayedPtValue);
 
     return Stack(
       children: [
@@ -550,9 +601,9 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
                   child: Text(
                     '解析中...',
                     style: TextStyle(
-                      fontSize: 14,
-                      color: const Color(0xFF1A1A2E).withOpacity(0.5),
-                      fontWeight: FontWeight.w400,
+                      fontSize: 18,
+                      color: const Color(0xFF1A1A2E).withOpacity(0.8),
+                      fontWeight: FontWeight.w500,
                     ),
                   ),
                 ),
