@@ -33,4 +33,15 @@
   "[markdown]": {
     "editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
   },
+  "cSpell.enabled": true,
+  "cSpell.enableFiletypes": [
+    "dart",
+    "yaml",
+    "yml",
+    "json",
+    "markdown",
+    "md",
+    "txt"
+  ],
+  "cSpell.configurationScope": "workspace",
 }
