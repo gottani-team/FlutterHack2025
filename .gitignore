@@ -62,8 +62,8 @@ app.*.map.json
 **/ios/Podfile.lock
 
 # Generated files
-*.g.dart
-*.freezed.dart
+# *.g.dart
+# *.freezed.dart
 *.config.dart
 
 # Mise/Rtx
