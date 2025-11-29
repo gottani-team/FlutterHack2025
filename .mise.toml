@@ -1,0 +1,17 @@
+[tools]
+# Flutterのバージョン管理
+# "latest"を使用するか、特定のバージョンを指定（例: "3.24.0"）
+flutter = "3.38.1"
+
+# Dartのバージョン管理（Flutterに含まれるが、明示的に指定可能）
+# dart = "latest"
+
+# その他のツール（必要に応じて追加）
+# fvm = "latest"  # Flutter Version Management（miseを使う場合は不要）
+
+# 注意: miseが設定ファイルを信頼する必要がある場合
+# mise trust コマンドを実行してください
+
+[env]
+DEBUG_MISE_APPLIED = "true"
+MISE_VERBOSE=1
