@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
@@ -28,7 +29,6 @@ class AnimatedBurialButton extends StatefulWidget {
 
   final ButtonPhase phase;
   final VoidCallback? onPressed;
-  /// 入力テキストの文字数（0-10で連続的にサイズ変化）
   final int textLength;
 
   @override
@@ -36,8 +36,12 @@ class AnimatedBurialButton extends StatefulWidget {
 }
 
 class _AnimatedBurialButtonState extends State<AnimatedBurialButton>
-    with SingleTickerProviderStateMixin {
+    with TickerProviderStateMixin {
   late AnimationController _rotationController;
+  late AnimationController _entryEffectController;
+  
+  // エフェクトのアニメーション
+  late Animation<double> _entryAnimation;
 
   @override
   void initState() {
@@ -46,37 +50,56 @@ class _AnimatedBurialButtonState extends State<AnimatedBurialButton>
       vsync: this,
       duration: const Duration(seconds: 10),
     )..repeat();
+    
+    // 大気圏突入エフェクト（ボタン移動と同じ1500ms）
+    _entryEffectController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
+    
+    _entryAnimation = CurvedAnimation(
+      parent: _entryEffectController,
+      curve: Curves.easeOutCubic,
+    );
+  }
+
+  @override
+  void didUpdateWidget(AnimatedBurialButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    
+    // processingに移行したらエフェクト開始
+    if (widget.phase == ButtonPhase.processing &&
+        oldWidget.phase != ButtonPhase.processing) {
+      _entryEffectController.forward(from: 0);
+    }
   }
 
   @override
   void dispose() {
     _rotationController.dispose();
+    _entryEffectController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    // 文字数に応じてサイズを連続的に補間（0文字→10文字）
     final progress = (widget.textLength / 10.0).clamp(0.0, 1.0);
     
-    // 処理中・完了時は別の設定
     final isProcessingOrCompleted = 
         widget.phase == ButtonPhase.processing || 
         widget.phase == ButtonPhase.completed;
 
-    // サイズの補間
-    // 初期: 65x104 → 送信可能: 160x160
-    final double width;
-    final double height;
+    // ボタンのサイズと位置
+    final double buttonWidth;
+    final double buttonHeight;
     final double buttonTopOffset;
     final double arcsCenterY;
     final double arcsIntensity;
     final _ButtonIcon icon;
 
     if (isProcessingOrCompleted) {
-      // 処理中・完了: 160x240の縦長
-      width = 160;
-      height = 240;
+      buttonWidth = 160;
+      buttonHeight = 240;
       buttonTopOffset = 146;
       arcsCenterY = 266;
       arcsIntensity = 1.0;
@@ -84,27 +107,47 @@ class _AnimatedBurialButtonState extends State<AnimatedBurialButton>
           ? _ButtonIcon.diamond 
           : _ButtonIcon.verticalLine;
     } else {
-      // 入力中: 文字数に応じて連続変化
-      // 65 → 160 (幅)
-      width = 65 + (160 - 65) * progress;
-      // 104 → 160 (高さ)
-      height = 104 + (160 - 104) * progress;
-      // 148 → 120 (上からのオフセット)
+      buttonWidth = 65 + (160 - 65) * progress;
+      buttonHeight = 104 + (160 - 104) * progress;
       buttonTopOffset = 148 - (148 - 120) * progress;
       arcsCenterY = 200;
       arcsIntensity = progress * 0.8;
       icon = _ButtonIcon.arrowDown;
     }
 
+    // ボタンの下端位置
+    final buttonBottomY = buttonTopOffset + buttonHeight;
+
     return SizedBox(
       width: 400,
-      height: 400,
+      height: 500, // エフェクト用に高さを拡大
       child: Stack(
         alignment: Alignment.center,
         clipBehavior: Clip.none,
         children: [
-          // 同心円（常に表示、opacityで制御）
-          Positioned.fill(
+          // 大気圏突入エフェクト（ボタンの下に配置）
+          if (isProcessingOrCompleted)
+            AnimatedBuilder(
+              animation: _entryAnimation,
+              builder: (context, child) {
+                return CustomPaint(
+                  size: const Size(400, 500),
+                  painter: _AtmosphericEntryPainter(
+                    progress: _entryAnimation.value,
+                    buttonBottomY: buttonBottomY,
+                    buttonWidth: buttonWidth,
+                    buttonHeight: buttonHeight,
+                  ),
+                );
+              },
+            ),
+
+          // 同心円
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 400,
             child: AnimatedOpacity(
               opacity: arcsIntensity,
               duration: const Duration(milliseconds: 200),
@@ -116,7 +159,7 @@ class _AnimatedBurialButtonState extends State<AnimatedBurialButton>
             ),
           ),
 
-          // ボタン本体（AnimatedPositionedで位置もアニメーション）
+          // ボタン本体
           AnimatedPositioned(
             duration: const Duration(milliseconds: 800),
             curve: Curves.easeOutCubic,
@@ -129,10 +172,10 @@ class _AnimatedBurialButtonState extends State<AnimatedBurialButton>
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 800),
                   curve: Curves.easeOutCubic,
-                  width: width,
-                  height: height,
+                  width: buttonWidth,
+                  height: buttonHeight,
                   decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(width / 2),
+                    borderRadius: BorderRadius.circular(buttonWidth / 2),
                     color: const Color(0xFF0D00FF).withOpacity(0.22),
                     border: Border.all(
                       color: const Color(0xFF5A9EC4).withOpacity(0.3),
@@ -181,6 +224,264 @@ class _AnimatedBurialButtonState extends State<AnimatedBurialButton>
 }
 
 enum _ButtonIcon { arrowDown, verticalLine, diamond }
+
+/// 大気圏突入エフェクト
+class _AtmosphericEntryPainter extends CustomPainter {
+  _AtmosphericEntryPainter({
+    required this.progress,
+    required this.buttonBottomY,
+    required this.buttonWidth,
+    required this.buttonHeight,
+  });
+
+  final double progress;
+  final double buttonBottomY;
+  final double buttonWidth;
+  final double buttonHeight;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (progress <= 0) return;
+    
+    final centerX = size.width / 2;
+    
+    // エフェクトの起点はボタンの下端
+    final effectStartY = buttonBottomY;
+    
+    // アニメーションの強度計算
+    // 0.0〜0.1: フェードイン
+    // 0.1〜0.5: 最大強度維持
+    // 0.5〜1.0: フェードアウト
+    double intensity;
+    if (progress < 0.1) {
+      final t = progress / 0.1;
+      intensity = Curves.easeOut.transform(t);
+    } else if (progress < 0.5) {
+      intensity = 1.0;
+    } else {
+      final t = (progress - 0.5) / 0.5;
+      intensity = 1.0 - Curves.easeIn.transform(t);
+    }
+    
+    // === 外側の青いグラデーションエリア（塗りつぶし） ===
+    _drawOuterGlow(canvas, centerX, effectStartY, intensity);
+    
+    // === 中間の水色エリア（塗りつぶし） ===
+    _drawMiddleGlow(canvas, centerX, effectStartY, intensity);
+    
+    // === 白い三日月形のコア（塗りつぶし） ===
+    _drawWhiteCrescent(canvas, centerX, effectStartY, intensity);
+  }
+
+  /// 外側の青いグラデーションエリア
+  void _drawOuterGlow(
+    Canvas canvas,
+    double centerX,
+    double startY,
+    double intensity,
+  ) {
+    if (intensity <= 0) return;
+    
+    // 下に広がる大きな形状
+    final width = buttonWidth * 3.5;
+    final height = 320.0;
+    
+    final path = Path();
+    path.moveTo(centerX - buttonWidth * 0.5, startY);
+    path.quadraticBezierTo(
+      centerX - width * 0.5,
+      startY + height * 0.5,
+      centerX,
+      startY + height,
+    );
+    path.quadraticBezierTo(
+      centerX + width * 0.5,
+      startY + height * 0.5,
+      centerX + buttonWidth * 0.5,
+      startY,
+    );
+    path.close();
+    
+    final paint = Paint()
+      ..shader = ui.Gradient.linear(
+        Offset(centerX, startY),
+        Offset(centerX, startY + height),
+        [
+          const Color(0xFF7EC8E3).withOpacity(0.5 * intensity),
+          const Color(0xFF5AADE0).withOpacity(0.4 * intensity),
+          const Color(0xFF5AADE0).withOpacity(0.15 * intensity),
+          Colors.transparent,
+        ],
+        [0.0, 0.25, 0.6, 1.0],
+      )
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 40);
+    
+    canvas.drawPath(path, paint);
+  }
+
+  /// 中間の水色エリア
+  void _drawMiddleGlow(
+    Canvas canvas,
+    double centerX,
+    double startY,
+    double intensity,
+  ) {
+    if (intensity <= 0) return;
+    
+    final width = buttonWidth * 2.2;
+    final height = 180.0;
+    
+    final path = Path();
+    path.moveTo(centerX - buttonWidth * 0.4, startY);
+    path.quadraticBezierTo(
+      centerX - width * 0.45,
+      startY + height * 0.4,
+      centerX,
+      startY + height,
+    );
+    path.quadraticBezierTo(
+      centerX + width * 0.45,
+      startY + height * 0.4,
+      centerX + buttonWidth * 0.4,
+      startY,
+    );
+    path.close();
+    
+    final paint = Paint()
+      ..shader = ui.Gradient.linear(
+        Offset(centerX, startY),
+        Offset(centerX, startY + height),
+        [
+          const Color(0xFFB8E4F0).withOpacity(0.7 * intensity),
+          const Color(0xFF7EC8E3).withOpacity(0.5 * intensity),
+          const Color(0xFF7EC8E3).withOpacity(0.2 * intensity),
+          Colors.transparent,
+        ],
+        [0.0, 0.3, 0.6, 1.0],
+      )
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 25);
+    
+    canvas.drawPath(path, paint);
+  }
+
+  /// 白い三日月形のコア
+  void _drawWhiteCrescent(
+    Canvas canvas,
+    double centerX,
+    double startY,
+    double intensity,
+  ) {
+    if (intensity <= 0) return;
+    
+    // 三日月形（ボタン直下の白い発光）
+    final crescentWidth = buttonWidth * 1.3;
+    final crescentHeight = 50.0;
+    
+    // 外側の弧（下に凸）
+    final outerPath = Path();
+    outerPath.moveTo(centerX - crescentWidth / 2, startY);
+    outerPath.quadraticBezierTo(
+      centerX,
+      startY + crescentHeight,
+      centerX + crescentWidth / 2,
+      startY,
+    );
+    // 内側の弧（上に凸、浅い）
+    outerPath.quadraticBezierTo(
+      centerX,
+      startY + crescentHeight * 0.3,
+      centerX - crescentWidth / 2,
+      startY,
+    );
+    outerPath.close();
+    
+    // 外側のグロー
+    final outerGlowPaint = Paint()
+      ..shader = ui.Gradient.radial(
+        Offset(centerX, startY + crescentHeight * 0.4),
+        crescentWidth * 0.6,
+        [
+          Colors.white.withOpacity(0.9 * intensity),
+          Colors.white.withOpacity(0.5 * intensity),
+          const Color(0xFFE0F8FF).withOpacity(0.3 * intensity),
+          Colors.transparent,
+        ],
+        [0.0, 0.4, 0.7, 1.0],
+      )
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 20);
+    
+    canvas.drawPath(outerPath, outerGlowPaint);
+    
+    // 中間のグロー
+    final midGlowPaint = Paint()
+      ..shader = ui.Gradient.radial(
+        Offset(centerX, startY + crescentHeight * 0.3),
+        crescentWidth * 0.4,
+        [
+          Colors.white.withOpacity(0.95 * intensity),
+          Colors.white.withOpacity(0.7 * intensity),
+          Colors.white.withOpacity(0.3 * intensity),
+          Colors.transparent,
+        ],
+        [0.0, 0.3, 0.6, 1.0],
+      )
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12);
+    
+    canvas.drawPath(outerPath, midGlowPaint);
+    
+    // 最も明るいコア（小さい三日月）
+    final coreWidth = buttonWidth * 0.9;
+    final coreHeight = 30.0;
+    
+    final corePath = Path();
+    corePath.moveTo(centerX - coreWidth / 2, startY + 5);
+    corePath.quadraticBezierTo(
+      centerX,
+      startY + 5 + coreHeight,
+      centerX + coreWidth / 2,
+      startY + 5,
+    );
+    corePath.quadraticBezierTo(
+      centerX,
+      startY + 5 + coreHeight * 0.4,
+      centerX - coreWidth / 2,
+      startY + 5,
+    );
+    corePath.close();
+    
+    final corePaint = Paint()
+      ..color = Colors.white.withOpacity(intensity)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5);
+    
+    canvas.drawPath(corePath, corePaint);
+    
+    // ハイライト（純白の線）
+    final highlightPath = Path();
+    highlightPath.moveTo(centerX - coreWidth * 0.35, startY + 8);
+    highlightPath.quadraticBezierTo(
+      centerX,
+      startY + 8 + coreHeight * 0.6,
+      centerX + coreWidth * 0.35,
+      startY + 8,
+    );
+    
+    final highlightPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 4
+      ..strokeCap = StrokeCap.round
+      ..color = Colors.white.withOpacity(intensity)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
+    
+    canvas.drawPath(highlightPath, highlightPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant _AtmosphericEntryPainter oldDelegate) {
+    return oldDelegate.progress != progress ||
+        oldDelegate.buttonBottomY != buttonBottomY ||
+        oldDelegate.buttonWidth != buttonWidth;
+  }
+}
 
 /// 同心円（円弧）
 class _ConcentricArcs extends StatelessWidget {
@@ -234,15 +535,12 @@ class _ConcentricArcsPainter extends CustomPainter {
       ..strokeWidth = 1.5
       ..strokeCap = StrokeCap.round;
 
-    // 外側の円弧（時計回り）
     paint.color = const Color(0xFF5AADE0).withOpacity(0.3 * intensity);
     _drawArc(canvas, center, 200, 250, rotation * 2 * math.pi, paint);
 
-    // 中間の円弧（反時計回り）
     paint.color = const Color(0xFF5AADE0).withOpacity(0.25 * intensity);
     _drawArc(canvas, center, 150, 180, -rotation * 2 * math.pi * 0.7, paint);
 
-    // 内側の円弧（時計回り）
     paint.color = const Color(0xFF5AADE0).withOpacity(0.2 * intensity);
     _drawArc(canvas, center, 100, 120, rotation * 2 * math.pi * 0.5, paint);
   }
@@ -268,7 +566,7 @@ class _ConcentricArcsPainter extends CustomPainter {
   }
 }
 
-/// ダイヤモンドアイコンを描画するPainter
+/// ダイヤモンドアイコン
 class _DiamondPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {

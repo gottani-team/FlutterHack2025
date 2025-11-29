@@ -8,6 +8,7 @@ import '../providers/memory_burial_state.dart';
 import '../widgets/animated_burial_button.dart';
 import '../widgets/background_effects.dart';
 import '../widgets/crystal_display.dart';
+import '../widgets/input_badges.dart';
 import '../widgets/text_dissolution_animation.dart';
 
 /// 画面の状態
@@ -32,8 +33,10 @@ class MemoryBurialPage extends ConsumerStatefulWidget {
 
 class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
     with TickerProviderStateMixin {
+  final TextEditingController _nicknameController = TextEditingController();
   final TextEditingController _textController = TextEditingController();
-  final FocusNode _focusNode = FocusNode();
+  final FocusNode _nicknameFocusNode = FocusNode();
+  final FocusNode _textFocusNode = FocusNode();
   final GlobalKey _buttonKey = GlobalKey();
 
   _ScreenPhase _phase = _ScreenPhase.input;
@@ -50,27 +53,34 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
       duration: const Duration(seconds: 4),
     )..repeat();
 
-    // 画面表示後にキーボードを自動で表示
+    // 画面表示後にニックネーム欄にフォーカス
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      _focusNode.requestFocus();
+      _nicknameFocusNode.requestFocus();
     });
   }
 
   @override
   void dispose() {
+    _nicknameController.dispose();
     _textController.dispose();
-    _focusNode.dispose();
+    _nicknameFocusNode.dispose();
+    _textFocusNode.dispose();
     _ringAnimationController.dispose();
     super.dispose();
   }
 
   /// テキスト状態に応じたボタンフェーズを計算
-  ButtonPhase _getButtonPhase(String memoryText, bool isButtonEnabled) {
+  ButtonPhase _getButtonPhase(
+    String nickname,
+    String memoryText,
+    bool isButtonEnabled,
+  ) {
     if (_phase == _ScreenPhase.animating) {
       return ButtonPhase.processing;
     }
 
-    if (memoryText.length >= 10) {
+    // ニックネーム必須 + テキスト10文字以上
+    if (nickname.isNotEmpty && memoryText.length >= 10) {
       return ButtonPhase.ready;
     } else {
       return ButtonPhase.typing;
@@ -79,11 +89,14 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
 
   /// 埋葬処理を実行
   Future<void> _handleBuryAction() async {
+    final nickname = ref.read(nicknameProvider);
     final memoryText = ref.read(memoryTextProvider);
-    if (memoryText.length < 10 || memoryText.length > 500) return;
+    if (nickname.isEmpty || memoryText.length < 10 || memoryText.length > 500)
+      return;
 
     // キーボードを閉じる
-    _focusNode.unfocus();
+    _nicknameFocusNode.unfocus();
+    _textFocusNode.unfocus();
 
     setState(() {
       _animatingText = memoryText;
@@ -94,10 +107,10 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
     final buryMemoryUseCase = ref.read(buryMemoryUseCaseProvider);
     final locationRepository = ref.read(locationRepositoryProvider);
 
-    ref.read(memoryBurialNotifierProvider.notifier).buryMemory(
-          memoryText,
-          buryMemoryUseCase,
-          locationRepository,
+      ref.read(memoryBurialNotifierProvider.notifier).buryMemory(
+            memoryText,
+            buryMemoryUseCase,
+            locationRepository,
         );
   }
 
@@ -120,7 +133,9 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
   /// 入力画面にリセット
   void _resetToInput() {
     ref.read(memoryBurialNotifierProvider.notifier).reset();
+    ref.read(nicknameProvider.notifier).clear();
     ref.read(memoryTextProvider.notifier).clear();
+    _nicknameController.clear();
     _textController.clear();
 
     setState(() {
@@ -131,7 +146,7 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
     // キーボードを再表示
     Future.delayed(const Duration(milliseconds: 300), () {
       if (mounted) {
-        _focusNode.requestFocus();
+        _nicknameFocusNode.requestFocus();
       }
     });
   }
@@ -171,6 +186,7 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
 
   @override
   Widget build(BuildContext context) {
+    final nickname = ref.watch(nicknameProvider);
     final memoryText = ref.watch(memoryTextProvider);
     final isButtonEnabled = ref.watch(isButtonEnabledProvider);
     final burialState = ref.watch(memoryBurialNotifierProvider);
@@ -188,7 +204,7 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
     final showBackgroundRings = _phase == _ScreenPhase.crystalDisplay;
 
     return Scaffold(
-      resizeToAvoidBottomInset: true,
+      resizeToAvoidBottomInset: false,
       body: Stack(
         children: [
           // 背景
@@ -206,6 +222,7 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
           // メインコンテンツ
           SafeArea(
             child: _buildContent(
+              nickname: nickname,
               memoryText: memoryText,
               isButtonEnabled: isButtonEnabled,
               burialState: burialState,
@@ -228,6 +245,7 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
   }
 
   Widget _buildContent({
+    required String nickname,
     required String memoryText,
     required bool isButtonEnabled,
     required MemoryBurialState burialState,
@@ -238,71 +256,162 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
     }
 
     // 入力画面とアニメーション画面は同じボタンを共有
-    final buttonPhase = _getButtonPhase(memoryText, isButtonEnabled);
+    final buttonPhase = _getButtonPhase(nickname, memoryText, isButtonEnabled);
+
+    // テキスト色
+    const textColor = Color(0xFF1A1A2E);
+    final placeholderColor = textColor.withOpacity(0.3);
 
     return Stack(
       children: [
-        // テキスト入力/表示エリア
+        // 入力エリア
         if (_phase == _ScreenPhase.input)
           Positioned(
             top: 0,
             left: 0,
             right: 0,
-            bottom: 280,
-            child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 0),
-              child: TextField(
-                controller: _textController,
-                focusNode: _focusNode,
-                maxLength: 500,
-                maxLines: null,
-                expands: true,
-                textAlignVertical: TextAlignVertical.top,
-                keyboardType: TextInputType.multiline,
-                textInputAction: TextInputAction.newline,
-                cursorColor: const Color(0xFF1A1A2E),
-                cursorWidth: 2.0,
-                showCursor: true,
-                style: const TextStyle(
-                  color: Color(0xFF1A1A2E),
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                  height: 1.6,
-                ),
-                inputFormatters: [
-                  LengthLimitingTextInputFormatter(500),
-                ],
-                decoration: InputDecoration(
-                  hintText: 'あなたの言葉',
-                  hintStyle: TextStyle(
-                    color: const Color(0xFF1A1A2E).withOpacity(0.3),
-                    fontSize: 16,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 280,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(32, 16, 32, 0),
+        child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+                  // ニックネーム欄
+                  _buildNicknameField(
+                    nickname: nickname,
+                    textColor: textColor,
+                    placeholderColor: placeholderColor,
                   ),
-                  border: InputBorder.none,
-                  counterText: '',
-                ),
-                onChanged: (value) {
-                  ref.read(memoryTextProvider.notifier).update(value);
-                },
+
+                  const SizedBox(height: 24),
+
+                  // テキスト欄
+                  _buildTextField(
+                    memoryText: memoryText,
+                    textColor: textColor,
+                    placeholderColor: placeholderColor,
+                  ),
+                ],
               ),
             ),
           ),
 
-        // ボタンエリア（常に同じウィジェット - アニメーションが途切れない）
-        Positioned(
+        // ボタン（エフェクトは内部に組み込み）
+        AnimatedPositioned(
           key: _buttonKey,
+          duration: _phase == _ScreenPhase.animating
+              ? const Duration(milliseconds: 1500)
+              : const Duration(milliseconds: 50),
+          curve: Curves.easeOutCubic,
           left: 0,
           right: 0,
-          bottom: 14,
+          bottom: _phase == _ScreenPhase.animating
+              ? -86.0  // エフェクト用にさらに下に
+              : (MediaQuery.of(context).viewInsets.bottom - 100).clamp(14.0, double.infinity),
           child: Center(
             child: AnimatedBurialButton(
               phase: buttonPhase,
               textLength: memoryText.length,
-              onPressed: buttonPhase == ButtonPhase.ready ? _handleBuryAction : null,
+              onPressed:
+                  buttonPhase == ButtonPhase.ready ? _handleBuryAction : null,
             ),
           ),
         ),
       ],
+    );
+  }
+
+  /// ニックネーム入力欄
+  Widget _buildNicknameField({
+    required String nickname,
+    required Color textColor,
+    required Color placeholderColor,
+  }) {
+    return Row(
+      children: [
+        Expanded(
+          child: TextField(
+            controller: _nicknameController,
+            focusNode: _nicknameFocusNode,
+            maxLength: 20,
+            maxLines: 1,
+            cursorColor: textColor,
+            cursorWidth: 2.0,
+            showCursor: true,
+              style: TextStyle(
+              color: textColor,
+              fontSize: 16,
+              fontWeight: FontWeight.w500,
+              height: 1.6,
+            ),
+            inputFormatters: [
+              LengthLimitingTextInputFormatter(20),
+            ],
+            decoration: InputDecoration(
+              hintText: 'あなたのニックネーム',
+              hintStyle: TextStyle(
+                color: placeholderColor,
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+              border: InputBorder.none,
+              counterText: '',
+              isDense: true,
+              contentPadding: EdgeInsets.zero,
+            ),
+            onChanged: (value) {
+              ref.read(nicknameProvider.notifier).update(value);
+            },
+          ),
+        ),
+        const SizedBox(width: 8),
+        // 必須バッジまたはチェックマーク
+        if (nickname.isEmpty) const RequiredBadge() else const CheckBadge(),
+      ],
+    );
+  }
+
+  /// テキスト入力欄
+  Widget _buildTextField({
+    required String memoryText,
+    required Color textColor,
+    required Color placeholderColor,
+  }) {
+    return TextField(
+      controller: _textController,
+      focusNode: _textFocusNode,
+      maxLength: 500,
+      maxLines: null,
+      minLines: 5,
+      keyboardType: TextInputType.multiline,
+      textInputAction: TextInputAction.newline,
+      cursorColor: textColor,
+      cursorWidth: 2.0,
+      showCursor: true,
+      style: TextStyle(
+        color: textColor,
+        fontSize: 16,
+        fontWeight: FontWeight.w500,
+        height: 1.6,
+      ),
+      inputFormatters: [
+        LengthLimitingTextInputFormatter(500),
+      ],
+      decoration: InputDecoration(
+        hintText: 'あなたの言葉',
+        hintStyle: TextStyle(
+          color: placeholderColor,
+          fontSize: 16,
+          fontWeight: FontWeight.w500,
+        ),
+        border: InputBorder.none,
+        counterText: '',
+        isDense: true,
+        contentPadding: EdgeInsets.zero,
+      ),
+      onChanged: (value) {
+        ref.read(memoryTextProvider.notifier).update(value);
+      },
     );
   }
 

@@ -58,6 +58,25 @@ final getBurialHistoryUseCaseProvider =
 });
 
 // State Providers
+/// ニックネームの状態管理Notifier
+class NicknameNotifier extends Notifier<String> {
+  @override
+  String build() => '';
+
+  void update(String text) {
+    state = text;
+  }
+
+  void clear() {
+    state = '';
+  }
+}
+
+/// ニックネームのProvider
+final nicknameProvider = NotifierProvider<NicknameNotifier, String>(
+  NicknameNotifier.new,
+);
+
 /// 記憶テキストの状態管理Notifier
 class MemoryTextNotifier extends Notifier<String> {
   @override
@@ -77,8 +96,9 @@ final memoryTextProvider = NotifierProvider<MemoryTextNotifier, String>(
   MemoryTextNotifier.new,
 );
 
-/// ボタン有効化の状態
+/// ボタン有効化の状態（ニックネーム必須 + テキスト10文字以上）
 final isButtonEnabledProvider = Provider<bool>((ref) {
+  final nickname = ref.watch(nicknameProvider);
   final text = ref.watch(memoryTextProvider);
-  return text.length >= 10 && text.length <= 500;
+  return nickname.isNotEmpty && text.length >= 10 && text.length <= 500;
 });
