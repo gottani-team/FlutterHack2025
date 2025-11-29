@@ -39,4 +39,4 @@ flutter:
   assets:
     - assets/sounds/
     - assets/images/
-
+    - assets/models/rock.glb

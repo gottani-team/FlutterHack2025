@@ -1,6 +1,7 @@
 import 'package:feature/crystal/presentation/pages/crystal_display_page.dart';
 import 'package:feature/haiku/presentation/pages/haiku_page.dart';
 import 'package:feature/home/presentation/pages/home_page.dart';
+import 'package:feature/map/presentation/pages/map_page.dart';
 import 'package:feature/mining/presentation/pages/mining_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -8,7 +9,7 @@ import 'package:go_router/go_router.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
-    initialLocation: '/',
+    initialLocation: '/map', // Start with map for Chimyaku MVP
     routes: [
       GoRoute(
         path: '/',
@@ -21,6 +22,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) => const HaikuPage(),
       ),
       GoRoute(
+        path: '/map',
+        name: 'map',
+        builder: (context, state) => const MapPage(),
+      ),
+      GoRoute(
         path: '/mining',
         name: 'mining',
         builder: (context, state) {
@@ -31,8 +37,8 @@ final routerProvider = Provider<GoRouter>((ref) {
             crystalLabel: extra?['crystalLabel'] ?? '',
             memoryText: extra?['memoryText'] ?? '',
             glowColor: extra?['glowColor'] as Color?,
-            onComplete: extra?['onComplete']
-                as Future<void> Function(MiningResult)?,
+            onComplete:
+                extra?['onComplete'] as Future<void> Function(MiningResult)?,
           );
         },
       ),

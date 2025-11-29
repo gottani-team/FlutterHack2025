@@ -34,6 +34,13 @@ dependencies:
 
   # UI
   gradient_borders: ^1.0.1
+  
+  # Audio (for sensory feedback)
+  audioplayers: ^6.1.0
+
+  # Location (for GPS tracking)
+  geolocator: ^14.0.0
+  permission_handler: ^11.4.0
 
 dev_dependencies:
   flutter_test:
