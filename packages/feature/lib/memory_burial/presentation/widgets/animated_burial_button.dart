@@ -193,12 +193,10 @@ class _AnimatedBurialButtonState extends State<AnimatedBurialButton>
       animation: _shapeAnimationController,
       builder: (context, child) {
         // アニメーション中の値を再計算
-        final animButtonWidth = isProcessingOrCompleted
-            ? _widthAnimation.value
-            : 65.0;
-        final animButtonHeight = isProcessingOrCompleted
-            ? _heightAnimation.value
-            : 104.0;
+        final animButtonWidth =
+            isProcessingOrCompleted ? _widthAnimation.value : 65.0;
+        final animButtonHeight =
+            isProcessingOrCompleted ? _heightAnimation.value : 104.0;
         final animButtonTopOffset = isProcessingOrCompleted
             ? 148 - (148 - 146) * _positionAnimation.value
             : 148.0;
@@ -416,7 +414,7 @@ class _AtmosphericEntryPainter extends CustomPainter {
     _drawWhiteCrescent(canvas, centerX, effectStartY, intensity);
   }
 
-  /// 外側の青いグラデーションエリア
+  /// 外側のオレンジエリア（楕円の下半分、下に凸）
   void _drawOuterGlow(
     Canvas canvas,
     double centerX,
@@ -425,44 +423,31 @@ class _AtmosphericEntryPainter extends CustomPainter {
   ) {
     if (intensity <= 0) return;
 
-    // 下に広がる大きな形状
-    final width = buttonWidth * 3.5;
-    final height = 320.0;
+    // 楕円の下半分（下に凸のお椀型）
+    // 白い三日月と同じ位置から開始し、下に広がる
+    final width = buttonWidth * 3.0;
+    final height = 100.0;
+
+    // 楕円の下半分を描く（上端が平ら、下が丸い）
+    final rect = Rect.fromCenter(
+      center: Offset(centerX, startY), // 上端が startY
+      width: width,
+      height: height * 2, // 楕円全体の高さ（下半分だけ使う）
+    );
 
     final path = Path();
-    path.moveTo(centerX - buttonWidth * 0.5, startY);
-    path.quadraticBezierTo(
-      centerX - width * 0.5,
-      startY + height * 0.5,
-      centerX,
-      startY + height,
-    );
-    path.quadraticBezierTo(
-      centerX + width * 0.5,
-      startY + height * 0.5,
-      centerX + buttonWidth * 0.5,
-      startY,
-    );
+    // 楕円の下半分だけ描画（0からπまでの弧）
+    path.arcTo(rect, 0, math.pi, true);
     path.close();
 
     final paint = Paint()
-      ..shader = ui.Gradient.linear(
-        Offset(centerX, startY),
-        Offset(centerX, startY + height),
-        [
-          const Color(0xFFFFB8A8).withOpacity(0.5 * intensity),
-          const Color(0xFFF37255).withOpacity(0.4 * intensity),
-          const Color(0xFFF37255).withOpacity(0.15 * intensity),
-          Colors.transparent,
-        ],
-        [0.0, 0.25, 0.6, 1.0],
-      )
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 40);
+      ..color = const Color(0xFFF37255).withOpacity(0.35 * intensity)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 30);
 
     canvas.drawPath(path, paint);
   }
 
-  /// 中間の水色エリア
+  /// 中間のピンクエリア（楕円の下半分、下に凸）
   void _drawMiddleGlow(
     Canvas canvas,
     double centerX,
@@ -471,38 +456,25 @@ class _AtmosphericEntryPainter extends CustomPainter {
   ) {
     if (intensity <= 0) return;
 
-    final width = buttonWidth * 2.2;
-    final height = 180.0;
+    // 楕円の下半分（下に凸のお椀型）、外側より小さめ
+    final width = buttonWidth * 2.0;
+    final height = 60.0;
+
+    // 楕円の下半分を描く（上端が平ら、下が丸い）
+    final rect = Rect.fromCenter(
+      center: Offset(centerX, startY), // 上端が startY
+      width: width,
+      height: height * 2, // 楕円全体の高さ（下半分だけ使う）
+    );
 
     final path = Path();
-    path.moveTo(centerX - buttonWidth * 0.4, startY);
-    path.quadraticBezierTo(
-      centerX - width * 0.45,
-      startY + height * 0.4,
-      centerX,
-      startY + height,
-    );
-    path.quadraticBezierTo(
-      centerX + width * 0.45,
-      startY + height * 0.4,
-      centerX + buttonWidth * 0.4,
-      startY,
-    );
+    // 楕円の下半分だけ描画（0からπまでの弧）
+    path.arcTo(rect, 0, math.pi, true);
     path.close();
 
     final paint = Paint()
-      ..shader = ui.Gradient.linear(
-        Offset(centerX, startY),
-        Offset(centerX, startY + height),
-        [
-          const Color(0xFFFFD5C8).withOpacity(0.7 * intensity),
-          const Color(0xFFFFB8A8).withOpacity(0.5 * intensity),
-          const Color(0xFFFFB8A8).withOpacity(0.2 * intensity),
-          Colors.transparent,
-        ],
-        [0.0, 0.3, 0.6, 1.0],
-      )
-      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 25);
+      ..color = const Color(0xFFFFB8A8).withOpacity(0.5 * intensity)
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 20);
 
     canvas.drawPath(path, paint);
   }
