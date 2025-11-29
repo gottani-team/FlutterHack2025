@@ -123,16 +123,6 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
             setState(() {
               _evaluationResult = result;
             });
-            // アニメーションが完了していれば、すぐにクリスタル表示画面へ
-            if (_phase == _ScreenPhase.animating) {
-              Future.delayed(const Duration(milliseconds: 500), () {
-                if (mounted && _evaluationResult != null) {
-                  setState(() {
-                    _phase = _ScreenPhase.crystalDisplay;
-                  });
-                }
-              });
-            }
           }
           break;
         case Failure(error: final failure):
@@ -149,19 +139,14 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
 
   /// アニメーション完了時の処理
   void _onAnimationComplete() {
-    // 評価結果が取得できていれば、クリスタル表示画面へ
-    if (_evaluationResult != null) {
-      Future.delayed(const Duration(milliseconds: 500), () {
-        if (mounted) {
-          setState(() {
-            _phase = _ScreenPhase.crystalDisplay;
-          });
-        }
-      });
-    } else {
-      // 評価結果がまだ取得できていない場合は待機
-      // 評価が完了するまで待つ
-    }
+    // レスポンスの有無に関わらず、アニメーション完了で即座にクリスタル表示画面へ遷移
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (mounted) {
+        setState(() {
+          _phase = _ScreenPhase.crystalDisplay;
+        });
+      }
+    });
   }
 
   /// 埋めるボタンを押した時の処理
@@ -506,20 +491,16 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
 
   /// クリスタル表示画面
   Widget _buildCrystalScreen() {
-    if (_evaluationResult == null) {
-      // 評価結果がまだ取得できていない場合はローディング表示
-      return const Center(
-        child: CircularProgressIndicator(),
-      );
-    }
+    final isLoading = _evaluationResult == null;
 
     return Stack(
       children: [
-        // クリスタル表示
-        const CrystalDisplay(
-          showAnalyzing: false,
-          onAnalysisComplete: null,
-        ),
+        // クリスタル表示（レスポンス着後のみ表示）
+        if (!isLoading)
+          const CrystalDisplay(
+            showAnalyzing: false,
+            onAnalysisComplete: null,
+          ),
 
         // カルマPT表示とボタン
         Positioned.fill(
@@ -556,8 +537,11 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
                         ),
                       ),
                       const SizedBox(height: 8),
+                      // PT表示（ローディング中は000,000、完了後は実際の値）
                       Text(
-                        '${_evaluationResult!.karmaToEarn} PT',
+                        isLoading
+                            ? '000,000 PT'
+                            : '${_evaluationResult!.karmaToEarn} PT',
                         style: const TextStyle(
                           fontSize: 32,
                           fontWeight: FontWeight.bold,
@@ -565,25 +549,73 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
                         ),
                       ),
                       const SizedBox(height: 4),
-                      Text(
-                        _evaluationResult!.emotionDisplayName,
-                        style: TextStyle(
-                          fontSize: 16,
-                          color: Colors.grey[700],
-                          fontWeight: FontWeight.w500,
+                      // 解析中 or 感情表示
+                      if (isLoading)
+                        Text(
+                          '解析中...',
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey[500],
+                            fontWeight: FontWeight.w500,
+                          ),
+                        )
+                      else
+                        Text(
+                          _evaluationResult!.emotionDisplayName,
+                          style: TextStyle(
+                            fontSize: 16,
+                            color: Colors.grey[700],
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
-                      ),
                     ],
                   ),
                 ),
 
-                // ボタン
+                // ボタン（縦並び: 上が埋める、下がキャンセル）
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 32),
-                  child: Row(
+                  child: Column(
                     children: [
-                      // キャンセルボタン
-                      Expanded(
+                      // 埋めるボタン（レスポンス着後のみ表示）
+                      if (!isLoading)
+                        SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: _isConfirming ? null : _handleConfirm,
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              backgroundColor: const Color(0xFFFF3C00),
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              elevation: 0,
+                            ),
+                            child: _isConfirming
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white,
+                                      ),
+                                    ),
+                                  )
+                                : const Text(
+                                    '埋める',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                          ),
+                        ),
+                      if (!isLoading) const SizedBox(height: 12),
+                      // キャンセルボタン（常に表示）
+                      SizedBox(
+                        width: double.infinity,
                         child: OutlinedButton(
                           onPressed: _isConfirming ? null : _handleCancel,
                           style: OutlinedButton.styleFrom(
@@ -604,41 +636,6 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
                               color: Color(0xFF1A1A2E),
                             ),
                           ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      // 埋めるボタン
-                      Expanded(
-                        flex: 2,
-                        child: ElevatedButton(
-                          onPressed: _isConfirming ? null : _handleConfirm,
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            backgroundColor: const Color(0xFFFF3C00),
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                            elevation: 0,
-                          ),
-                          child: _isConfirming
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      Colors.white,
-                                    ),
-                                  ),
-                                )
-                              : const Text(
-                                  '埋める',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
                         ),
                       ),
                     ],
