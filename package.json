@@ -1,0 +1,19 @@
+{
+  "name": "flutterhack2025-gottani",
+  "version": "1.0.0",
+  "description": "FlutterHack2025 - Gottani project spell checker configuration",
+  "private": true,
+  "scripts": {
+    "spell-check": "cspell \"**/*.{dart,md,yaml,yml,json}\" --no-progress",
+    "spell-check:fix": "cspell \"**/*.{dart,md,yaml,yml,json}\" --no-progress --no-must-find-files"
+  },
+  "devDependencies": {
+    "@cspell/dict-typescript": "^2.0.0",
+    "cspell": "^8.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}
+
+
