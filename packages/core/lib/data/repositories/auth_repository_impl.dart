@@ -21,7 +21,7 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Result<UserSession>> signInAnonymously() async {
     try {
       final userModel = await _authService.signInAnonymously();
-      return Result.success(userModel.toEntity());
+      return Result.success(userModel.toUserSession());
     } on firebase_auth.FirebaseAuthException catch (e) {
       return Result.failure(
         CoreFailure.auth(
@@ -49,7 +49,7 @@ class AuthRepositoryImpl implements AuthRepository {
   Future<Result<UserSession>> getCurrentSession() async {
     try {
       final userModel = await _authService.getCurrentUser();
-      return Result.success(userModel.toEntity());
+      return Result.success(userModel.toUserSession());
     } on StateError {
       return Result.failure(
         const CoreFailure.auth(
@@ -74,7 +74,7 @@ class AuthRepositoryImpl implements AuthRepository {
         if (userModel == null) {
           return Result.success(null);
         }
-        return Result.success(userModel.toEntity());
+        return Result.success(userModel.toUserSession());
       }).handleError((error) {
         return Result.failure(
           CoreFailure.unknown(
