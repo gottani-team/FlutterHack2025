@@ -72,24 +72,24 @@ enum EmotionType {
   }
 
   /// クリスタルカラーを取得（HEX）
-  String get colorHex {
+  int get colorHex {
     switch (this) {
       case EmotionType.happiness:
-        return '#FF69B4'; // ピンク
+        return 0xFFFF69B4; // ピンク
       case EmotionType.enjoyment:
-        return '#FFA500'; // オレンジ
+        return 0xFFFFA500; // オレンジ
       case EmotionType.relief:
-        return '#32CD32'; // 緑
+        return 0xFF32CD32; // 緑
       case EmotionType.anticipation:
-        return '#FFD700'; // 黄
+        return 0xFFFFD700; // 黄
       case EmotionType.sadness:
-        return '#4169E1'; // 青
+        return 0xFF4169E1; // 青
       case EmotionType.embarrassment:
-        return '#9370DB'; // 紫
+        return 0xFF9370DB; // 紫
       case EmotionType.anger:
-        return '#DC143C'; // 赤
+        return 0xFFDC143C; // 赤
       case EmotionType.emptiness:
-        return '#708090'; // 灰
+        return 0xFF708090; // 灰
     }
   }
 
