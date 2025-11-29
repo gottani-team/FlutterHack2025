@@ -1,4 +1,6 @@
-import 'package:core/presentation/providers/location_providers.dart';
+import 'package:core/data/providers.dart';
+import 'package:core/domain/common/result.dart';
+import 'package:core/domain/repositories/sublimation_repository.dart';
 import 'package:core/presentation/widgets/glass_app_bar_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -6,7 +8,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import '../providers/memory_burial_providers.dart';
-import '../providers/memory_burial_state.dart';
 import '../widgets/animated_burial_button.dart';
 import '../widgets/background_effects.dart';
 import '../widgets/crystal_display.dart';
@@ -43,6 +44,8 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
 
   _ScreenPhase _phase = _ScreenPhase.input;
   String _animatingText = '';
+  EvaluationResult? _evaluationResult;
+  bool _isConfirming = false;
 
   late AnimationController _ringAnimationController;
 
@@ -103,43 +106,109 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
     setState(() {
       _animatingText = memoryText;
       _phase = _ScreenPhase.animating;
+      _evaluationResult = null;
     });
 
-    // API呼び出しを開始（バックグラウンド）
-    final buryMemoryUseCase = ref.read(buryMemoryUseCaseProvider);
-    final locationRepository = ref.read(locationRepositoryProvider);
-
-    ref.read(memoryBurialNotifierProvider.notifier).buryMemory(
-          memoryText,
-          buryMemoryUseCase,
-          locationRepository,
-        );
-  }
-
-  /// アニメーション完了時の処理
-  void _onAnimationComplete() {
-    // クリスタルが表示されてから少し待ってから次の画面へ
-    Future.delayed(const Duration(milliseconds: 1500), () {
-      if (mounted) {
-        setState(() {
-          _phase = _ScreenPhase.crystalDisplay;
-        });
+    // 評価を開始（バックグラウンドで実行）
+    final sublimationRepository = ref.read(sublimationRepositoryProvider);
+    sublimationRepository
+        .evaluate(
+      secretText: memoryText,
+    )
+        .then((evaluationResult) {
+      // 評価結果を処理
+      switch (evaluationResult) {
+        case Success(value: final result):
+          if (mounted) {
+            setState(() {
+              _evaluationResult = result;
+            });
+            // アニメーションが完了していれば、すぐにクリスタル表示画面へ
+            if (_phase == _ScreenPhase.animating) {
+              Future.delayed(const Duration(milliseconds: 500), () {
+                if (mounted && _evaluationResult != null) {
+                  setState(() {
+                    _phase = _ScreenPhase.crystalDisplay;
+                  });
+                }
+              });
+            }
+          }
+          break;
+        case Failure(error: final failure):
+          if (mounted) {
+            _showErrorDialog(
+              '評価に失敗しました: ${failure.message ?? '不明なエラー'}',
+            );
+            _resetToInput();
+          }
+          break;
       }
     });
   }
 
-  /// 解析完了時の処理
-  void _onAnalysisComplete() {
-    // TODO: マップ画面への遷移を実装
-    // Navigator.of(context).pushReplacementNamed('/map');
+  /// アニメーション完了時の処理
+  void _onAnimationComplete() {
+    // 評価結果が取得できていれば、クリスタル表示画面へ
+    if (_evaluationResult != null) {
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) {
+          setState(() {
+            _phase = _ScreenPhase.crystalDisplay;
+          });
+        }
+      });
+    } else {
+      // 評価結果がまだ取得できていない場合は待機
+      // 評価が完了するまで待つ
+    }
+  }
 
-    // 暫定: 状態をリセットして入力画面に戻る
+  /// 埋めるボタンを押した時の処理
+  Future<void> _handleConfirm() async {
+    if (_evaluationResult == null || _isConfirming) return;
+
+    final nickname = ref.read(nicknameProvider);
+    final memoryText = ref.read(memoryTextProvider);
+
+    setState(() {
+      _isConfirming = true;
+    });
+
+    final sublimationRepository = ref.read(sublimationRepositoryProvider);
+    final confirmResult = await sublimationRepository.confirm(
+      secretText: memoryText,
+      evaluation: _evaluationResult!,
+      nickname: nickname,
+    );
+
+    switch (confirmResult) {
+      case Success():
+        if (mounted) {
+          // 成功したらMapに戻る
+          context.pop();
+        }
+        break;
+      case Failure(error: final failure):
+        if (mounted) {
+          setState(() {
+            _isConfirming = false;
+          });
+          _showErrorDialog(
+            '埋める処理に失敗しました: ${failure.message ?? '不明なエラー'}',
+          );
+        }
+        break;
+    }
+  }
+
+  /// キャンセルボタンを押した時の処理
+  void _handleCancel() {
     _resetToInput();
   }
 
   /// 入力画面にリセット
   void _resetToInput() {
-    ref.read(memoryBurialNotifierProvider.notifier).reset();
     ref.read(nicknameProvider.notifier).clear();
     ref.read(memoryTextProvider.notifier).clear();
     _nicknameController.clear();
@@ -148,6 +217,8 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
     setState(() {
       _phase = _ScreenPhase.input;
       _animatingText = '';
+      _evaluationResult = null;
+      _isConfirming = false;
     });
 
     // キーボードを再表示
@@ -196,16 +267,6 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
     final nickname = ref.watch(nicknameProvider);
     final memoryText = ref.watch(memoryTextProvider);
     final isButtonEnabled = ref.watch(isButtonEnabledProvider);
-    final burialState = ref.watch(memoryBurialNotifierProvider);
-
-    // エラー監視
-    ref.listen<MemoryBurialState>(memoryBurialNotifierProvider,
-        (previous, next) {
-      if (next.status == MemoryBurialStatus.error &&
-          next.errorMessage != null) {
-        _showErrorDialog(next.errorMessage!);
-      }
-    });
 
     // 背景のリングは入力画面では非表示（ボタン周囲の円弧で表示する）
     final showBackgroundRings = _phase == _ScreenPhase.crystalDisplay;
@@ -248,7 +309,6 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
               nickname: nickname,
               memoryText: memoryText,
               isButtonEnabled: isButtonEnabled,
-              burialState: burialState,
             ),
           ),
 
@@ -271,7 +331,6 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
     required String nickname,
     required String memoryText,
     required bool isButtonEnabled,
-    required MemoryBurialState burialState,
   }) {
     // クリスタル画面は別処理
     if (_phase == _ScreenPhase.crystalDisplay) {
@@ -447,9 +506,150 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
 
   /// クリスタル表示画面
   Widget _buildCrystalScreen() {
-    return CrystalDisplay(
-      showAnalyzing: true,
-      onAnalysisComplete: _onAnalysisComplete,
+    if (_evaluationResult == null) {
+      // 評価結果がまだ取得できていない場合はローディング表示
+      return const Center(
+        child: CircularProgressIndicator(),
+      );
+    }
+
+    return Stack(
+      children: [
+        // クリスタル表示
+        const CrystalDisplay(
+          showAnalyzing: false,
+          onAnalysisComplete: null,
+        ),
+
+        // カルマPT表示とボタン
+        Positioned.fill(
+          child: SafeArea(
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                // カルマPT表示
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 32,
+                    vertical: 24,
+                  ),
+                  margin: const EdgeInsets.only(bottom: 24),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.9),
+                    borderRadius: BorderRadius.circular(20),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.1),
+                        blurRadius: 20,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    children: [
+                      Text(
+                        '獲得予定カルマ',
+                        style: TextStyle(
+                          fontSize: 14,
+                          color: Colors.grey[600],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        '${_evaluationResult!.karmaToEarn} PT',
+                        style: const TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1A1A2E),
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        _evaluationResult!.emotionDisplayName,
+                        style: TextStyle(
+                          fontSize: 16,
+                          color: Colors.grey[700],
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // ボタン
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 32),
+                  child: Row(
+                    children: [
+                      // キャンセルボタン
+                      Expanded(
+                        child: OutlinedButton(
+                          onPressed: _isConfirming ? null : _handleCancel,
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            side: BorderSide(
+                              color: Colors.grey[300]!,
+                              width: 1.5,
+                            ),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                          ),
+                          child: const Text(
+                            'キャンセル',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: Color(0xFF1A1A2E),
+                            ),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 16),
+                      // 埋めるボタン
+                      Expanded(
+                        flex: 2,
+                        child: ElevatedButton(
+                          onPressed: _isConfirming ? null : _handleConfirm,
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            backgroundColor: const Color(0xFFFF3C00),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: _isConfirming
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white,
+                                    ),
+                                  ),
+                                )
+                              : const Text(
+                                  '埋める',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: 32),
+              ],
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
