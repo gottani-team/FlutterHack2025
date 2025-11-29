@@ -1,1 +1,19 @@
-{"flutter":{"platforms":{"dart":{"lib/firebase_options.dart":{"projectId":"gottani-2025","configurations":{"android":"1:284279273330:android:0ab26ebdc7a7e294624feb","ios":"1:284279273330:ios:55bfe741853652d1624feb"}}}}}}
+{
+  "flutter": {
+    "platforms": {
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "gottani-2025",
+          "configurations": {
+            "android": "1:284279273330:android:0ab26ebdc7a7e294624feb",
+            "ios": "1:284279273330:ios:55bfe741853652d1624feb"
+          }
+        }
+      }
+    }
+  },
+  "firestore": {
+    "rules": "firestore.rules",
+    "indexes": "firestore.indexes.json"
+  }
+}
