@@ -38,17 +38,16 @@ abstract class SublimationRepository {
   ///
   /// [secretText]: 秘密テキスト
   /// [evaluation]: Step 1で取得した評価結果
-  /// [userId]: 作成者のUID
   /// [nickname]: クリスタルに付けるニックネーム
   ///
   /// Returns: 作成されたクリスタルとカルマ情報
   ///
   /// Errors:
+  /// - AuthFailure: 未認証の場合
   /// - NetworkFailure: ネットワークエラー
   Future<Result<SublimationResult>> confirm({
     required String secretText,
     required EvaluationResult evaluation,
-    required String userId,
     required String nickname,
   });
 }

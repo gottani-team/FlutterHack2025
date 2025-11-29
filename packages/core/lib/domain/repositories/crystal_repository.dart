@@ -24,12 +24,13 @@ abstract class CrystalRepository {
 
   /// 自分が作成したクリスタル一覧を取得
   ///
-  /// [userId]: ユーザーID
   /// [limit]: 最大取得件数（デフォルト50）
   ///
   /// Returns: 作成日時降順のクリスタル一覧
+  ///
+  /// Errors:
+  /// - AuthFailure: 未認証の場合
   Future<Result<List<Crystal>>> getCreatedCrystals({
-    required String userId,
     int limit = 50,
   });
 

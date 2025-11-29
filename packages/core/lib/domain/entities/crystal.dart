@@ -2,6 +2,7 @@ import 'package:freezed_annotation/freezed_annotation.dart';
 
 import 'ai_metadata.dart';
 import 'crystal_status.dart';
+import 'crystal_tier.dart';
 
 part 'crystal.freezed.dart';
 
@@ -65,4 +66,7 @@ abstract class Crystal with _$Crystal {
 
   /// 感情タイプの表示名を取得
   String get emotionDisplayName => aiMetadata.emotionType.displayName;
+
+  /// カルマ値に基づくTierを取得
+  CrystalTier get tier => CrystalTier.fromKarmaValue(karmaValue);
 }

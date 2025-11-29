@@ -16,6 +16,11 @@ dependencies:
   firebase_auth: ^6.1.2
   cloud_firestore: ^6.1.0
   firebase_storage: ^13.0.1
+  firebase_ai: ^3.6.0
+  firebase_remote_config: ^6.1.2
+
+  # Templating
+  mustache_template: ^2.0.0
 
   # Geospatial (manual implementation with geohash)
   latlong2: ^0.9.1

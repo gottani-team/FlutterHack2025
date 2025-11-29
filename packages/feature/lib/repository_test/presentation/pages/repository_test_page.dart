@@ -25,6 +25,11 @@ class _RepositoryTestPageState extends ConsumerState<RepositoryTestPage> {
   // テスト用に作成したクリスタルID
   String? _createdCrystalId;
 
+  // デバッグクリスタル生成用
+  EmotionType _selectedEmotion = EmotionType.happiness;
+  int _targetKarma = 50;
+  bool _isGenerating = false;
+
   @override
   void initState() {
     super.initState();
@@ -53,7 +58,7 @@ class _RepositoryTestPageState extends ConsumerState<RepositoryTestPage> {
     if (_currentUserId == null) return;
 
     final userRepo = ref.read(userRepositoryProvider);
-    final result = await userRepo.getKarma(_currentUserId!);
+    final result = await userRepo.getKarma();
 
     switch (result) {
       case Success(value: final karma):
@@ -203,6 +208,10 @@ class _RepositoryTestPageState extends ConsumerState<RepositoryTestPage> {
                   _buildTestButton('クリスタル作成 (confirm)', _testConfirm),
                   const SizedBox(height: 16),
 
+                  // デバッグクリスタル生成
+                  _buildDebugCrystalGenerator(),
+                  const SizedBox(height: 16),
+
                   // CrystalRepository
                   _buildSectionTitle('💎 CrystalRepository'),
                   _buildTestButton('利用可能クリスタル取得', _testGetAvailableCrystals),
@@ -306,6 +315,177 @@ class _RepositoryTestPageState extends ConsumerState<RepositoryTestPage> {
     );
   }
 
+  /// デバッグクリスタル生成UI
+  Widget _buildDebugCrystalGenerator() {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.purple.shade50,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.purple),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '🔮 デバッグクリスタル生成',
+            style: TextStyle(
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            '感情とカルマを指定してAIで秘密を生成し、クリスタルを作成',
+            style: TextStyle(fontSize: 12, color: Colors.grey),
+          ),
+          const SizedBox(height: 16),
+
+          // 感情タイプ選択
+          const Text('感情タイプ:', style: TextStyle(fontWeight: FontWeight.w500)),
+          const SizedBox(height: 4),
+          DropdownButton<EmotionType>(
+            value: _selectedEmotion,
+            isExpanded: true,
+            onChanged: (value) {
+              if (value != null) {
+                setState(() {
+                  _selectedEmotion = value;
+                });
+              }
+            },
+            items: EmotionType.values.map((emotion) {
+              return DropdownMenuItem(
+                value: emotion,
+                child: Row(
+                  children: [
+                    Container(
+                      width: 16,
+                      height: 16,
+                      decoration: BoxDecoration(
+                        color: Color(emotion.colorHex),
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Text('${emotion.displayName} (${emotion.displayNameEn})'),
+                  ],
+                ),
+              );
+            }).toList(),
+          ),
+          const SizedBox(height: 16),
+
+          // カルマ値スライダー
+          Text(
+            'カルマ値: $_targetKarma',
+            style: const TextStyle(fontWeight: FontWeight.w500),
+          ),
+          Slider(
+            value: _targetKarma.toDouble(),
+            min: 10,
+            max: 100,
+            divisions: 9,
+            label: '$_targetKarma',
+            onChanged: (value) {
+              setState(() {
+                _targetKarma = value.toInt();
+              });
+            },
+          ),
+          const SizedBox(height: 8),
+
+          // 生成ボタン
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: _isGenerating ? null : _generateDebugCrystal,
+              icon: _isGenerating
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(strokeWidth: 2),
+                    )
+                  : const Icon(Icons.auto_awesome),
+              label: Text(_isGenerating ? '生成中...' : 'AIで秘密を生成してクリスタル作成'),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.purple,
+                foregroundColor: Colors.white,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  /// デバッグクリスタル生成
+  Future<void> _generateDebugCrystal() async {
+    if (_currentUserId == null) {
+      _addLog('❌ 先に認証してください');
+      return;
+    }
+
+    setState(() {
+      _isGenerating = true;
+    });
+
+    try {
+      _addLog('🔮 デバッグクリスタル生成開始');
+      _addLog('   感情: ${_selectedEmotion.displayName}');
+      _addLog('   目標カルマ: $_targetKarma');
+
+      // 1. AIで秘密テキストを生成
+      _addLog('   1. AIで秘密テキストを生成中...');
+      final generator = ref.read(secretTextGeneratorServiceProvider);
+      final secretText = await generator.generate(
+        emotionType: _selectedEmotion,
+        targetKarma: _targetKarma,
+      );
+      _addLog('   ✅ 生成完了: "${secretText.substring(0, secretText.length.clamp(0, 30))}..."');
+
+      // 2. 評価
+      _addLog('   2. 秘密を評価中...');
+      final sublimationRepo = ref.read(sublimationRepositoryProvider);
+      final evalResult = await sublimationRepo.evaluate(secretText: secretText);
+
+      switch (evalResult) {
+        case Success(value: final evaluation):
+          _addLog('   ✅ 評価完了');
+          _addLog('      感情: ${evaluation.emotionDisplayName}');
+          _addLog('      スコア: ${evaluation.aiMetadata.score}');
+
+          // 3. クリスタル作成
+          _addLog('   3. クリスタル作成中...');
+          final confirmResult = await sublimationRepo.confirm(
+            secretText: secretText,
+            evaluation: evaluation,
+            nickname: 'Debug_${_selectedEmotion.name}',
+          );
+
+          switch (confirmResult) {
+            case Success(value: final result):
+              _createdCrystalId = result.crystal.id;
+              _addLog('✅ デバッグクリスタル作成成功!');
+              _addLog('   ID: ${result.crystal.id}');
+              _addLog('   感情: ${result.aiMetadata.emotionType.displayName}');
+              _addLog('   カルマ獲得: +${result.karmaAwarded}');
+              await _refreshKarma();
+            case Failure(error: final e):
+              _addLog('❌ クリスタル作成失敗: ${e.message}');
+          }
+        case Failure(error: final e):
+          _addLog('❌ 評価失敗: ${e.message}');
+      }
+    } catch (e) {
+      _addLog('❌ エラー: $e');
+    } finally {
+      setState(() {
+        _isGenerating = false;
+      });
+    }
+  }
+
   // ========== AuthRepository Tests ==========
 
   Future<void> _testSignInAnonymously() async {
@@ -370,7 +550,7 @@ class _RepositoryTestPageState extends ConsumerState<RepositoryTestPage> {
     }
 
     final repo = ref.read(userRepositoryProvider);
-    final result = await repo.getUser(_currentUserId!);
+    final result = await repo.getCurrentUser();
 
     switch (result) {
       case Success(value: final user):
@@ -394,7 +574,7 @@ class _RepositoryTestPageState extends ConsumerState<RepositoryTestPage> {
     }
 
     final repo = ref.read(userRepositoryProvider);
-    final result = await repo.getKarma(_currentUserId!);
+    final result = await repo.getKarma();
 
     switch (result) {
       case Success(value: final karma):
@@ -414,10 +594,7 @@ class _RepositoryTestPageState extends ConsumerState<RepositoryTestPage> {
     }
 
     final repo = ref.read(userRepositoryProvider);
-    final result = await repo.addKarma(
-      userId: _currentUserId!,
-      amount: 10,
-    );
+    final result = await repo.addKarma(amount: 10);
 
     switch (result) {
       case Success(value: final newKarma):
@@ -437,10 +614,7 @@ class _RepositoryTestPageState extends ConsumerState<RepositoryTestPage> {
     }
 
     final repo = ref.read(userRepositoryProvider);
-    final result = await repo.subtractKarma(
-      userId: _currentUserId!,
-      amount: 5,
-    );
+    final result = await repo.subtractKarma(amount: 5);
 
     switch (result) {
       case Success(value: final newKarma):
@@ -496,7 +670,6 @@ class _RepositoryTestPageState extends ConsumerState<RepositoryTestPage> {
     final result = await repo.confirm(
       secretText: _lastSecretText!,
       evaluation: _lastEvaluationResult!,
-      userId: _currentUserId!,
       nickname: 'TestNickname${DateTime.now().millisecondsSinceEpoch}',
     );
 
@@ -550,10 +723,7 @@ class _RepositoryTestPageState extends ConsumerState<RepositoryTestPage> {
     }
 
     final repo = ref.read(crystalRepositoryProvider);
-    final result = await repo.getCreatedCrystals(
-      userId: _currentUserId!,
-      limit: 10,
-    );
+    final result = await repo.getCreatedCrystals(limit: 10);
 
     switch (result) {
       case Success(value: final crystals):
@@ -642,10 +812,7 @@ class _RepositoryTestPageState extends ConsumerState<RepositoryTestPage> {
     _addLog('🔓 解読対象: $targetCrystalId (Karma: $targetKarmaValue)');
 
     final repo = ref.read(deciphermentRepositoryProvider);
-    final result = await repo.decipher(
-      crystalId: targetCrystalId,
-      userId: _currentUserId!,
-    );
+    final result = await repo.decipher(crystalId: targetCrystalId);
 
     switch (result) {
       case Success(value: final decipherment):
@@ -670,10 +837,7 @@ class _RepositoryTestPageState extends ConsumerState<RepositoryTestPage> {
     }
 
     final repo = ref.read(journalRepositoryProvider);
-    final result = await repo.getCollectedCrystals(
-      userId: _currentUserId!,
-      limit: 10,
-    );
+    final result = await repo.getCollectedCrystals(limit: 10);
 
     switch (result) {
       case Success(value: final crystals):
@@ -695,7 +859,7 @@ class _RepositoryTestPageState extends ConsumerState<RepositoryTestPage> {
     }
 
     final repo = ref.read(journalRepositoryProvider);
-    final result = await repo.getCollectedCount(userId: _currentUserId!);
+    final result = await repo.getCollectedCount();
 
     switch (result) {
       case Success(value: final count):

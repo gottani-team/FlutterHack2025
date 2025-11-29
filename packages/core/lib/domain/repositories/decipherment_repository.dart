@@ -18,17 +18,16 @@ abstract class DeciphermentRepository {
   /// 7. 秘密テキストを返す
   ///
   /// [crystalId]: 解読するクリスタルのID
-  /// [userId]: 解読者のUID
   ///
   /// Returns: 解読結果（秘密テキストと収集されたクリスタル）
   ///
   /// Errors:
+  /// - AuthFailure: 未認証の場合
   /// - InsufficientKarmaFailure: カルマ不足
   /// - AlreadyTakenFailure: すでに他のユーザーに解読された
   /// - NotFoundFailure: クリスタルが見つからない
   Future<Result<DeciphermentResult>> decipher({
     required String crystalId,
-    required String userId,
   });
 }
 

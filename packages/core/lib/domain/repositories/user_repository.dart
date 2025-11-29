@@ -4,72 +4,66 @@ import '../entities/user.dart';
 /// ユーザーリポジトリ
 ///
 /// ユーザー情報とカルマ残高を管理する。
+/// 認証済みユーザーのみが対象（userIdは内部で自動取得）。
 abstract class UserRepository {
-  /// ユーザー情報を取得
-  ///
-  /// [userId]: ユーザーID
+  /// 現在のユーザー情報を取得
   ///
   /// Returns: ユーザー情報（存在しない場合はnull）
-  Future<Result<User?>> getUser(String userId);
+  ///
+  /// Errors:
+  /// - AuthFailure: 未認証の場合
+  Future<Result<User?>> getCurrentUser();
 
-  /// ユーザーを作成（初回ログイン時）
+  /// 現在のユーザーを取得、存在しなければ作成
   ///
-  /// [userId]: ユーザーID
-  /// [initialKarma]: 初期カルマ（デフォルト0）
-  ///
-  /// Returns: 作成されたユーザー
-  Future<Result<User>> createUser({
-    required String userId,
-    int initialKarma = 0,
-  });
-
-  /// ユーザーを取得、存在しなければ作成
-  ///
-  /// [userId]: ユーザーID
   /// [initialKarma]: 初期カルマ（デフォルト0）
   ///
   /// Returns: ユーザー情報
-  Future<Result<User>> getOrCreateUser({
-    required String userId,
+  ///
+  /// Errors:
+  /// - AuthFailure: 未認証の場合
+  Future<Result<User>> getOrCreateCurrentUser({
     int initialKarma = 0,
   });
 
-  /// カルマ残高を取得
-  ///
-  /// [userId]: ユーザーID
+  /// 現在のユーザーのカルマ残高を取得
   ///
   /// Returns: 現在のカルマ残高
-  Future<Result<int>> getKarma(String userId);
+  ///
+  /// Errors:
+  /// - AuthFailure: 未認証の場合
+  Future<Result<int>> getKarma();
 
   /// カルマを加算
   ///
-  /// [userId]: ユーザーID
   /// [amount]: 加算量
   ///
   /// Returns: 更新後のカルマ残高
+  ///
+  /// Errors:
+  /// - AuthFailure: 未認証の場合
   Future<Result<int>> addKarma({
-    required String userId,
     required int amount,
   });
 
   /// カルマを減算
   ///
-  /// [userId]: ユーザーID
   /// [amount]: 減算量
   ///
   /// Returns: 更新後のカルマ残高
   ///
   /// Errors:
+  /// - AuthFailure: 未認証の場合
   /// - InsufficientKarmaFailure: カルマ不足
   Future<Result<int>> subtractKarma({
-    required String userId,
     required int amount,
   });
 
-  /// ユーザー情報をリアルタイムで監視
-  ///
-  /// [userId]: ユーザーID
+  /// 現在のユーザー情報をリアルタイムで監視
   ///
   /// Returns: ユーザー情報のStream
-  Stream<Result<User?>> watchUser(String userId);
+  ///
+  /// Errors:
+  /// - AuthFailure: 未認証の場合
+  Stream<Result<User?>> watchCurrentUser();
 }
