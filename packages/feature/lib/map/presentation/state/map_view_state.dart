@@ -1,3 +1,4 @@
+import 'package:core/core.dart' as core;
 import 'package:core/domain/entities/location_permission_status.dart';
 import 'package:core/domain/entities/user_location_entity.dart';
 import 'package:freezed_annotation/freezed_annotation.dart';
@@ -90,6 +91,18 @@ sealed class MapViewState with _$MapViewState {
 
     /// Whether map is following user location
     @Default(true) bool isFollowingUser,
+
+    /// Remote crystals fetched from Firestore (keyed by crystal ID)
+    @Default({}) Map<String, core.Crystal> remoteCrystals,
+
+    /// Current user's karma balance, null if not yet loaded
+    int? currentKarma,
+
+    /// Whether map style has finished loading
+    @Default(false) bool isMapStyleLoaded,
+
+    /// Whether initial location has been set and camera moved
+    @Default(false) bool hasSetInitialLocation,
   }) = _MapViewState;
 
   const MapViewState._();

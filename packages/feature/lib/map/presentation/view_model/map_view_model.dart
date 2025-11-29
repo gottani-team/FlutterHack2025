@@ -1,13 +1,16 @@
 import 'dart:async';
 import 'dart:math' as math;
 
+import 'package:core/core.dart' as core;
 import 'package:core/data/data_sources/location_data_source.dart';
+import 'package:core/data/providers.dart';
 import 'package:core/domain/services/haptic_service.dart';
 import 'package:core/presentation/utils/audio_player_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:riverpod_annotation/riverpod_annotation.dart';
 
 import '../../data/data_sources/crystal_mock_data_source.dart';
+import '../../domain/entities/crystal_entity.dart';
 import '../../domain/entities/crystallization_area_entity.dart';
 import '../../domain/usecases/scan_crystals_usecase.dart';
 import '../providers/map_providers.dart';
@@ -49,7 +52,25 @@ class MapViewModel extends _$MapViewModel {
       _pulseAnimationTimer?.cancel();
     });
 
+    // Load karma balance on init
+    Future.microtask(loadKarma);
+
     return const MapViewState();
+  }
+
+  /// Load current user's karma balance from UserRepository
+  Future<void> loadKarma() async {
+    final userRepository = ref.read(userRepositoryProvider);
+    final result = await userRepository.getKarma();
+
+    switch (result) {
+      case core.Success(value: final karma):
+        debugPrint('[MapViewModel] Loaded karma: $karma');
+        state = state.copyWith(currentKarma: karma);
+      case core.Failure(error: final failure):
+        debugPrint('[MapViewModel] Failed to load karma: ${failure.message}');
+      // Don't show error to user, just leave karma as null
+    }
   }
 
   /// Request location permission from the user
@@ -282,9 +303,6 @@ class MapViewModel extends _$MapViewModel {
     required double minLng,
     required double maxLng,
   }) {
-    debugPrint('[MapViewModel] Scanning area: '
-        'lat($minLat - $maxLat), lng($minLng - $maxLng)');
-
     // Generate random crystals in the visible area
     final crystals = _scanCrystalsUseCase.execute(
       minLat: minLat,
@@ -529,5 +547,164 @@ class MapViewModel extends _$MapViewModel {
   /// Open location settings for user to enable GPS
   Future<void> openLocationSettings() async {
     await _locationDataSource.openLocationSettings();
+  }
+
+  /// Load crystals from remote Firestore and place them within 100m of user
+  ///
+  /// Fetches up to [limit] available crystals and randomly positions them
+  /// within the specified radius around the user's current location.
+  Future<void> loadRemoteCrystals({int limit = 5}) async {
+    final userLocation = state.userLocation;
+    if (userLocation == null) {
+      debugPrint(
+        '[MapViewModel] Cannot load remote crystals: no user location',
+      );
+      return;
+    }
+
+    debugPrint('[MapViewModel] Loading remote crystals with limit=$limit');
+
+    final crystalRepository = ref.read(crystalRepositoryProvider);
+    final result = await crystalRepository.getAvailableCrystals(limit: limit);
+
+    switch (result) {
+      case core.Success(value: final crystals):
+        debugPrint(
+          '[MapViewModel] Fetched ${crystals.length} crystals from remote',
+        );
+
+        if (crystals.isEmpty) {
+          debugPrint('[MapViewModel] No available crystals found');
+          return;
+        }
+
+        // Store remote crystals in state
+        final remoteCrystalsMap = <String, core.Crystal>{
+          for (final crystal in crystals) crystal.id: crystal,
+        };
+
+        // Generate random positions within 100m radius
+        final random = math.Random();
+        const radiusMeters = 100.0;
+        const earthRadius = 6371000.0;
+
+        final crystallizationAreas = <CrystallizationAreaEntity>[];
+
+        for (final crystal in crystals) {
+          // Generate random distance (0 to 100m) and angle
+          final distance = random.nextDouble() * radiusMeters;
+          final angle = random.nextDouble() * 2 * math.pi;
+
+          // Calculate offset in degrees
+          final latOffset =
+              (distance * math.cos(angle) / earthRadius) * (180 / math.pi);
+          final lngOffset = (distance * math.sin(angle) / earthRadius) *
+              (180 / math.pi) /
+              math.cos(userLocation.latitude * math.pi / 180);
+
+          final area = CrystallizationAreaEntity(
+            crystalId: crystal.id,
+            approximateLatitude: userLocation.latitude + latOffset,
+            approximateLongitude: userLocation.longitude + lngOffset,
+            emotionType: _mapCoreEmotionToMapEmotion(
+              crystal.aiMetadata.emotionType,
+            ),
+          );
+
+          crystallizationAreas.add(area);
+        }
+
+        // Merge with existing crystals
+        final existingIds =
+            state.visibleCrystallizationAreas.map((c) => c.crystalId).toSet();
+        final newAreas = crystallizationAreas
+            .where((a) => !existingIds.contains(a.crystalId))
+            .toList();
+
+        state = state.copyWith(
+          visibleCrystallizationAreas: [
+            ...state.visibleCrystallizationAreas,
+            ...newAreas,
+          ],
+          remoteCrystals: {
+            ...state.remoteCrystals,
+            ...remoteCrystalsMap,
+          },
+        );
+
+        debugPrint(
+          '[MapViewModel] Added ${newAreas.length} new crystal areas to map',
+        );
+
+        // Check proximity after adding crystals
+        _checkCrystalProximity();
+
+      case core.Failure(error: final failure):
+        debugPrint(
+          '[MapViewModel] Failed to fetch crystals: ${failure.message}',
+        );
+        state = state.copyWith(
+          errorMessage: 'クリスタルの読み込みに失敗しました: ${failure.message}',
+        );
+    }
+  }
+
+  /// Map core EmotionType to map EmotionType
+  EmotionType _mapCoreEmotionToMapEmotion(core.EmotionType coreEmotion) {
+    switch (coreEmotion) {
+      case core.EmotionType.happiness:
+      case core.EmotionType.enjoyment:
+        return EmotionType.joy;
+      case core.EmotionType.relief:
+      case core.EmotionType.anticipation:
+        return EmotionType.healing;
+      case core.EmotionType.sadness:
+      case core.EmotionType.emptiness:
+        return EmotionType.silence;
+      case core.EmotionType.embarrassment:
+      case core.EmotionType.anger:
+        return EmotionType.passion;
+    }
+  }
+
+  /// Get a remote crystal by ID
+  core.Crystal? getRemoteCrystal(String crystalId) {
+    return state.remoteCrystals[crystalId];
+  }
+
+  /// Remove a crystal from the map (e.g., after purchase)
+  void removeCrystal(String crystalId) {
+    debugPrint('[MapViewModel] Removing crystal: $crystalId');
+
+    // Remove from visible crystallization areas
+    final updatedAreas = state.visibleCrystallizationAreas
+        .where((area) => area.crystalId != crystalId)
+        .toList();
+
+    // Remove from remote crystals cache
+    final updatedRemoteCrystals = Map<String, core.Crystal>.from(
+      state.remoteCrystals,
+    )..remove(crystalId);
+
+    state = state.copyWith(
+      visibleCrystallizationAreas: updatedAreas,
+      remoteCrystals: updatedRemoteCrystals,
+    );
+
+    debugPrint(
+      '[MapViewModel] Crystal removed. Remaining: ${updatedAreas.length}',
+    );
+  }
+
+  /// Set map style loaded flag
+  void setMapStyleLoaded(bool loaded) {
+    debugPrint('[MapViewModel] Map style loaded: $loaded');
+    state = state.copyWith(isMapStyleLoaded: loaded);
+  }
+
+  /// Set initial location set flag
+  void setInitialLocationSet(bool set) {
+    debugPrint('[MapViewModel] Initial location set: $set');
+    state = state.copyWith(hasSetInitialLocation: set);
   }
 }
