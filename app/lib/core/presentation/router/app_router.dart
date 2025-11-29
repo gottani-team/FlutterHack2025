@@ -50,11 +50,6 @@ final routerProvider = Provider<GoRouter>((ref) {
           return CrystalDisplayPage(crystalId: crystalId);
         },
       ),
-      GoRoute(
-        path: '/repository-test',
-        name: 'repository-test',
-        builder: (context, state) => const RepositoryTestPage(),
-      ),
     ],
     errorBuilder: (context, state) => Scaffold(
       body: Center(
