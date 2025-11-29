@@ -68,7 +68,7 @@ final class CrystalProvider extends $FunctionalProvider<
   }
 }
 
-String _$crystalHash() => r'3ba80d5e793255248bbbb8f2f65f6c2d7cb518bb';
+String _$crystalHash() => r'6eab6db7f38e8d513006f9c75deb2b79b8180a64';
 
 /// Provider that fetches crystal data by ID
 /// Currently returns mock data, will be replaced with real API call later
