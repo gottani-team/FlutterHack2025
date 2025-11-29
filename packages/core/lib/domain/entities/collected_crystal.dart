@@ -14,7 +14,6 @@ abstract class CollectedCrystal with _$CollectedCrystal {
   ///
   /// [id]: ドキュメント ID（元のcrystalIdと同じ）
   /// [secretText]: 明かされた秘密
-  /// [imageUrl]: クリスタル画像URL
   /// [karmaCost]: 支払ったカルマ
   /// [aiMetadata]: AI解析メタデータ
   /// [decipheredAt]: 解読日時
@@ -23,7 +22,6 @@ abstract class CollectedCrystal with _$CollectedCrystal {
   const factory CollectedCrystal({
     required String id,
     required String secretText,
-    required String imageUrl,
     required int karmaCost,
     required AIMetadata aiMetadata,
     required DateTime decipheredAt,

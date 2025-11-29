@@ -16,7 +16,6 @@ part 'crystal_model.g.dart';
 /// {
 ///   "status": "available" | "taken",
 ///   "karmaValue": 0-100,
-///   "imageUrl": String,
 ///   "aiMetadata": { "emotionType": String, "score": int },
 ///   "createdAt": Timestamp,
 ///   "secretText": String,
@@ -32,7 +31,6 @@ class CrystalModel {
     required this.id,
     required this.status,
     required this.karmaValue,
-    required this.imageUrl,
     required this.aiMetadata,
     required this.createdAt,
     required this.secretText,
@@ -67,7 +65,6 @@ class CrystalModel {
       id: entity.id,
       status: entity.status.toJson(),
       karmaValue: entity.karmaValue,
-      imageUrl: entity.imageUrl,
       aiMetadata: AIMetadataModel.fromEntity(entity.aiMetadata),
       createdAt: Timestamp.fromDate(entity.createdAt),
       secretText: entity.secretText ?? '',
@@ -83,7 +80,6 @@ class CrystalModel {
   final String id;
   final String status;
   final int karmaValue;
-  final String imageUrl;
   final AIMetadataModel aiMetadata;
 
   @TimestampConverter()
@@ -113,7 +109,6 @@ class CrystalModel {
       id: id,
       status: CrystalStatus.fromJson(status),
       karmaValue: karmaValue,
-      imageUrl: imageUrl,
       aiMetadata: aiMetadata.toEntity(),
       createdAt: createdAt.toDate(),
       secretText: secretText,

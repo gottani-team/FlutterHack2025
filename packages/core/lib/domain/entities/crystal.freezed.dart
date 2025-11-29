@@ -17,7 +17,6 @@ mixin _$Crystal {
   String get id;
   CrystalStatus get status;
   int get karmaValue;
-  String get imageUrl;
   AIMetadata get aiMetadata;
   DateTime get createdAt;
   String get createdBy;
@@ -42,8 +41,6 @@ mixin _$Crystal {
             (identical(other.status, status) || other.status == status) &&
             (identical(other.karmaValue, karmaValue) ||
                 other.karmaValue == karmaValue) &&
-            (identical(other.imageUrl, imageUrl) ||
-                other.imageUrl == imageUrl) &&
             (identical(other.aiMetadata, aiMetadata) ||
                 other.aiMetadata == aiMetadata) &&
             (identical(other.createdAt, createdAt) ||
@@ -66,7 +63,6 @@ mixin _$Crystal {
       id,
       status,
       karmaValue,
-      imageUrl,
       aiMetadata,
       createdAt,
       createdBy,
@@ -77,7 +73,7 @@ mixin _$Crystal {
 
   @override
   String toString() {
-    return 'Crystal(id: $id, status: $status, karmaValue: $karmaValue, imageUrl: $imageUrl, aiMetadata: $aiMetadata, createdAt: $createdAt, createdBy: $createdBy, creatorNickname: $creatorNickname, secretText: $secretText, decipheredBy: $decipheredBy, decipheredAt: $decipheredAt)';
+    return 'Crystal(id: $id, status: $status, karmaValue: $karmaValue, aiMetadata: $aiMetadata, createdAt: $createdAt, createdBy: $createdBy, creatorNickname: $creatorNickname, secretText: $secretText, decipheredBy: $decipheredBy, decipheredAt: $decipheredAt)';
   }
 }
 
@@ -90,7 +86,6 @@ abstract mixin class $CrystalCopyWith<$Res> {
       {String id,
       CrystalStatus status,
       int karmaValue,
-      String imageUrl,
       AIMetadata aiMetadata,
       DateTime createdAt,
       String createdBy,
@@ -117,7 +112,6 @@ class _$CrystalCopyWithImpl<$Res> implements $CrystalCopyWith<$Res> {
     Object? id = null,
     Object? status = null,
     Object? karmaValue = null,
-    Object? imageUrl = null,
     Object? aiMetadata = null,
     Object? createdAt = null,
     Object? createdBy = null,
@@ -139,10 +133,6 @@ class _$CrystalCopyWithImpl<$Res> implements $CrystalCopyWith<$Res> {
           ? _self.karmaValue
           : karmaValue // ignore: cast_nullable_to_non_nullable
               as int,
-      imageUrl: null == imageUrl
-          ? _self.imageUrl
-          : imageUrl // ignore: cast_nullable_to_non_nullable
-              as String,
       aiMetadata: null == aiMetadata
           ? _self.aiMetadata
           : aiMetadata // ignore: cast_nullable_to_non_nullable
@@ -282,7 +272,6 @@ extension CrystalPatterns on Crystal {
             String id,
             CrystalStatus status,
             int karmaValue,
-            String imageUrl,
             AIMetadata aiMetadata,
             DateTime createdAt,
             String createdBy,
@@ -300,7 +289,6 @@ extension CrystalPatterns on Crystal {
             _that.id,
             _that.status,
             _that.karmaValue,
-            _that.imageUrl,
             _that.aiMetadata,
             _that.createdAt,
             _that.createdBy,
@@ -332,7 +320,6 @@ extension CrystalPatterns on Crystal {
             String id,
             CrystalStatus status,
             int karmaValue,
-            String imageUrl,
             AIMetadata aiMetadata,
             DateTime createdAt,
             String createdBy,
@@ -349,7 +336,6 @@ extension CrystalPatterns on Crystal {
             _that.id,
             _that.status,
             _that.karmaValue,
-            _that.imageUrl,
             _that.aiMetadata,
             _that.createdAt,
             _that.createdBy,
@@ -380,7 +366,6 @@ extension CrystalPatterns on Crystal {
             String id,
             CrystalStatus status,
             int karmaValue,
-            String imageUrl,
             AIMetadata aiMetadata,
             DateTime createdAt,
             String createdBy,
@@ -397,7 +382,6 @@ extension CrystalPatterns on Crystal {
             _that.id,
             _that.status,
             _that.karmaValue,
-            _that.imageUrl,
             _that.aiMetadata,
             _that.createdAt,
             _that.createdBy,
@@ -418,7 +402,6 @@ class _Crystal extends Crystal {
       {required this.id,
       required this.status,
       required this.karmaValue,
-      required this.imageUrl,
       required this.aiMetadata,
       required this.createdAt,
       required this.createdBy,
@@ -434,8 +417,6 @@ class _Crystal extends Crystal {
   final CrystalStatus status;
   @override
   final int karmaValue;
-  @override
-  final String imageUrl;
   @override
   final AIMetadata aiMetadata;
   @override
@@ -468,8 +449,6 @@ class _Crystal extends Crystal {
             (identical(other.status, status) || other.status == status) &&
             (identical(other.karmaValue, karmaValue) ||
                 other.karmaValue == karmaValue) &&
-            (identical(other.imageUrl, imageUrl) ||
-                other.imageUrl == imageUrl) &&
             (identical(other.aiMetadata, aiMetadata) ||
                 other.aiMetadata == aiMetadata) &&
             (identical(other.createdAt, createdAt) ||
@@ -492,7 +471,6 @@ class _Crystal extends Crystal {
       id,
       status,
       karmaValue,
-      imageUrl,
       aiMetadata,
       createdAt,
       createdBy,
@@ -503,7 +481,7 @@ class _Crystal extends Crystal {
 
   @override
   String toString() {
-    return 'Crystal(id: $id, status: $status, karmaValue: $karmaValue, imageUrl: $imageUrl, aiMetadata: $aiMetadata, createdAt: $createdAt, createdBy: $createdBy, creatorNickname: $creatorNickname, secretText: $secretText, decipheredBy: $decipheredBy, decipheredAt: $decipheredAt)';
+    return 'Crystal(id: $id, status: $status, karmaValue: $karmaValue, aiMetadata: $aiMetadata, createdAt: $createdAt, createdBy: $createdBy, creatorNickname: $creatorNickname, secretText: $secretText, decipheredBy: $decipheredBy, decipheredAt: $decipheredAt)';
   }
 }
 
@@ -517,7 +495,6 @@ abstract mixin class _$CrystalCopyWith<$Res> implements $CrystalCopyWith<$Res> {
       {String id,
       CrystalStatus status,
       int karmaValue,
-      String imageUrl,
       AIMetadata aiMetadata,
       DateTime createdAt,
       String createdBy,
@@ -545,7 +522,6 @@ class __$CrystalCopyWithImpl<$Res> implements _$CrystalCopyWith<$Res> {
     Object? id = null,
     Object? status = null,
     Object? karmaValue = null,
-    Object? imageUrl = null,
     Object? aiMetadata = null,
     Object? createdAt = null,
     Object? createdBy = null,
@@ -567,10 +543,6 @@ class __$CrystalCopyWithImpl<$Res> implements _$CrystalCopyWith<$Res> {
           ? _self.karmaValue
           : karmaValue // ignore: cast_nullable_to_non_nullable
               as int,
-      imageUrl: null == imageUrl
-          ? _self.imageUrl
-          : imageUrl // ignore: cast_nullable_to_non_nullable
-              as String,
       aiMetadata: null == aiMetadata
           ? _self.aiMetadata
           : aiMetadata // ignore: cast_nullable_to_non_nullable

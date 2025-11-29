@@ -56,8 +56,7 @@ service cloud.firestore {
                     && (!request.resource.data.keys().hasAny(['ai_metadata']) || request.resource.data.ai_metadata == resource.data.ai_metadata)
                     && (!request.resource.data.keys().hasAny(['karma_value']) || request.resource.data.karma_value == resource.data.karma_value)
                     && (!request.resource.data.keys().hasAny(['secret_text']) || request.resource.data.secret_text == resource.data.secret_text)
-                    && (!request.resource.data.keys().hasAny(['creator_nickname']) || request.resource.data.creator_nickname == resource.data.creator_nickname)
-                    && (!request.resource.data.keys().hasAny(['image_url']) || request.resource.data.image_url == resource.data.image_url);
+                    && (!request.resource.data.keys().hasAny(['creator_nickname']) || request.resource.data.creator_nickname == resource.data.creator_nickname);
 
       // 削除: 禁止（クリスタルは削除できない）
       allow delete: if false;

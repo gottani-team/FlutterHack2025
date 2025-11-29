@@ -16,7 +16,6 @@ abstract class Crystal with _$Crystal {
   /// [id]: Firestore ドキュメント ID
   /// [status]: 状態（available/taken）
   /// [karmaValue]: カルマ値（解読に必要なコスト、0-100）
-  /// [imageUrl]: クリスタル画像URL
   /// [aiMetadata]: AI解析メタデータ
   /// [createdAt]: 作成日時
   /// [createdBy]: 作成者ID
@@ -28,7 +27,6 @@ abstract class Crystal with _$Crystal {
     required String id,
     required CrystalStatus status,
     required int karmaValue,
-    required String imageUrl,
     required AIMetadata aiMetadata,
     required DateTime createdAt,
     required String createdBy,

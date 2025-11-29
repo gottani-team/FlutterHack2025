@@ -11,7 +11,6 @@ CollectedCrystalModel _$CollectedCrystalModelFromJson(
     CollectedCrystalModel(
       id: json['id'] as String,
       secretText: json['secret_text'] as String,
-      imageUrl: json['image_url'] as String,
       karmaCost: (json['karma_cost'] as num).toInt(),
       aiMetadata:
           AIMetadataModel.fromJson(json['ai_metadata'] as Map<String, dynamic>),
@@ -26,7 +25,6 @@ Map<String, dynamic> _$CollectedCrystalModelToJson(
     <String, dynamic>{
       'id': instance.id,
       'secret_text': instance.secretText,
-      'image_url': instance.imageUrl,
       'karma_cost': instance.karmaCost,
       'ai_metadata': instance.aiMetadata.toJson(),
       'deciphered_at': const TimestampConverter().toJson(instance.decipheredAt),

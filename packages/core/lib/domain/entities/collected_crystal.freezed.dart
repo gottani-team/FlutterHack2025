@@ -16,7 +16,6 @@ T _$identity<T>(T value) => value;
 mixin _$CollectedCrystal {
   String get id;
   String get secretText;
-  String get imageUrl;
   int get karmaCost;
   AIMetadata get aiMetadata;
   DateTime get decipheredAt;
@@ -39,8 +38,6 @@ mixin _$CollectedCrystal {
             (identical(other.id, id) || other.id == id) &&
             (identical(other.secretText, secretText) ||
                 other.secretText == secretText) &&
-            (identical(other.imageUrl, imageUrl) ||
-                other.imageUrl == imageUrl) &&
             (identical(other.karmaCost, karmaCost) ||
                 other.karmaCost == karmaCost) &&
             (identical(other.aiMetadata, aiMetadata) ||
@@ -55,20 +52,12 @@ mixin _$CollectedCrystal {
   }
 
   @override
-  int get hashCode => Object.hash(
-      runtimeType,
-      id,
-      secretText,
-      imageUrl,
-      karmaCost,
-      aiMetadata,
-      decipheredAt,
-      originalCreatorId,
-      originalCreatorNickname);
+  int get hashCode => Object.hash(runtimeType, id, secretText, karmaCost,
+      aiMetadata, decipheredAt, originalCreatorId, originalCreatorNickname);
 
   @override
   String toString() {
-    return 'CollectedCrystal(id: $id, secretText: $secretText, imageUrl: $imageUrl, karmaCost: $karmaCost, aiMetadata: $aiMetadata, decipheredAt: $decipheredAt, originalCreatorId: $originalCreatorId, originalCreatorNickname: $originalCreatorNickname)';
+    return 'CollectedCrystal(id: $id, secretText: $secretText, karmaCost: $karmaCost, aiMetadata: $aiMetadata, decipheredAt: $decipheredAt, originalCreatorId: $originalCreatorId, originalCreatorNickname: $originalCreatorNickname)';
   }
 }
 
@@ -81,7 +70,6 @@ abstract mixin class $CollectedCrystalCopyWith<$Res> {
   $Res call(
       {String id,
       String secretText,
-      String imageUrl,
       int karmaCost,
       AIMetadata aiMetadata,
       DateTime decipheredAt,
@@ -106,7 +94,6 @@ class _$CollectedCrystalCopyWithImpl<$Res>
   $Res call({
     Object? id = null,
     Object? secretText = null,
-    Object? imageUrl = null,
     Object? karmaCost = null,
     Object? aiMetadata = null,
     Object? decipheredAt = null,
@@ -121,10 +108,6 @@ class _$CollectedCrystalCopyWithImpl<$Res>
       secretText: null == secretText
           ? _self.secretText
           : secretText // ignore: cast_nullable_to_non_nullable
-              as String,
-      imageUrl: null == imageUrl
-          ? _self.imageUrl
-          : imageUrl // ignore: cast_nullable_to_non_nullable
               as String,
       karmaCost: null == karmaCost
           ? _self.karmaCost
@@ -256,7 +239,6 @@ extension CollectedCrystalPatterns on CollectedCrystal {
     TResult Function(
             String id,
             String secretText,
-            String imageUrl,
             int karmaCost,
             AIMetadata aiMetadata,
             DateTime decipheredAt,
@@ -271,7 +253,6 @@ extension CollectedCrystalPatterns on CollectedCrystal {
         return $default(
             _that.id,
             _that.secretText,
-            _that.imageUrl,
             _that.karmaCost,
             _that.aiMetadata,
             _that.decipheredAt,
@@ -300,7 +281,6 @@ extension CollectedCrystalPatterns on CollectedCrystal {
     TResult Function(
             String id,
             String secretText,
-            String imageUrl,
             int karmaCost,
             AIMetadata aiMetadata,
             DateTime decipheredAt,
@@ -314,7 +294,6 @@ extension CollectedCrystalPatterns on CollectedCrystal {
         return $default(
             _that.id,
             _that.secretText,
-            _that.imageUrl,
             _that.karmaCost,
             _that.aiMetadata,
             _that.decipheredAt,
@@ -342,7 +321,6 @@ extension CollectedCrystalPatterns on CollectedCrystal {
     TResult? Function(
             String id,
             String secretText,
-            String imageUrl,
             int karmaCost,
             AIMetadata aiMetadata,
             DateTime decipheredAt,
@@ -356,7 +334,6 @@ extension CollectedCrystalPatterns on CollectedCrystal {
         return $default(
             _that.id,
             _that.secretText,
-            _that.imageUrl,
             _that.karmaCost,
             _that.aiMetadata,
             _that.decipheredAt,
@@ -374,7 +351,6 @@ class _CollectedCrystal extends CollectedCrystal {
   const _CollectedCrystal(
       {required this.id,
       required this.secretText,
-      required this.imageUrl,
       required this.karmaCost,
       required this.aiMetadata,
       required this.decipheredAt,
@@ -386,8 +362,6 @@ class _CollectedCrystal extends CollectedCrystal {
   final String id;
   @override
   final String secretText;
-  @override
-  final String imageUrl;
   @override
   final int karmaCost;
   @override
@@ -415,8 +389,6 @@ class _CollectedCrystal extends CollectedCrystal {
             (identical(other.id, id) || other.id == id) &&
             (identical(other.secretText, secretText) ||
                 other.secretText == secretText) &&
-            (identical(other.imageUrl, imageUrl) ||
-                other.imageUrl == imageUrl) &&
             (identical(other.karmaCost, karmaCost) ||
                 other.karmaCost == karmaCost) &&
             (identical(other.aiMetadata, aiMetadata) ||
@@ -431,20 +403,12 @@ class _CollectedCrystal extends CollectedCrystal {
   }
 
   @override
-  int get hashCode => Object.hash(
-      runtimeType,
-      id,
-      secretText,
-      imageUrl,
-      karmaCost,
-      aiMetadata,
-      decipheredAt,
-      originalCreatorId,
-      originalCreatorNickname);
+  int get hashCode => Object.hash(runtimeType, id, secretText, karmaCost,
+      aiMetadata, decipheredAt, originalCreatorId, originalCreatorNickname);
 
   @override
   String toString() {
-    return 'CollectedCrystal(id: $id, secretText: $secretText, imageUrl: $imageUrl, karmaCost: $karmaCost, aiMetadata: $aiMetadata, decipheredAt: $decipheredAt, originalCreatorId: $originalCreatorId, originalCreatorNickname: $originalCreatorNickname)';
+    return 'CollectedCrystal(id: $id, secretText: $secretText, karmaCost: $karmaCost, aiMetadata: $aiMetadata, decipheredAt: $decipheredAt, originalCreatorId: $originalCreatorId, originalCreatorNickname: $originalCreatorNickname)';
   }
 }
 
@@ -459,7 +423,6 @@ abstract mixin class _$CollectedCrystalCopyWith<$Res>
   $Res call(
       {String id,
       String secretText,
-      String imageUrl,
       int karmaCost,
       AIMetadata aiMetadata,
       DateTime decipheredAt,
@@ -485,7 +448,6 @@ class __$CollectedCrystalCopyWithImpl<$Res>
   $Res call({
     Object? id = null,
     Object? secretText = null,
-    Object? imageUrl = null,
     Object? karmaCost = null,
     Object? aiMetadata = null,
     Object? decipheredAt = null,
@@ -500,10 +462,6 @@ class __$CollectedCrystalCopyWithImpl<$Res>
       secretText: null == secretText
           ? _self.secretText
           : secretText // ignore: cast_nullable_to_non_nullable
-              as String,
-      imageUrl: null == imageUrl
-          ? _self.imageUrl
-          : imageUrl // ignore: cast_nullable_to_non_nullable
               as String,
       karmaCost: null == karmaCost
           ? _self.karmaCost

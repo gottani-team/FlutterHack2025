@@ -14,7 +14,6 @@ part 'collected_crystal_model.g.dart';
 /// ```json
 /// {
 ///   "secretText": String,
-///   "imageUrl": String,
 ///   "karmaCost": int,
 ///   "aiMetadata": { "emotionType": String, "score": int },
 ///   "decipheredAt": Timestamp,
@@ -27,7 +26,6 @@ class CollectedCrystalModel {
   CollectedCrystalModel({
     required this.id,
     required this.secretText,
-    required this.imageUrl,
     required this.karmaCost,
     required this.aiMetadata,
     required this.decipheredAt,
@@ -59,7 +57,6 @@ class CollectedCrystalModel {
     return CollectedCrystalModel(
       id: entity.id,
       secretText: entity.secretText,
-      imageUrl: entity.imageUrl,
       karmaCost: entity.karmaCost,
       aiMetadata: AIMetadataModel.fromEntity(entity.aiMetadata),
       decipheredAt: Timestamp.fromDate(entity.decipheredAt),
@@ -70,7 +67,6 @@ class CollectedCrystalModel {
 
   final String id;
   final String secretText;
-  final String imageUrl;
   final int karmaCost;
   final AIMetadataModel aiMetadata;
 
@@ -95,7 +91,6 @@ class CollectedCrystalModel {
     return CollectedCrystal(
       id: id,
       secretText: secretText,
-      imageUrl: imageUrl,
       karmaCost: karmaCost,
       aiMetadata: aiMetadata.toEntity(),
       decipheredAt: decipheredAt.toDate(),

@@ -10,7 +10,6 @@ CrystalModel _$CrystalModelFromJson(Map<String, dynamic> json) => CrystalModel(
       id: json['id'] as String,
       status: json['status'] as String,
       karmaValue: (json['karma_value'] as num).toInt(),
-      imageUrl: json['image_url'] as String,
       aiMetadata:
           AIMetadataModel.fromJson(json['ai_metadata'] as Map<String, dynamic>),
       createdAt:
@@ -28,7 +27,6 @@ Map<String, dynamic> _$CrystalModelToJson(CrystalModel instance) =>
       'id': instance.id,
       'status': instance.status,
       'karma_value': instance.karmaValue,
-      'image_url': instance.imageUrl,
       'ai_metadata': instance.aiMetadata.toJson(),
       'created_at': const TimestampConverter().toJson(instance.createdAt),
       'secret_text': instance.secretText,
