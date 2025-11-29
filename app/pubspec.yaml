@@ -20,7 +20,7 @@ dependencies:
   # Firebase Services
   firebase_app_check: ^0.4.0+1
   firebase_core: ^4.2.1
-  
+  firebase_remote_config: ^6.1.2
 
   # Package dependencies
   core:
@@ -36,3 +36,7 @@ dev_dependencies:
 flutter:
   uses-material-design: true
 
+  assets:
+    - assets/sounds/
+    - assets/images/
+    - assets/models/rock.glb

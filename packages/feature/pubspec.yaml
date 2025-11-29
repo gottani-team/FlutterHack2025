@@ -26,6 +26,9 @@ dependencies:
   # Utilities
   equatable: ^2.0.5
 
+  # Routing
+  go_router: ^17.0.0
+
   # Firebase Services
   cloud_firestore: ^6.1.0
   cloud_functions: ^6.0.1
@@ -47,9 +50,20 @@ dependencies:
   flutter_inappwebview: ^6.1.5
   url_launcher: ^6.3.1
 
+  # Map (for Chimyaku map view)
+  mapbox_maps_flutter: ^2.4.0
+  # Note: geolocator and permission_handler are provided by core package
+
+  # Audio (for resonance sound effects)
+  audioplayers: ^6.1.0
+
   # Core package dependency
   core:
     path: ../core
+
+flutter:
+  assets:
+    - assets/models/rock.glb
 
 dev_dependencies:
   flutter_test:

@@ -11,6 +11,15 @@ dependencies:
   flutter:
     sdk: flutter
 
+  # Firebase
+  firebase_core: ^4.2.1
+  firebase_auth: ^6.1.2
+  cloud_firestore: ^6.1.0
+  firebase_storage: ^13.0.1
+
+  # Geospatial (manual implementation with geohash)
+  latlong2: ^0.9.1
+
   # State Management
   flutter_riverpod: ^3.0.3
   riverpod_annotation: ^3.0.3
@@ -23,6 +32,16 @@ dependencies:
   equatable: ^2.0.5
   logger: ^2.0.2+1
 
+  # UI
+  gradient_borders: ^1.0.1
+  
+  # Audio (for sensory feedback)
+  audioplayers: ^6.1.0
+
+  # Location (for GPS tracking)
+  geolocator: ^14.0.0
+  permission_handler: ^11.4.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -33,4 +52,7 @@ dev_dependencies:
   freezed: ^3.2.3
   json_serializable: ^6.11.2
   riverpod_generator: ^3.0.3
+
+  # Testing
+  mockito: ^5.4.0
 

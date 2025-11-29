@@ -1,0 +1,79 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // ========== Helper Functions ==========
+
+    // ユーザーが認証済みかチェック
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // ユーザーIDが一致するかチェック
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // ========== Crystals Collection (想晶) ==========
+
+    match /crystals/{crystalId} {
+      // 読み取り: 認証済みユーザーなら誰でも可能
+      // Note: secretTextはCloud Functions経由でのみ取得可能（解読後）
+      allow read: if isAuthenticated();
+
+      // 作成: Cloud Functions経由のみ（昇華処理）
+      // ハッカソンデモ用に一時的にクライアントからの作成を許可
+      // Note: JSONシリアライズはsnake_caseを使用
+      allow create: if isAuthenticated()
+                    && request.resource.data.created_by == request.auth.uid
+                    && request.resource.data.status == 'available'
+                    && request.resource.data.karma_value >= 0
+                    && request.resource.data.karma_value <= 100
+                    && request.resource.data.secret_text is string
+                    && request.resource.data.secret_text.size() >= 10
+                    && request.resource.data.secret_text.size() <= 500
+                    && request.resource.data.creator_nickname is string
+                    && request.resource.data.creator_nickname.size() >= 1
+                    && request.resource.data.creator_nickname.size() <= 50;
+
+      // 更新: Cloud Functions経由のみ（解読処理）
+      // ハッカソンデモ用に一時的にクライアントからの更新を許可
+      // - statusをtakenにする
+      // - deciphered_by, deciphered_atを設定する
+      // - 自分が作成したクリスタルも解読可能（制限なし）
+      // - すでに解読済みのクリスタルは再解読できない
+      // Note: JSONシリアライズはsnake_caseを使用
+      // Note: transaction.update()は差分更新なので、変更されるフィールドのみチェック
+      allow update: if isAuthenticated()
+                    && resource.data.status == 'available'
+                    && request.resource.data.status == 'taken'
+                    && request.resource.data.deciphered_by == request.auth.uid
+                    && request.resource.data.deciphered_at is timestamp
+                    // 不変フィールドが更新リクエストに含まれている場合は変更されていないことを確認
+                    && (!request.resource.data.keys().hasAny(['created_by']) || request.resource.data.created_by == resource.data.created_by)
+                    && (!request.resource.data.keys().hasAny(['created_at']) || request.resource.data.created_at == resource.data.created_at)
+                    && (!request.resource.data.keys().hasAny(['ai_metadata']) || request.resource.data.ai_metadata == resource.data.ai_metadata)
+                    && (!request.resource.data.keys().hasAny(['karma_value']) || request.resource.data.karma_value == resource.data.karma_value)
+                    && (!request.resource.data.keys().hasAny(['secret_text']) || request.resource.data.secret_text == resource.data.secret_text)
+                    && (!request.resource.data.keys().hasAny(['creator_nickname']) || request.resource.data.creator_nickname == resource.data.creator_nickname);
+
+      // 削除: 禁止（クリスタルは削除できない）
+      allow delete: if false;
+    }
+
+    // ========== Users Collection ==========
+
+    match /users/{userId} {
+      // 自分のユーザードキュメントのみ読み書き可能
+      allow read, write: if isOwner(userId);
+
+      // ========== Collected Crystals Subcollection (ジャーナル) ==========
+
+      match /collected_crystals/{crystalId} {
+        // 自分のサブコレクションのみ読み書き可能
+        allow read, write: if isOwner(userId);
+      }
+    }
+  }
+}
