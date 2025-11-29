@@ -1,3 +1,4 @@
+import 'package:feature/crystal/presentation/pages/crystal_display_page.dart';
 import 'package:feature/haiku/presentation/pages/haiku_page.dart';
 import 'package:feature/home/presentation/pages/home_page.dart';
 import 'package:feature/map/presentation/pages/map_page.dart';
@@ -43,9 +44,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         },
       ),
       GoRoute(
-        path: '/repository-test',
-        name: 'repository-test',
-        builder: (context, state) => const RepositoryTestPage(),
+        path: '/crystal/:id',
+        name: 'crystal-display',
+        builder: (context, state) {
+          final crystalId = state.pathParameters['id'] ?? '';
+          return CrystalDisplayPage(crystalId: crystalId);
+        },
       ),
     ],
     errorBuilder: (context, state) => Scaffold(
