@@ -30,6 +30,16 @@ flutter_ios_podfile_setup
 target 'Runner' do
   use_frameworks!
 
+    # Firebase関連の最適化設定
+    pod 'Firebase/Analytics', :modular_headers => true
+    pod 'Firebase/Auth', :modular_headers => true
+    pod 'Firebase/Core', :modular_headers => true
+    pod 'Firebase/Firestore', :modular_headers => true
+  
+    # ビルド時間を短縮するための設定コード
+    pod 'FirebaseFirestore', :git => 'https://github.com/invertase/firestore-ios-sdk-frameworks.git', :tag => '12.4.0'
+    # Firebase関連の最適化設定は自動的に管理されます
+
   flutter_install_all_ios_pods File.dirname(File.realpath(__FILE__))
   target 'RunnerTests' do
     inherit! :search_paths

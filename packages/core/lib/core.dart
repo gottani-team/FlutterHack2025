@@ -19,9 +19,12 @@ library;
 export 'domain/common/result.dart';
 
 // Entities
+export 'domain/entities/ai_metadata.dart';
+export 'domain/entities/collected_crystal.dart';
+export 'domain/entities/crystal.dart';
+export 'domain/entities/crystal_status.dart';
 export 'domain/entities/emotion_type.dart';
-export 'domain/entities/location.dart';
-export 'domain/entities/memory_crystal.dart';
+export 'domain/entities/user.dart';
 export 'domain/entities/user_session.dart';
 
 // Failures
@@ -29,10 +32,11 @@ export 'domain/failures/core_failure.dart';
 
 // Repositories
 export 'domain/repositories/auth_repository.dart';
-export 'domain/repositories/collection_repository.dart';
-export 'domain/repositories/creation_repository.dart';
-export 'domain/repositories/discovery_repository.dart';
-export 'domain/repositories/excavation_repository.dart';
+export 'domain/repositories/crystal_repository.dart';
+export 'domain/repositories/decipherment_repository.dart';
+export 'domain/repositories/journal_repository.dart';
+export 'domain/repositories/sublimation_repository.dart';
+export 'domain/repositories/user_repository.dart';
 
 // ========== Data Layer ==========
 

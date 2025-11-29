@@ -3,7 +3,7 @@
 // ignore_for_file: type=lint
 // ignore_for_file: unused_element, deprecated_member_use, deprecated_member_use_from_same_package, use_function_type_syntax_for_parameters, unnecessary_const, avoid_init_to_null, invalid_override_different_default_values_named, prefer_expression_function_bodies, annotate_overrides, invalid_annotation_target, unnecessary_question_mark
 
-part of 'location.dart';
+part of 'user.dart';
 
 // **************************************************************************
 // FreezedGenerator
@@ -13,75 +13,82 @@ part of 'location.dart';
 T _$identity<T>(T value) => value;
 
 /// @nodoc
-mixin _$Location {
-  double get latitude;
-  double get longitude;
+mixin _$User {
+  String get id;
+  int get currentKarma;
+  DateTime get createdAt;
 
-  /// Create a copy of Location
+  /// Create a copy of User
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
   @pragma('vm:prefer-inline')
-  $LocationCopyWith<Location> get copyWith =>
-      _$LocationCopyWithImpl<Location>(this as Location, _$identity);
+  $UserCopyWith<User> get copyWith =>
+      _$UserCopyWithImpl<User>(this as User, _$identity);
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is Location &&
-            (identical(other.latitude, latitude) ||
-                other.latitude == latitude) &&
-            (identical(other.longitude, longitude) ||
-                other.longitude == longitude));
+            other is User &&
+            (identical(other.id, id) || other.id == id) &&
+            (identical(other.currentKarma, currentKarma) ||
+                other.currentKarma == currentKarma) &&
+            (identical(other.createdAt, createdAt) ||
+                other.createdAt == createdAt));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, latitude, longitude);
+  int get hashCode => Object.hash(runtimeType, id, currentKarma, createdAt);
 
   @override
   String toString() {
-    return 'Location(latitude: $latitude, longitude: $longitude)';
+    return 'User(id: $id, currentKarma: $currentKarma, createdAt: $createdAt)';
   }
 }
 
 /// @nodoc
-abstract mixin class $LocationCopyWith<$Res> {
-  factory $LocationCopyWith(Location value, $Res Function(Location) _then) =
-      _$LocationCopyWithImpl;
+abstract mixin class $UserCopyWith<$Res> {
+  factory $UserCopyWith(User value, $Res Function(User) _then) =
+      _$UserCopyWithImpl;
   @useResult
-  $Res call({double latitude, double longitude});
+  $Res call({String id, int currentKarma, DateTime createdAt});
 }
 
 /// @nodoc
-class _$LocationCopyWithImpl<$Res> implements $LocationCopyWith<$Res> {
-  _$LocationCopyWithImpl(this._self, this._then);
+class _$UserCopyWithImpl<$Res> implements $UserCopyWith<$Res> {
+  _$UserCopyWithImpl(this._self, this._then);
 
-  final Location _self;
-  final $Res Function(Location) _then;
+  final User _self;
+  final $Res Function(User) _then;
 
-  /// Create a copy of Location
+  /// Create a copy of User
   /// with the given fields replaced by the non-null parameter values.
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? latitude = null,
-    Object? longitude = null,
+    Object? id = null,
+    Object? currentKarma = null,
+    Object? createdAt = null,
   }) {
     return _then(_self.copyWith(
-      latitude: null == latitude
-          ? _self.latitude
-          : latitude // ignore: cast_nullable_to_non_nullable
-              as double,
-      longitude: null == longitude
-          ? _self.longitude
-          : longitude // ignore: cast_nullable_to_non_nullable
-              as double,
+      id: null == id
+          ? _self.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as String,
+      currentKarma: null == currentKarma
+          ? _self.currentKarma
+          : currentKarma // ignore: cast_nullable_to_non_nullable
+              as int,
+      createdAt: null == createdAt
+          ? _self.createdAt
+          : createdAt // ignore: cast_nullable_to_non_nullable
+              as DateTime,
     ));
   }
 }
 
-/// Adds pattern-matching-related methods to [Location].
-extension LocationPatterns on Location {
+/// Adds pattern-matching-related methods to [User].
+extension UserPatterns on User {
   /// A variant of `map` that fallback to returning `orElse`.
   ///
   /// It is equivalent to doing:
@@ -96,12 +103,12 @@ extension LocationPatterns on Location {
 
   @optionalTypeArgs
   TResult maybeMap<TResult extends Object?>(
-    TResult Function(_Location value)? $default, {
+    TResult Function(_User value)? $default, {
     required TResult orElse(),
   }) {
     final _that = this;
     switch (_that) {
-      case _Location() when $default != null:
+      case _User() when $default != null:
         return $default(_that);
       case _:
         return orElse();
@@ -123,11 +130,11 @@ extension LocationPatterns on Location {
 
   @optionalTypeArgs
   TResult map<TResult extends Object?>(
-    TResult Function(_Location value) $default,
+    TResult Function(_User value) $default,
   ) {
     final _that = this;
     switch (_that) {
-      case _Location():
+      case _User():
         return $default(_that);
       case _:
         throw StateError('Unexpected subclass');
@@ -148,11 +155,11 @@ extension LocationPatterns on Location {
 
   @optionalTypeArgs
   TResult? mapOrNull<TResult extends Object?>(
-    TResult? Function(_Location value)? $default,
+    TResult? Function(_User value)? $default,
   ) {
     final _that = this;
     switch (_that) {
-      case _Location() when $default != null:
+      case _User() when $default != null:
         return $default(_that);
       case _:
         return null;
@@ -173,13 +180,14 @@ extension LocationPatterns on Location {
 
   @optionalTypeArgs
   TResult maybeWhen<TResult extends Object?>(
-    TResult Function(double latitude, double longitude)? $default, {
+    TResult Function(String id, int currentKarma, DateTime createdAt)?
+        $default, {
     required TResult orElse(),
   }) {
     final _that = this;
     switch (_that) {
-      case _Location() when $default != null:
-        return $default(_that.latitude, _that.longitude);
+      case _User() when $default != null:
+        return $default(_that.id, _that.currentKarma, _that.createdAt);
       case _:
         return orElse();
     }
@@ -200,12 +208,12 @@ extension LocationPatterns on Location {
 
   @optionalTypeArgs
   TResult when<TResult extends Object?>(
-    TResult Function(double latitude, double longitude) $default,
+    TResult Function(String id, int currentKarma, DateTime createdAt) $default,
   ) {
     final _that = this;
     switch (_that) {
-      case _Location():
-        return $default(_that.latitude, _that.longitude);
+      case _User():
+        return $default(_that.id, _that.currentKarma, _that.createdAt);
       case _:
         throw StateError('Unexpected subclass');
     }
@@ -225,12 +233,13 @@ extension LocationPatterns on Location {
 
   @optionalTypeArgs
   TResult? whenOrNull<TResult extends Object?>(
-    TResult? Function(double latitude, double longitude)? $default,
+    TResult? Function(String id, int currentKarma, DateTime createdAt)?
+        $default,
   ) {
     final _that = this;
     switch (_that) {
-      case _Location() when $default != null:
-        return $default(_that.latitude, _that.longitude);
+      case _User() when $default != null:
+        return $default(_that.id, _that.currentKarma, _that.createdAt);
       case _:
         return null;
     }
@@ -239,77 +248,85 @@ extension LocationPatterns on Location {
 
 /// @nodoc
 
-class _Location extends Location {
-  const _Location({required this.latitude, required this.longitude})
+class _User extends User {
+  const _User(
+      {required this.id, required this.currentKarma, required this.createdAt})
       : super._();
 
   @override
-  final double latitude;
+  final String id;
   @override
-  final double longitude;
+  final int currentKarma;
+  @override
+  final DateTime createdAt;
 
-  /// Create a copy of Location
+  /// Create a copy of User
   /// with the given fields replaced by the non-null parameter values.
   @override
   @JsonKey(includeFromJson: false, includeToJson: false)
   @pragma('vm:prefer-inline')
-  _$LocationCopyWith<_Location> get copyWith =>
-      __$LocationCopyWithImpl<_Location>(this, _$identity);
+  _$UserCopyWith<_User> get copyWith =>
+      __$UserCopyWithImpl<_User>(this, _$identity);
 
   @override
   bool operator ==(Object other) {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
-            other is _Location &&
-            (identical(other.latitude, latitude) ||
-                other.latitude == latitude) &&
-            (identical(other.longitude, longitude) ||
-                other.longitude == longitude));
+            other is _User &&
+            (identical(other.id, id) || other.id == id) &&
+            (identical(other.currentKarma, currentKarma) ||
+                other.currentKarma == currentKarma) &&
+            (identical(other.createdAt, createdAt) ||
+                other.createdAt == createdAt));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, latitude, longitude);
+  int get hashCode => Object.hash(runtimeType, id, currentKarma, createdAt);
 
   @override
   String toString() {
-    return 'Location(latitude: $latitude, longitude: $longitude)';
+    return 'User(id: $id, currentKarma: $currentKarma, createdAt: $createdAt)';
   }
 }
 
 /// @nodoc
-abstract mixin class _$LocationCopyWith<$Res>
-    implements $LocationCopyWith<$Res> {
-  factory _$LocationCopyWith(_Location value, $Res Function(_Location) _then) =
-      __$LocationCopyWithImpl;
+abstract mixin class _$UserCopyWith<$Res> implements $UserCopyWith<$Res> {
+  factory _$UserCopyWith(_User value, $Res Function(_User) _then) =
+      __$UserCopyWithImpl;
   @override
   @useResult
-  $Res call({double latitude, double longitude});
+  $Res call({String id, int currentKarma, DateTime createdAt});
 }
 
 /// @nodoc
-class __$LocationCopyWithImpl<$Res> implements _$LocationCopyWith<$Res> {
-  __$LocationCopyWithImpl(this._self, this._then);
+class __$UserCopyWithImpl<$Res> implements _$UserCopyWith<$Res> {
+  __$UserCopyWithImpl(this._self, this._then);
 
-  final _Location _self;
-  final $Res Function(_Location) _then;
+  final _User _self;
+  final $Res Function(_User) _then;
 
-  /// Create a copy of Location
+  /// Create a copy of User
   /// with the given fields replaced by the non-null parameter values.
   @override
   @pragma('vm:prefer-inline')
   $Res call({
-    Object? latitude = null,
-    Object? longitude = null,
+    Object? id = null,
+    Object? currentKarma = null,
+    Object? createdAt = null,
   }) {
-    return _then(_Location(
-      latitude: null == latitude
-          ? _self.latitude
-          : latitude // ignore: cast_nullable_to_non_nullable
-              as double,
-      longitude: null == longitude
-          ? _self.longitude
-          : longitude // ignore: cast_nullable_to_non_nullable
-              as double,
+    return _then(_User(
+      id: null == id
+          ? _self.id
+          : id // ignore: cast_nullable_to_non_nullable
+              as String,
+      currentKarma: null == currentKarma
+          ? _self.currentKarma
+          : currentKarma // ignore: cast_nullable_to_non_nullable
+              as int,
+      createdAt: null == createdAt
+          ? _self.createdAt
+          : createdAt // ignore: cast_nullable_to_non_nullable
+              as DateTime,
     ));
   }
 }

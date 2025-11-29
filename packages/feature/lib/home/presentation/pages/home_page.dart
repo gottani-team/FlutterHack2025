@@ -52,8 +52,7 @@ class HomePage extends ConsumerWidget {
                     'crystalId': 'test-crystal-001',
                     'crystalImageUrl': 'assets/images/test-crystal.png',
                     'crystalLabel': '豊かの欠片',
-                    'memoryText':
-                        '先日、カフェ・ド・ミエルで友人のアキと待ち合わせ。'
+                    'memoryText': '先日、カフェ・ド・ミエルで友人のアキと待ち合わせ。'
                         '新作のローズティーは、一口飲むとバラ園にいるような香りが広がり、'
                         '心まで華やぎました。隣の席のカップルが話す映画論も、'
                         '思わず聞き入ってしまうほど魅力的。'
@@ -73,6 +72,14 @@ class HomePage extends ConsumerWidget {
                   backgroundColor: const Color(0xFF1E88E5),
                 ),
                 child: const Text('Test Crystal Display'),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => context.goNamed('repository-test'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.deepPurple,
+                ),
+                child: const Text('Repository Test Screen'),
               ),
             ],
           ),

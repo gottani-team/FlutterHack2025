@@ -1,21 +1,25 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+// Domain Repositories
 import '../domain/repositories/auth_repository.dart';
-import '../domain/repositories/collection_repository.dart';
-import '../domain/repositories/creation_repository.dart';
-import '../domain/repositories/discovery_repository.dart';
-import '../domain/repositories/excavation_repository.dart';
+import '../domain/repositories/crystal_repository.dart';
+import '../domain/repositories/decipherment_repository.dart';
+import '../domain/repositories/journal_repository.dart';
+import '../domain/repositories/sublimation_repository.dart';
+import '../domain/repositories/user_repository.dart';
+
+// Data Sources
 import 'datasources/firebase_auth_service.dart';
-import 'datasources/firestore_collection_service.dart';
-import 'datasources/firestore_creation_service.dart';
-import 'datasources/firestore_discovery_service.dart';
-import 'datasources/firestore_excavation_service.dart';
+
+// Repository Implementations
 import 'repositories/auth_repository_impl.dart';
-import 'repositories/collection_repository_impl.dart';
-import 'repositories/creation_repository_impl.dart';
-import 'repositories/discovery_repository_impl.dart';
-import 'repositories/excavation_repository_impl.dart';
+import 'repositories/crystal_repository_impl.dart';
+import 'repositories/decipherment_repository_impl.dart';
+import 'repositories/journal_repository_impl.dart';
+import 'repositories/sublimation_repository_impl.dart';
+import 'repositories/user_repository_impl.dart';
 
 /// Firestore インスタンス Provider
 ///
@@ -33,7 +37,7 @@ final firebaseAuthProvider = Provider<FirebaseAuth>((ref) {
   return FirebaseAuth.instance;
 });
 
-// ========== Authentication (User Story 1) ==========
+// ========== Authentication ==========
 
 /// FirebaseAuthService Provider
 final firebaseAuthServiceProvider = Provider<FirebaseAuthService>((ref) {
@@ -52,70 +56,47 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
   );
 });
 
-// ========== Discovery (User Story 2) ==========
+// ========== User ==========
 
-/// FirestoreDiscoveryService Provider
-final firestoreDiscoveryServiceProvider =
-    Provider<FirestoreDiscoveryService>((ref) {
-  return FirestoreDiscoveryService(ref.watch(firestoreProvider));
-});
-
-/// DiscoveryRepository Provider
+/// UserRepository Provider
 ///
-/// Feature層はこのプロバイダーを使用してクリスタル発見機能にアクセスする。
-final discoveryRepositoryProvider = Provider<DiscoveryRepository>((ref) {
-  return DiscoveryRepositoryImpl(
-    ref.watch(firestoreDiscoveryServiceProvider),
-  );
+/// Feature層はこのプロバイダーを使用してユーザー情報とカルマ管理機能にアクセスする。
+final userRepositoryProvider = Provider<UserRepository>((ref) {
+  return UserRepositoryImpl(ref.watch(firestoreProvider));
 });
 
-// ========== Creation (User Story 3) ==========
+// ========== Sublimation (昇華) ==========
 
-/// FirestoreCreationService Provider
-final firestoreCreationServiceProvider =
-    Provider<FirestoreCreationService>((ref) {
-  return FirestoreCreationService(ref.watch(firestoreProvider));
-});
-
-/// CreationRepository Provider
+/// SublimationRepository Provider
 ///
-/// Feature層はこのプロバイダーを使用してクリスタル作成機能にアクセスする。
-final creationRepositoryProvider = Provider<CreationRepository>((ref) {
-  return CreationRepositoryImpl(
-    ref.watch(firestoreCreationServiceProvider),
-  );
+/// Feature層はこのプロバイダーを使用して昇華（秘密→クリスタル変換）機能にアクセスする。
+final sublimationRepositoryProvider = Provider<SublimationRepository>((ref) {
+  return SublimationRepositoryImpl(ref.watch(firestoreProvider));
 });
 
-// ========== Excavation (User Story 4) ==========
+// ========== Crystal ==========
 
-/// FirestoreExcavationService Provider
-final firestoreExcavationServiceProvider =
-    Provider<FirestoreExcavationService>((ref) {
-  return FirestoreExcavationService(ref.watch(firestoreProvider));
-});
-
-/// ExcavationRepository Provider
+/// CrystalRepository Provider
 ///
-/// Feature層はこのプロバイダーを使用してクリスタル採掘機能にアクセスする。
-final excavationRepositoryProvider = Provider<ExcavationRepository>((ref) {
-  return ExcavationRepositoryImpl(
-    ref.watch(firestoreExcavationServiceProvider),
-  );
+/// Feature層はこのプロバイダーを使用してクリスタル取得機能にアクセスする。
+final crystalRepositoryProvider = Provider<CrystalRepository>((ref) {
+  return CrystalRepositoryImpl(ref.watch(firestoreProvider));
 });
 
-// ========== Collection (User Story 5) ==========
+// ========== Decipherment (解読) ==========
 
-/// FirestoreCollectionService Provider
-final firestoreCollectionServiceProvider =
-    Provider<FirestoreCollectionService>((ref) {
-  return FirestoreCollectionService(ref.watch(firestoreProvider));
-});
-
-/// CollectionRepository Provider
+/// DeciphermentRepository Provider
 ///
-/// Feature層はこのプロバイダーを使用してコレクション管理機能にアクセスする。
-final collectionRepositoryProvider = Provider<CollectionRepository>((ref) {
-  return CollectionRepositoryImpl(
-    ref.watch(firestoreCollectionServiceProvider),
-  );
+/// Feature層はこのプロバイダーを使用してクリスタル解読機能にアクセスする。
+final deciphermentRepositoryProvider = Provider<DeciphermentRepository>((ref) {
+  return DeciphermentRepositoryImpl(ref.watch(firestoreProvider));
+});
+
+// ========== Journal ==========
+
+/// JournalRepository Provider
+///
+/// Feature層はこのプロバイダーを使用してジャーナル（収集クリスタル）管理機能にアクセスする。
+final journalRepositoryProvider = Provider<JournalRepository>((ref) {
+  return JournalRepositoryImpl(ref.watch(firestoreProvider));
 });

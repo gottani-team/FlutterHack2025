@@ -33,7 +33,7 @@ class FirebaseAuthService {
     // Firestoreにユーザードキュメントを作成
     final userModel = UserModel(
       id: user.uid,
-      isAnonymous: user.isAnonymous,
+      currentKarma: 0,
       createdAt: Timestamp.now(),
     );
 
@@ -86,7 +86,7 @@ class FirebaseAuthService {
     // ドキュメントが存在しない場合は作成
     final userModel = UserModel(
       id: user.uid,
-      isAnonymous: user.isAnonymous,
+      currentKarma: 0,
       createdAt: Timestamp.now(),
     );
 
