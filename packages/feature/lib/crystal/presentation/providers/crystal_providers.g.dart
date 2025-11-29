@@ -17,9 +17,9 @@ const crystalProvider = CrystalFamily._();
 /// Provider that fetches crystal data by ID
 /// Currently returns mock data, will be replaced with real API call later
 
-final class CrystalProvider extends $FunctionalProvider<
-        AsyncValue<MemoryCrystal>, MemoryCrystal, FutureOr<MemoryCrystal>>
-    with $FutureModifier<MemoryCrystal>, $FutureProvider<MemoryCrystal> {
+final class CrystalProvider
+    extends $FunctionalProvider<AsyncValue<Crystal>, Crystal, FutureOr<Crystal>>
+    with $FutureModifier<Crystal>, $FutureProvider<Crystal> {
   /// Provider that fetches crystal data by ID
   /// Currently returns mock data, will be replaced with real API call later
   const CrystalProvider._(
@@ -44,12 +44,11 @@ final class CrystalProvider extends $FunctionalProvider<
 
   @$internal
   @override
-  $FutureProviderElement<MemoryCrystal> $createElement(
-          $ProviderPointer pointer) =>
+  $FutureProviderElement<Crystal> $createElement($ProviderPointer pointer) =>
       $FutureProviderElement(pointer);
 
   @override
-  FutureOr<MemoryCrystal> create(Ref ref) {
+  FutureOr<Crystal> create(Ref ref) {
     final argument = this.argument as String;
     return crystal(
       ref,
@@ -68,13 +67,13 @@ final class CrystalProvider extends $FunctionalProvider<
   }
 }
 
-String _$crystalHash() => r'6eab6db7f38e8d513006f9c75deb2b79b8180a64';
+String _$crystalHash() => r'70bf138c0085e8ecd97b21c3a05eba9325838686';
 
 /// Provider that fetches crystal data by ID
 /// Currently returns mock data, will be replaced with real API call later
 
 final class CrystalFamily extends $Family
-    with $FunctionalFamilyOverride<FutureOr<MemoryCrystal>, String> {
+    with $FunctionalFamilyOverride<FutureOr<Crystal>, String> {
   const CrystalFamily._()
       : super(
           retry: null,
