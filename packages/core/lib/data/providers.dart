@@ -65,7 +65,10 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
 ///
 /// Feature層はこのプロバイダーを使用してユーザー情報とカルマ管理機能にアクセスする。
 final userRepositoryProvider = Provider<UserRepository>((ref) {
-  return UserRepositoryImpl(ref.watch(firestoreProvider));
+  return UserRepositoryImpl(
+    ref.watch(firestoreProvider),
+    authRepository: ref.watch(authRepositoryProvider),
+  );
 });
 
 // ========== Sublimation (昇華) ==========
@@ -92,6 +95,7 @@ final karmaEvaluationServiceProvider = Provider<KarmaEvaluationService>((ref) {
 final sublimationRepositoryProvider = Provider<SublimationRepository>((ref) {
   return SublimationRepositoryImpl(
     ref.watch(firestoreProvider),
+    authRepository: ref.watch(authRepositoryProvider),
     karmaEvaluationService: ref.watch(karmaEvaluationServiceProvider),
   );
 });
@@ -102,7 +106,10 @@ final sublimationRepositoryProvider = Provider<SublimationRepository>((ref) {
 ///
 /// Feature層はこのプロバイダーを使用してクリスタル取得機能にアクセスする。
 final crystalRepositoryProvider = Provider<CrystalRepository>((ref) {
-  return CrystalRepositoryImpl(ref.watch(firestoreProvider));
+  return CrystalRepositoryImpl(
+    ref.watch(firestoreProvider),
+    authRepository: ref.watch(authRepositoryProvider),
+  );
 });
 
 // ========== Decipherment (解読) ==========
@@ -111,7 +118,10 @@ final crystalRepositoryProvider = Provider<CrystalRepository>((ref) {
 ///
 /// Feature層はこのプロバイダーを使用してクリスタル解読機能にアクセスする。
 final deciphermentRepositoryProvider = Provider<DeciphermentRepository>((ref) {
-  return DeciphermentRepositoryImpl(ref.watch(firestoreProvider));
+  return DeciphermentRepositoryImpl(
+    ref.watch(firestoreProvider),
+    authRepository: ref.watch(authRepositoryProvider),
+  );
 });
 
 // ========== Journal ==========
@@ -120,7 +130,10 @@ final deciphermentRepositoryProvider = Provider<DeciphermentRepository>((ref) {
 ///
 /// Feature層はこのプロバイダーを使用してジャーナル（収集クリスタル）管理機能にアクセスする。
 final journalRepositoryProvider = Provider<JournalRepository>((ref) {
-  return JournalRepositoryImpl(ref.watch(firestoreProvider));
+  return JournalRepositoryImpl(
+    ref.watch(firestoreProvider),
+    authRepository: ref.watch(authRepositoryProvider),
+  );
 });
 
 // ========== Debug Services ==========
