@@ -97,7 +97,6 @@ class DeciphermentRepositoryImpl implements DeciphermentRepository {
         final collectedCrystalModel = CollectedCrystalModel(
           id: crystalId,
           secretText: crystalModel.secretText,
-          imageUrl: crystalModel.imageUrl,
           karmaCost: karmaCost,
           aiMetadata: crystalModel.aiMetadata,
           decipheredAt: now,
@@ -114,7 +113,6 @@ class DeciphermentRepositoryImpl implements DeciphermentRepository {
         final collectedCrystal = CollectedCrystal(
           id: crystalId,
           secretText: crystalModel.secretText,
-          imageUrl: crystalModel.imageUrl,
           karmaCost: karmaCost,
           aiMetadata: crystalModel.aiMetadata.toEntity(),
           decipheredAt: now.toDate(),

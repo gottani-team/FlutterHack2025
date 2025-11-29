@@ -19,14 +19,18 @@ class UserRepositoryImpl implements UserRepository {
 
   @override
   Future<Result<User?>> getUser(String userId) async {
+    dev.log('[UserRepo] getUser: userId=$userId');
     try {
       final doc = await _usersRef.doc(userId).get();
       if (!doc.exists) {
+        dev.log('[UserRepo] getUser: User not found');
         return Result.success(null);
       }
       final model = UserModel.fromFirestore(doc);
+      dev.log('[UserRepo] getUser: Found user, karma=${model.currentKarma}');
       return Result.success(model.toEntity());
     } on FirebaseException catch (e) {
+      dev.log('[UserRepo] getUser: FirebaseException code=${e.code}, message=${e.message}');
       return Result.failure(
         CoreFailure.network(
           message: e.message ?? 'Failed to get user',
@@ -34,6 +38,7 @@ class UserRepositoryImpl implements UserRepository {
         ),
       );
     } catch (e) {
+      dev.log('[UserRepo] getUser: Unknown error: $e');
       return Result.failure(
         CoreFailure.unknown(
           message: 'Failed to get user: ${e.toString()}',
@@ -47,6 +52,7 @@ class UserRepositoryImpl implements UserRepository {
     required String userId,
     int initialKarma = 0,
   }) async {
+    dev.log('[UserRepo] createUser: userId=$userId, initialKarma=$initialKarma');
     try {
       final now = Timestamp.now();
       final model = UserModel(
@@ -57,8 +63,10 @@ class UserRepositoryImpl implements UserRepository {
 
       await _usersRef.doc(userId).set(model.toFirestore());
 
+      dev.log('[UserRepo] createUser: Success');
       return Result.success(model.toEntity());
     } on FirebaseException catch (e) {
+      dev.log('[UserRepo] createUser: FirebaseException code=${e.code}, message=${e.message}');
       return Result.failure(
         CoreFailure.network(
           message: e.message ?? 'Failed to create user',
@@ -66,6 +74,7 @@ class UserRepositoryImpl implements UserRepository {
         ),
       );
     } catch (e) {
+      dev.log('[UserRepo] createUser: Unknown error: $e');
       return Result.failure(
         CoreFailure.unknown(
           message: 'Failed to create user: ${e.toString()}',
@@ -79,34 +88,42 @@ class UserRepositoryImpl implements UserRepository {
     required String userId,
     int initialKarma = 0,
   }) async {
+    dev.log('[UserRepo] getOrCreateUser: userId=$userId, initialKarma=$initialKarma');
     final getResult = await getUser(userId);
 
     switch (getResult) {
       case Success(value: final user):
         if (user != null) {
+          dev.log('[UserRepo] getOrCreateUser: User exists');
           return Result.success(user);
         }
+        dev.log('[UserRepo] getOrCreateUser: Creating new user');
         return createUser(userId: userId, initialKarma: initialKarma);
       case Failure(error: final failure):
+        dev.log('[UserRepo] getOrCreateUser: Failed to get user');
         return Result.failure(failure);
     }
   }
 
   @override
   Future<Result<int>> getKarma(String userId) async {
+    dev.log('[UserRepo] getKarma: userId=$userId');
     final result = await getUser(userId);
 
     switch (result) {
       case Success(value: final user):
         if (user == null) {
+          dev.log('[UserRepo] getKarma: User not found');
           return Result.failure(
             const CoreFailure.notFound(
               message: 'User not found',
             ),
           );
         }
+        dev.log('[UserRepo] getKarma: karma=${user.currentKarma}');
         return Result.success(user.currentKarma);
       case Failure(error: final failure):
+        dev.log('[UserRepo] getKarma: Failed');
         return Result.failure(failure);
     }
   }
@@ -116,6 +133,7 @@ class UserRepositoryImpl implements UserRepository {
     required String userId,
     required int amount,
   }) async {
+    dev.log('[UserRepo] addKarma: userId=$userId, amount=$amount');
     try {
       final docRef = _usersRef.doc(userId);
 
@@ -123,12 +141,14 @@ class UserRepositoryImpl implements UserRepository {
         final doc = await transaction.get(docRef);
 
         if (!doc.exists) {
+          dev.log('[UserRepo] addKarma: User not found');
           throw const CoreFailure.notFound(message: 'User not found');
         }
 
         final currentKarma = (doc.data()?['current_karma'] as num?)?.toInt() ?? 0;
         final newKarma = currentKarma + amount;
 
+        dev.log('[UserRepo] addKarma: $currentKarma + $amount = $newKarma');
         transaction.update(docRef, {'current_karma': newKarma});
 
         return Result.success(newKarma);
@@ -136,6 +156,7 @@ class UserRepositoryImpl implements UserRepository {
     } on CoreFailure catch (e) {
       return Result.failure(e);
     } on FirebaseException catch (e) {
+      dev.log('[UserRepo] addKarma: FirebaseException code=${e.code}, message=${e.message}');
       return Result.failure(
         CoreFailure.network(
           message: e.message ?? 'Failed to add karma',
@@ -143,6 +164,7 @@ class UserRepositoryImpl implements UserRepository {
         ),
       );
     } catch (e) {
+      dev.log('[UserRepo] addKarma: Unknown error: $e');
       return Result.failure(
         CoreFailure.unknown(
           message: 'Failed to add karma: ${e.toString()}',
@@ -156,6 +178,7 @@ class UserRepositoryImpl implements UserRepository {
     required String userId,
     required int amount,
   }) async {
+    dev.log('[UserRepo] subtractKarma: userId=$userId, amount=$amount');
     try {
       final docRef = _usersRef.doc(userId);
 
@@ -163,12 +186,14 @@ class UserRepositoryImpl implements UserRepository {
         final doc = await transaction.get(docRef);
 
         if (!doc.exists) {
+          dev.log('[UserRepo] subtractKarma: User not found');
           throw const CoreFailure.notFound(message: 'User not found');
         }
 
         final currentKarma = (doc.data()?['current_karma'] as num?)?.toInt() ?? 0;
 
         if (currentKarma < amount) {
+          dev.log('[UserRepo] subtractKarma: Insufficient karma ($currentKarma < $amount)');
           throw CoreFailure.insufficientKarma(
             message: 'Insufficient karma',
             required: amount,
@@ -178,6 +203,7 @@ class UserRepositoryImpl implements UserRepository {
 
         final newKarma = currentKarma - amount;
 
+        dev.log('[UserRepo] subtractKarma: $currentKarma - $amount = $newKarma');
         transaction.update(docRef, {'current_karma': newKarma});
 
         return Result.success(newKarma);
@@ -185,6 +211,7 @@ class UserRepositoryImpl implements UserRepository {
     } on CoreFailure catch (e) {
       return Result.failure(e);
     } on FirebaseException catch (e) {
+      dev.log('[UserRepo] subtractKarma: FirebaseException code=${e.code}, message=${e.message}');
       return Result.failure(
         CoreFailure.network(
           message: e.message ?? 'Failed to subtract karma',
@@ -192,6 +219,7 @@ class UserRepositoryImpl implements UserRepository {
         ),
       );
     } catch (e) {
+      dev.log('[UserRepo] subtractKarma: Unknown error: $e');
       return Result.failure(
         CoreFailure.unknown(
           message: 'Failed to subtract karma: ${e.toString()}',
@@ -202,13 +230,17 @@ class UserRepositoryImpl implements UserRepository {
 
   @override
   Stream<Result<User?>> watchUser(String userId) {
+    dev.log('[UserRepo] watchUser: Starting stream, userId=$userId');
     return _usersRef.doc(userId).snapshots().map((doc) {
       if (!doc.exists) {
+        dev.log('[UserRepo] watchUser: User not found');
         return Result.success(null);
       }
       final model = UserModel.fromFirestore(doc);
+      dev.log('[UserRepo] watchUser: Received update, karma=${model.currentKarma}');
       return Result.success(model.toEntity());
     }).handleError((error) {
+      dev.log('[UserRepo] watchUser: Stream error: $error');
       if (error is FirebaseException) {
         return Result.failure(
           CoreFailure.network(
