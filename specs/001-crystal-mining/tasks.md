@@ -23,9 +23,9 @@
 
 **Purpose**: Project initialization and directory structure
 
-- [ ] T001 Create mining feature directory structure at packages/feature/lib/mining/presentation/
-- [ ] T002 Add audioplayers dependency (^6.0.0) to packages/feature/pubspec.yaml
-- [ ] T003 [P] Create tap_impact.mp3 placeholder or source audio file in app/assets/sounds/
+- [x] T001 Create mining feature directory structure at packages/feature/lib/mining/presentation/
+- [x] T002 Add audioplayers dependency (^6.0.0) to packages/feature/pubspec.yaml
+- [x] T003 [P] Create tap_impact.mp3 placeholder or source audio file in app/assets/sounds/
 
 ---
 
@@ -35,10 +35,10 @@
 
 **⚠️ CRITICAL**: No user story work can begin until this phase is complete
 
-- [ ] T004 Create MiningPhase enum and MiningUIState class in packages/feature/lib/mining/presentation/state/mining_state.dart
-- [ ] T005 Create MiningNotifier (StateNotifier) with tap tracking logic in packages/feature/lib/mining/presentation/providers/mining_providers.dart
-- [ ] T006 [P] Register assets folder in app/pubspec.yaml (sounds)
-- [ ] T007 Add mining route to app/lib/core/presentation/router/app_router.dart
+- [x] T004 Create MiningPhase enum and MiningUIState class in packages/feature/lib/mining/presentation/state/mining_state.dart
+- [x] T005 Create MiningNotifier (StateNotifier) with tap tracking logic in packages/feature/lib/mining/presentation/providers/mining_providers.dart
+- [x] T006 [P] Register assets folder in app/pubspec.yaml (sounds)
+- [x] T007 Add mining route to app/lib/core/presentation/router/app_router.dart
 
 **Checkpoint**: Foundation ready - user story implementation can now begin
 
@@ -52,14 +52,14 @@
 
 ### Implementation for User Story 1
 
-- [ ] T008 [P] [US1] Create CrystalDisplayWidget with glow effect in packages/feature/lib/mining/presentation/widgets/crystal_display_widget.dart
-- [ ] T009 [P] [US1] Create CrystalShakeWidget with AnimationController shake animation in packages/feature/lib/mining/presentation/widgets/crystal_shake_widget.dart
-- [ ] T010 [P] [US1] Create MemoryTextWidget with SlideTransition rise animation in packages/feature/lib/mining/presentation/widgets/memory_text_widget.dart
-- [ ] T011 [US1] Create MiningPage composing all widgets with dark background in packages/feature/lib/mining/presentation/pages/mining_page.dart
-- [ ] T012 [US1] Implement tap detection with HapticFeedback.mediumImpact() in MiningPage
-- [ ] T013 [US1] Implement audio playback for tap sound using audioplayers in MiningPage
-- [ ] T014 [US1] Wire tap count state to trigger text reveal animation when threshold reached
-- [ ] T015 [US1] Add dismiss button that appears after text animation completes
+- [x] T008 [P] [US1] Create CrystalDisplayWidget with glow effect in packages/feature/lib/mining/presentation/widgets/crystal_display_widget.dart
+- [x] T009 [P] [US1] Create CrystalShakeWidget with AnimationController shake animation in packages/feature/lib/mining/presentation/widgets/crystal_shake_widget.dart
+- [x] T010 [P] [US1] Create MemoryTextWidget with SlideTransition rise animation in packages/feature/lib/mining/presentation/widgets/memory_text_widget.dart
+- [x] T011 [US1] Create MiningPage composing all widgets with dark background in packages/feature/lib/mining/presentation/pages/mining_page.dart
+- [x] T012 [US1] Implement tap detection with HapticFeedback.mediumImpact() in MiningPage
+- [x] T013 [US1] Implement audio playback for tap sound using audioplayers in MiningPage
+- [x] T014 [US1] Wire tap count state to trigger text reveal animation when threshold reached
+- [x] T015 [US1] Add dismiss button that appears after text animation completes
 
 **Checkpoint**: User Story 1 should be fully functional - tap crystal, shake, text rises from bottom
 
@@ -73,10 +73,10 @@
 
 ### Implementation for User Story 2
 
-- [ ] T016 [US2] Add onComplete callback parameter to MiningPage for core package integration
-- [ ] T017 [US2] Pass crystal data (id, location, timestamp) to onComplete callback on dismiss
-- [ ] T018 [US2] Add loading state UI while completion callback processes
-- [ ] T019 [US2] Handle completion errors with retry UI or error message
+- [x] T016 [US2] Add onComplete callback parameter to MiningPage for core package integration
+- [x] T017 [US2] Pass crystal data (id, location, timestamp) to onComplete callback on dismiss
+- [x] T018 [US2] Add loading state UI while completion callback processes
+- [x] T019 [US2] Handle completion errors with retry UI or error message
 
 **Checkpoint**: User Story 2 complete - dismiss triggers callback with mining result data
 
@@ -86,11 +86,11 @@
 
 **Purpose**: Improvements that affect multiple user stories
 
-- [ ] T020 [P] Add emotion type glow colors (red/blue/yellow/green) to CrystalDisplayWidget
-- [ ] T021 [P] Add scrolling support for long memory text in MemoryTextWidget
-- [ ] T022 Handle edge case: graceful degradation when haptic feedback unavailable
-- [ ] T023 Handle edge case: app backgrounded during mining (preserve state)
-- [ ] T024 Optimize animations to maintain 60fps target
+- [x] T020 [P] Add emotion type glow colors (red/blue/yellow/green) to CrystalDisplayWidget
+- [x] T021 [P] Add scrolling support for long memory text in MemoryTextWidget
+- [x] T022 Handle edge case: graceful degradation when haptic feedback unavailable
+- [x] T023 Handle edge case: app backgrounded during mining (preserve state)
+- [x] T024 Optimize animations to maintain 60fps target
 
 ---
 

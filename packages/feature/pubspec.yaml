@@ -42,6 +42,9 @@ dependencies:
   # Image & Media Cache
   cached_network_image: ^3.4.1
 
+  # Audio
+  audioplayers: ^6.0.0
+
   # File & Web
   file_picker: ^10.2.0
   flutter_inappwebview: ^6.1.5

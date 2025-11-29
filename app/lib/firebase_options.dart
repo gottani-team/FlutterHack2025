@@ -66,10 +66,10 @@ class DefaultFirebaseOptions {
 
   static const FirebaseOptions ios = FirebaseOptions(
     apiKey: 'AIzaSyDd-g9LN5Y5lHzp3pHlYpWFLNjPmUaIj-w',
-    appId: '1:284279273330:ios:733f389b6edc6d4b624feb',
+    appId: '1:284279273330:ios:55bfe741853652d1624feb',
     messagingSenderId: '284279273330',
     projectId: 'gottani-2025',
     storageBucket: 'gottani-2025.firebasestorage.app',
-    iosBundleId: 'com.example.gottani.template',
+    iosBundleId: 'io.goodmoon.chimyaku',
   );
 }
