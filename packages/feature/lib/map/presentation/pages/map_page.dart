@@ -136,7 +136,7 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
               title: 'HIMITSU no SECRET',
               icon: Icons.grid_view,
               onIconPressed: () {
-                // TODO: Open settings
+                context.push('/crystals');
               },
             ),
           ),
