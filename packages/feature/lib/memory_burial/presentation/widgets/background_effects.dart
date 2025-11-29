@@ -77,24 +77,53 @@ class ConcentricRingsPainter extends CustomPainter {
   final Offset? center;
   final double animationValue;
 
+  static const double _pi = 3.14159265359;
+  static const double _twoPi = 2 * _pi;
+
   @override
   void paint(Canvas canvas, Size size) {
-    final centerPoint = center ?? Offset(size.width / 2, size.height * 0.55);
+    // クリスタルの位置を中心に
+    final centerPoint = center ?? Offset(size.width / 2, size.height * 0.43);
 
-    final paint = Paint()
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.0;
+    // リングの設定: [半径, 開始角度(度), 回転方向(1 or -1), 周回数(整数)]
+    // 半径にばらつきを持たせる（等間隔ではない）
+    final ringConfigs = [
+      [320.0, 0.0, 1.0, 1.0],     // 外側: 時計回り、1周/サイクル
+      [220.0, 120.0, -1.0, 1.0],  // 中間: 反時計回り、1周/サイクル
+      [150.0, 240.0, 1.0, 2.0],   // 内側: 時計回り、2周/サイクル
+    ];
 
-    // 3つのリングを描画
-    final radii = [100.0, 180.0, 280.0];
+    for (final config in ringConfigs) {
+      final radius = config[0];
+      final startAngleDegrees = config[1];
+      final direction = config[2];
+      final revolutions = config[3]; // 1サイクルあたりの周回数（整数）
 
-    for (var i = 0; i < radii.length; i++) {
-      final baseRadius = radii[i];
-      // アニメーションでリングが拡大
-      final radius = baseRadius + (animationValue * 20.0);
-      final opacity = (0.15 - (animationValue * 0.1)).clamp(0.05, 0.2);
+      // 回転アニメーション（整数周なので0と1で同じ位置に戻る）
+      final rotationAngle = animationValue * _twoPi * direction * revolutions;
+      final rotation = (startAngleDegrees * _pi / 180) + rotationAngle;
 
-      paint.color = const Color(0xFFF37255).withOpacity(opacity);
+      // SweepGradientでopacityをグラデーション（約40%が見える）
+      final gradient = SweepGradient(
+        startAngle: 0,
+        endAngle: _twoPi,
+        colors: [
+          Colors.white.withOpacity(0.0),
+          Colors.white.withOpacity(0.35),
+          Colors.white.withOpacity(0.5),
+          Colors.white.withOpacity(0.35),
+          Colors.white.withOpacity(0.0),
+        ],
+        stops: const [0.0, 0.15, 0.3, 0.45, 0.6],
+        transform: GradientRotation(rotation),
+      );
+
+      final rect = Rect.fromCircle(center: centerPoint, radius: radius);
+
+      final paint = Paint()
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 5.0
+        ..shader = gradient.createShader(rect);
 
       canvas.drawCircle(centerPoint, radius, paint);
     }

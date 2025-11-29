@@ -55,7 +55,7 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
 
     _ringAnimationController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 4),
+      duration: const Duration(seconds: 8),
     )..repeat();
 
     // 画面表示後にニックネーム欄にフォーカス
@@ -253,8 +253,10 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
     final memoryText = ref.watch(memoryTextProvider);
     final isButtonEnabled = ref.watch(isButtonEnabledProvider);
 
-    // 背景のリングは入力画面では非表示（ボタン周囲の円弧で表示する）
-    final showBackgroundRings = _phase == _ScreenPhase.crystalDisplay;
+    // 背景のリングは待ち状態（crystalDisplay + レスポンス未着）で表示
+    final isLoadingInCrystalScreen =
+        _phase == _ScreenPhase.crystalDisplay && _evaluationResult == null;
+    final showBackgroundRings = isLoadingInCrystalScreen;
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
@@ -492,156 +494,169 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
   /// クリスタル表示画面
   Widget _buildCrystalScreen() {
     final isLoading = _evaluationResult == null;
+    final ptValue = isLoading ? '000,000' : '${_evaluationResult!.karmaToEarn}';
 
     return Stack(
       children: [
-        // クリスタル表示（レスポンス着後のみ表示）
-        if (!isLoading)
-          const CrystalDisplay(
-            showAnalyzing: false,
-            onAnalysisComplete: null,
-          ),
-
-        // カルマPT表示とボタン
+        // 中央コンテンツ（固定位置）
         Positioned.fill(
+          child: Column(
+            children: [
+              const Spacer(flex: 4),
+
+              // クリスタル領域（常に同じスペースを確保）
+              AnimatedOpacity(
+                opacity: isLoading ? 0.0 : 1.0,
+                duration: const Duration(milliseconds: 300),
+                child: const Padding(
+                  padding: EdgeInsets.only(bottom: 16),
+                  child: CrystalPlaceholder(),
+                ),
+              ),
+
+              // PT表示（常に同じ位置、待機中は薄く）
+              RichText(
+                text: TextSpan(
+                  children: [
+                    TextSpan(
+                      text: ptValue,
+                      style: TextStyle(
+                        fontSize: 40,
+                        fontWeight: FontWeight.w600,
+                        color: const Color(0xFF1A1A2E)
+                            .withOpacity(isLoading ? 0.4 : 0.8),
+                        letterSpacing: 1.5,
+                      ),
+                    ),
+                    TextSpan(
+                      text: 'P',
+                      style: TextStyle(
+                        fontSize: 20,
+                        fontWeight: FontWeight.w500,
+                        color: const Color(0xFF1A1A2E)
+                            .withOpacity(isLoading ? 0.3 : 0.6),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // 解析中テキスト領域（常に同じスペースを確保）
+              AnimatedOpacity(
+                opacity: isLoading ? 1.0 : 0.0,
+                duration: const Duration(milliseconds: 300),
+                child: Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(
+                    '解析中...',
+                    style: TextStyle(
+                      fontSize: 14,
+                      color: const Color(0xFF1A1A2E).withOpacity(0.5),
+                      fontWeight: FontWeight.w400,
+                    ),
+                  ),
+                ),
+              ),
+
+              const Spacer(flex: 3),
+            ],
+          ),
+        ),
+
+        // ボタン（下部固定）
+        Positioned(
+          left: 24,
+          right: 24,
+          bottom: 32,
           child: SafeArea(
             child: Column(
-              mainAxisAlignment: MainAxisAlignment.end,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                // カルマPT表示
-                Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 32,
-                    vertical: 24,
-                  ),
-                  margin: const EdgeInsets.only(bottom: 24),
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.9),
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withOpacity(0.1),
-                        blurRadius: 20,
-                        offset: const Offset(0, 10),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    children: [
-                      Text(
-                        '獲得予定カルマ',
-                        style: TextStyle(
-                          fontSize: 14,
-                          color: Colors.grey[600],
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                      const SizedBox(height: 8),
-                      // PT表示（ローディング中は000,000、完了後は実際の値）
-                      Text(
-                        isLoading
-                            ? '000,000 PT'
-                            : '${_evaluationResult!.karmaToEarn} PT',
-                        style: const TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFF1A1A2E),
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      // 解析中 or 感情表示
-                      if (isLoading)
-                        Text(
-                          '解析中...',
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.grey[500],
-                            fontWeight: FontWeight.w500,
-                          ),
-                        )
-                      else
-                        Text(
-                          _evaluationResult!.emotionDisplayName,
-                          style: TextStyle(
-                            fontSize: 16,
-                            color: Colors.grey[700],
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                    ],
-                  ),
-                ),
-
-                // ボタン（縦並び: 上が埋める、下がキャンセル）
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 32),
-                  child: Column(
-                    children: [
-                      // 埋めるボタン（レスポンス着後のみ表示）
-                      if (!isLoading)
-                        SizedBox(
-                          width: double.infinity,
-                          child: ElevatedButton(
-                            onPressed: _isConfirming ? null : _handleConfirm,
-                            style: ElevatedButton.styleFrom(
-                              padding: const EdgeInsets.symmetric(vertical: 16),
-                              backgroundColor: const Color(0xFFFF3C00),
-                              foregroundColor: Colors.white,
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              elevation: 0,
+                // 埋めるボタン（常に同じスペースを確保、表示/非表示を切り替え）
+                AnimatedOpacity(
+                  opacity: isLoading ? 0.0 : 1.0,
+                  duration: const Duration(milliseconds: 300),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    height: isLoading ? 0 : 64,
+                    child: Padding(
+                      padding: const EdgeInsets.only(bottom: 12),
+                      child: SizedBox(
+                        width: double.infinity,
+                        child: ElevatedButton(
+                          onPressed: isLoading || _isConfirming
+                              ? null
+                              : _handleConfirm,
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 16),
+                            backgroundColor: const Color(0xFFFF3C00),
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
                             ),
-                            child: _isConfirming
-                                ? const SizedBox(
-                                    width: 20,
-                                    height: 20,
-                                    child: CircularProgressIndicator(
-                                      strokeWidth: 2,
-                                      valueColor: AlwaysStoppedAnimation<Color>(
-                                        Colors.white,
-                                      ),
-                                    ),
-                                  )
-                                : const Text(
-                                    '埋める',
-                                    style: TextStyle(
-                                      fontSize: 16,
-                                      fontWeight: FontWeight.w600,
+                            elevation: 0,
+                          ),
+                          child: _isConfirming
+                              ? const SizedBox(
+                                  width: 20,
+                                  height: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                      Colors.white,
                                     ),
                                   ),
-                          ),
+                                )
+                              : const Text(
+                                  '埋める',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
                         ),
-                      if (!isLoading) const SizedBox(height: 12),
-                      // キャンセルボタン（常に表示）
-                      SizedBox(
-                        width: double.infinity,
-                        child: OutlinedButton(
-                          onPressed: _isConfirming ? null : _handleCancel,
-                          style: OutlinedButton.styleFrom(
+                      ),
+                    ),
+                  ),
+                ),
+                // キャンセルボタン（グラスモーフィズム風、常に表示）
+                SizedBox(
+                  width: double.infinity,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(16),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.4),
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.5),
+                          width: 1,
+                        ),
+                      ),
+                      child: Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          onTap: _isConfirming ? null : _handleCancel,
+                          borderRadius: BorderRadius.circular(16),
+                          child: Padding(
                             padding: const EdgeInsets.symmetric(vertical: 16),
-                            side: BorderSide(
-                              color: Colors.grey[300]!,
-                              width: 1.5,
-                            ),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
-                            ),
-                          ),
-                          child: const Text(
-                            'キャンセル',
-                            style: TextStyle(
-                              fontSize: 16,
-                              fontWeight: FontWeight.w600,
-                              color: Color(0xFF1A1A2E),
+                            child: Center(
+                              child: Text(
+                                'キャンセル',
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                  color:
+                                      const Color(0xFF1A1A2E).withOpacity(0.8),
+                                ),
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ],
+                    ),
                   ),
                 ),
-                const SizedBox(height: 32),
               ],
             ),
           ),
