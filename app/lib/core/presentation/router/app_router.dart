@@ -1,3 +1,4 @@
+import 'package:feature/crystal/presentation/pages/crystal_display_page.dart';
 import 'package:feature/haiku/presentation/pages/haiku_page.dart';
 import 'package:feature/home/presentation/pages/home_page.dart';
 import 'package:feature/mining/presentation/pages/mining_page.dart';
@@ -33,6 +34,14 @@ final routerProvider = Provider<GoRouter>((ref) {
             onComplete: extra?['onComplete']
                 as Future<void> Function(MiningResult)?,
           );
+        },
+      ),
+      GoRoute(
+        path: '/crystal/:id',
+        name: 'crystal-display',
+        builder: (context, state) {
+          final crystalId = state.pathParameters['id'] ?? '';
+          return CrystalDisplayPage(crystalId: crystalId);
         },
       ),
     ],

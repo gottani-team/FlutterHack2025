@@ -75,12 +75,14 @@ class _ShimmerBackgroundWidgetState extends State<ShimmerBackgroundWidget>
           }
         });
 
-        _dots!.add(_ShimmerDot(
-          x: col * widget.dotSpacing,
-          y: row * widget.dotSpacing,
-          maxOpacity: 0.1 + _random.nextDouble() * 0.2,
-          controller: controller,
-        ));
+        _dots!.add(
+          _ShimmerDot(
+            x: col * widget.dotSpacing,
+            y: row * widget.dotSpacing,
+            maxOpacity: 0.1 + _random.nextDouble() * 0.2,
+            controller: controller,
+          ),
+        );
       }
     }
 
