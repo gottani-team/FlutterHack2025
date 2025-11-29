@@ -1,12 +1,13 @@
 import 'package:feature/haiku/presentation/pages/haiku_page.dart';
 import 'package:feature/home/presentation/pages/home_page.dart';
+import 'package:feature/map/presentation/pages/map_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
-    initialLocation: '/haiku',
+    initialLocation: '/map', // Start with map for Chimyaku MVP
     routes: [
       GoRoute(
         path: '/',
@@ -17,6 +18,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/haiku',
         name: 'haiku',
         builder: (context, state) => const HaikuPage(),
+      ),
+      GoRoute(
+        path: '/map',
+        name: 'map',
+        builder: (context, state) => const MapPage(),
       ),
       // ここに新しいルートを追加してください
     ],
