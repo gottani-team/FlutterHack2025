@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:core/presentation/widgets/glass_app_bar_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 
@@ -196,6 +197,21 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
               backgroundColor: const Color(0xFF9C27B0),
               child: const Icon(
                 Icons.radar,
+                color: Colors.white,
+              ),
+            ),
+          ),
+
+          // Crystal Sublimation Button
+          Positioned(
+            bottom: 240,
+            right: 16,
+            child: FloatingActionButton(
+              heroTag: 'crystal-sublimation',
+              onPressed: () => context.push('/memory-burial'),
+              backgroundColor: const Color(0xFF00BCD4),
+              child: const Icon(
+                Icons.auto_awesome,
                 color: Colors.white,
               ),
             ),
