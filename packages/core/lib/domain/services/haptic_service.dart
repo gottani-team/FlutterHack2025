@@ -70,4 +70,3 @@ class HapticService {
     await HapticFeedback.heavyImpact();
   }
 }
-

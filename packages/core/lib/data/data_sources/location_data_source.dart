@@ -87,7 +87,8 @@ class LocationDataSourceImpl implements LocationDataSource {
     // Step 1: Check if location services are enabled on device
     final serviceEnabled = await isLocationServiceEnabled();
     debugPrint(
-        '[LocationDataSource] Location service enabled: $serviceEnabled');
+      '[LocationDataSource] Location service enabled: $serviceEnabled',
+    );
     if (!serviceEnabled) {
       debugPrint('[LocationDataSource] Returning serviceDisabled');
       return LocationPermissionStatus.serviceDisabled;
@@ -106,7 +107,8 @@ class LocationDataSourceImpl implements LocationDataSource {
       try {
         permission = await Geolocator.requestPermission();
         debugPrint(
-            '[LocationDataSource] Permission after request: $permission');
+          '[LocationDataSource] Permission after request: $permission',
+        );
       } catch (e) {
         debugPrint('[LocationDataSource] Error requesting permission: $e');
         // If request fails, return current status
@@ -236,17 +238,17 @@ class LocationDataSourceImpl implements LocationDataSource {
 
   @override
   Future<bool> isLocationServiceEnabled() async {
-    return await Geolocator.isLocationServiceEnabled();
+    return Geolocator.isLocationServiceEnabled();
   }
 
   @override
   Future<bool> openAppSettings() async {
-    return await Geolocator.openAppSettings();
+    return Geolocator.openAppSettings();
   }
 
   @override
   Future<bool> openLocationSettings() async {
-    return await Geolocator.openLocationSettings();
+    return Geolocator.openLocationSettings();
   }
 
   /// Convert Geolocator Position to UserLocationEntity

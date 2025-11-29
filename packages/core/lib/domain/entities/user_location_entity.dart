@@ -3,6 +3,16 @@ import 'package:equatable/equatable.dart';
 /// Represents the user's current GPS location with accuracy information.
 /// This entity is shared across all features that need location data.
 class UserLocationEntity extends Equatable {
+  const UserLocationEntity({
+    required this.latitude,
+    required this.longitude,
+    required this.accuracy,
+    required this.timestamp,
+    this.heading,
+    this.speed,
+    this.altitude,
+  });
+
   /// Latitude coordinate
   final double latitude;
 
@@ -23,16 +33,6 @@ class UserLocationEntity extends Equatable {
 
   /// Altitude in meters, null if not available
   final double? altitude;
-
-  const UserLocationEntity({
-    required this.latitude,
-    required this.longitude,
-    required this.accuracy,
-    required this.timestamp,
-    this.heading,
-    this.speed,
-    this.altitude,
-  });
 
   /// Check if the location accuracy is excellent (under 10 meters)
   bool get isExcellent => accuracy <= 10.0;
@@ -62,4 +62,3 @@ class UserLocationEntity extends Equatable {
     return 'UserLocationEntity(lat: $latitude, lng: $longitude, accuracy: ${accuracy.toStringAsFixed(1)}m)';
   }
 }
-

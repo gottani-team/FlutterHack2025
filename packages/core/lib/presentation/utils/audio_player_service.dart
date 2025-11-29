@@ -134,4 +134,3 @@ class AudioPlayerService {
     _isInitialized = false;
   }
 }
-

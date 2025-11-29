@@ -103,4 +103,3 @@ class CrystalEntity extends Equatable {
         miningCount,
       ];
 }
-

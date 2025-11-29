@@ -56,4 +56,3 @@ extension LocationPermissionStatusX on LocationPermissionStatus {
     }
   }
 }
-

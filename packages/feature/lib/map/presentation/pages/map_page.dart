@@ -10,7 +10,6 @@ import '../providers/map_providers.dart';
 import '../state/map_view_state.dart';
 import '../widgets/error_banner.dart';
 import '../widgets/gps_warning_banner.dart';
-import '../widgets/heartbeat_overlay.dart';
 import '../widgets/magical_loading_overlay.dart';
 
 /// Main map page for crystal discovery and proximity detection.
@@ -30,6 +29,9 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
   // Flag to prevent onCameraChangeListener from firing during programmatic updates
   bool _isProgrammaticCameraUpdate = false;
 
+  // Flag to track if initial location has been set
+  bool _hasSetInitialLocation = false;
+
   // User polygon layer IDs
   static const String _userPolygonSourceId = 'user-polygon-source';
   static const String _userPolygonLayerId = 'user-polygon-layer';
@@ -40,9 +42,9 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
 
   // 3D Model IDs
   static const String _crystal3DModelId = 'crystal-3d-model';
-  // Using Khronos glTF sample model for testing
+  // Local asset for crystal 3D model (from feature package)
   static const String _crystal3DModelUri =
-      'https://github.com/KhronosGroup/glTF-Sample-Models/raw/d7a3cc8e51d7c573771ae77a57f16b0662a905c6/2.0/Buggy/glTF/Buggy.gltf';
+      'asset://packages/feature/assets/models/rock.glb';
 
   // Map configuration constants
   static const double _defaultPitch = 45.0; // Tilt angle for 3D view
@@ -92,18 +94,20 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
     final mapState = ref.watch(mapViewModelProvider);
     final viewModel = ref.read(mapViewModelProvider.notifier);
 
-    // Handle mining transition when user is close enough
+    // Handle camera follow when user location changes
     ref.listen<MapViewState>(mapViewModelProvider, (previous, next) {
-      if (next.canMine && next.approachingCrystal != null) {
-        _navigateToMining(context, next.approachingCrystal!.crystalId);
-      }
-
       // Update camera to follow user and rotate with heading
       if (next.isFollowingUser && next.userLocation != null) {
         final nextLocation = next.userLocation!;
 
-        // Always update camera when following user (for heading changes)
-        _updateCameraToFollowUser(nextLocation);
+        // Jump to initial location without animation on first location update
+        if (!_hasSetInitialLocation) {
+          _hasSetInitialLocation = true;
+          _jumpToInitialLocation(nextLocation);
+        } else {
+          // Smooth camera update for subsequent location changes
+          _updateCameraToFollowUser(nextLocation);
+        }
 
         // Update user polygon when location changes
         _updateUserPolygon(nextLocation);
@@ -115,13 +119,6 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
         children: [
           // Mapbox Map
           _buildMap(context, mapState, viewModel),
-
-          // Heartbeat Overlay (proximity feedback)
-          if (mapState.hasCrystalInRange)
-            HeartbeatOverlay(
-              color: Color(mapState.approachingCrystalColor ?? 0xFFFFFFFF),
-              intensity: mapState.pulseIntensity,
-            ),
 
           // GPS Warning Banner
           if (mapState.shouldShowGpsWarning)
@@ -196,7 +193,7 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Text(
-                '💎 ${mapState.visibleCrystallizationAreas.length}',
+                '${mapState.visibleCrystallizationAreas.length}P',
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 14,
@@ -205,28 +202,6 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
               ),
             ),
           ),
-
-          // Debug info (development only)
-          if (mapState.distanceToClosestCrystal != null)
-            Positioned(
-              top: 60,
-              right: 16,
-              child: Container(
-                padding: const EdgeInsets.all(8),
-                decoration: BoxDecoration(
-                  color: Colors.black54,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  '${mapState.distanceToClosestCrystal!.toStringAsFixed(0)}m',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 14,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-              ),
-            ),
         ],
       ),
     );
@@ -237,13 +212,25 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
     MapViewState mapState,
     MapViewModel viewModel,
   ) {
+    // Default location: Shibaura area
+    const defaultLatitude = 35.62871770681847;
+    const defaultLongitude = 139.77776556855437;
+
+    // Use user location if available, otherwise use state center or default
+    final initialLongitude = mapState.userLocation?.longitude ??
+        mapState.mapCenterLongitude ??
+        defaultLongitude;
+    final initialLatitude = mapState.userLocation?.latitude ??
+        mapState.mapCenterLatitude ??
+        defaultLatitude;
+
     return MapWidget(
       key: const ValueKey('mapbox_map'),
       cameraOptions: CameraOptions(
         center: Point(
           coordinates: Position(
-            mapState.mapCenterLongitude ?? 139.7671, // Tokyo default
-            mapState.mapCenterLatitude ?? 35.6812,
+            initialLongitude,
+            initialLatitude,
           ),
         ),
         zoom: mapState.mapZoomLevel,
@@ -279,6 +266,9 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
   ) async {
     _mapboxMap = mapboxMap;
 
+    // Hide map UI controls for cleaner look
+    await _hideMapControls(mapboxMap);
+
     // Setup user location puck (blue dot like native maps)
     await _setupLocationPuck(mapboxMap);
 
@@ -287,6 +277,35 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
 
     // Load visible crystals
     viewModel.loadVisibleCrystallizationAreas();
+  }
+
+  /// Hide map UI controls (compass, scale bar, attribution, logo)
+  Future<void> _hideMapControls(MapboxMap mapboxMap) async {
+    try {
+      // Hide compass
+      await mapboxMap.compass.updateSettings(
+        CompassSettings(enabled: false),
+      );
+
+      // Hide scale bar
+      await mapboxMap.scaleBar.updateSettings(
+        ScaleBarSettings(enabled: false),
+      );
+
+      // Hide attribution button (info button)
+      await mapboxMap.attribution.updateSettings(
+        AttributionSettings(enabled: false),
+      );
+
+      // Hide Mapbox logo
+      await mapboxMap.logo.updateSettings(
+        LogoSettings(enabled: false),
+      );
+
+      debugPrint('Map UI controls hidden');
+    } catch (e) {
+      debugPrint('Error hiding map controls: $e');
+    }
   }
 
   /// Called when map style is fully loaded
@@ -306,7 +325,7 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
     await _setupCrystalMarkerLayer(style);
   }
 
-  /// Hide all text labels on the map
+  /// Hide all text labels and symbols on the map
   Future<void> _hideLabels(StyleManager style) async {
     try {
       // Get all layer IDs
@@ -316,19 +335,38 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
         final layerId = layer?.id;
         if (layerId == null) continue;
 
-        // Hide symbol layers (text labels, icons)
-        if (layerId.contains('label') ||
-            layerId.contains('place') ||
-            layerId.contains('poi') ||
-            layerId.contains('road-number') ||
-            layerId.contains('transit')) {
+        // Convert to lowercase for case-insensitive matching
+        final lowerLayerId = layerId.toLowerCase();
+
+        // Hide all symbol layers (text labels, icons, markers)
+        // This covers: place names, road names, POIs, transit, etc.
+        if (lowerLayerId.contains('label') ||
+            lowerLayerId.contains('place') ||
+            lowerLayerId.contains('poi') ||
+            lowerLayerId.contains('road-number') ||
+            lowerLayerId.contains('transit') ||
+            lowerLayerId.contains('symbol') ||
+            lowerLayerId.contains('text') ||
+            lowerLayerId.contains('name') ||
+            lowerLayerId.contains('icon') ||
+            lowerLayerId.contains('shield') ||
+            lowerLayerId.contains('marker') ||
+            lowerLayerId.contains('airport') ||
+            lowerLayerId.contains('station') ||
+            lowerLayerId.contains('country') ||
+            lowerLayerId.contains('state') ||
+            lowerLayerId.contains('settlement') ||
+            lowerLayerId.contains('water-name') ||
+            lowerLayerId.contains('natural')) {
           await style.setStyleLayerProperty(
             layerId,
             'visibility',
             'none',
           );
+          debugPrint('Hidden layer: $layerId');
         }
       }
+      debugPrint('All labels hidden');
     } catch (e) {
       debugPrint('Error hiding labels: $e');
     }
@@ -526,7 +564,8 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
         }
       } catch (e) {
         debugPrint(
-            'Error adding 3D model for crystal ${crystal.crystalId}: $e');
+          'Error adding 3D model for crystal ${crystal.crystalId}: $e',
+        );
       }
     }
   }
@@ -758,6 +797,40 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
     }
   }
 
+  /// Jump to initial user location without animation
+  Future<void> _jumpToInitialLocation(UserLocationEntity userLocation) async {
+    final mapboxMap = _mapboxMap;
+    if (mapboxMap == null) return;
+
+    _isProgrammaticCameraUpdate = true;
+
+    try {
+      // Use flyTo with short duration for smooth initial positioning
+      await mapboxMap.flyTo(
+        CameraOptions(
+          center: Point(
+            coordinates: Position(
+              userLocation.longitude,
+              userLocation.latitude,
+            ),
+          ),
+          bearing: userLocation.heading ?? 0.0,
+          pitch: _defaultPitch,
+          zoom: 17.5,
+        ),
+        MapAnimationOptions(duration: 500),
+      );
+      debugPrint('Camera moved to initial user location: '
+          '${userLocation.latitude}, ${userLocation.longitude}');
+    } catch (e) {
+      debugPrint('Error jumping to initial location: $e');
+    } finally {
+      Future.delayed(const Duration(milliseconds: 600), () {
+        _isProgrammaticCameraUpdate = false;
+      });
+    }
+  }
+
   /// Update camera to follow user location and rotate with heading
   Future<void> _updateCameraToFollowUser(
     UserLocationEntity userLocation,
@@ -850,12 +923,6 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
         ),
       ),
     );
-  }
-
-  void _navigateToMining(BuildContext context, String crystalId) {
-    // TODO: Navigate to mining screen with crystal data
-    // Navigator.of(context).pushNamed('/mining', arguments: crystalId);
-    debugPrint('Mining transition triggered for crystal: $crystalId');
   }
 
   /// Recenter map camera on user's current location and resume following

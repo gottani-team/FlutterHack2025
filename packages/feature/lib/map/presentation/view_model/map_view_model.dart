@@ -227,15 +227,23 @@ class MapViewModel extends _$MapViewModel {
 
   /// Load crystallization areas visible in the current map viewport
   Future<void> loadVisibleCrystallizationAreas() async {
+    // Default location: Shibaura area
+    const defaultLatitude = 35.62871770681847;
+    const defaultLongitude = 139.77776556855437;
+
+    // Use user location if map center is not set yet, fall back to default
+    final centerLat = state.mapCenterLatitude ??
+        state.userLocation?.latitude ??
+        defaultLatitude;
+    final centerLon = state.mapCenterLongitude ??
+        state.userLocation?.longitude ??
+        defaultLongitude;
+
     state = state.copyWith(isLoading: true);
 
     try {
       // Use mock data source (Firestore integration is out of scope)
       final mockDataSource = CrystalMockDataSource.instance;
-
-      // Calculate bounding box from current map center (approximately 1km radius)
-      final centerLat = state.mapCenterLatitude ?? 35.6812;
-      final centerLon = state.mapCenterLongitude ?? 139.7671;
       const kmPerDegree = 111.32;
       const radiusKm = 1.0;
       final latDelta = radiusKm / kmPerDegree;

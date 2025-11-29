@@ -58,4 +58,3 @@ class CrystallizationAreaEntity extends Equatable {
         status,
       ];
 }
-
