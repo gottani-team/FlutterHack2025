@@ -1,4 +1,4 @@
-package com.example.app_template
+package io.goodmoon.chimyaku
 
 import io.flutter.embedding.android.FlutterActivity
 
