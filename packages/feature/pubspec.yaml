@@ -1,0 +1,62 @@
+name: feature
+description: Feature package containing feature-specific implementations
+version: 1.0.0+1
+publish_to: 'none'
+resolution: workspace
+
+environment:
+  sdk: '>=3.5.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State Management
+  flutter_riverpod: ^3.0.3
+  riverpod_annotation: ^3.0.3
+  riverpod_generator: ^3.0.3
+  hooks_riverpod: ^3.0.3
+  flutter_hooks: ^0.21.0
+
+  # Code Generation
+  freezed_annotation: ^3.1.0
+  json_annotation: ^4.8.1
+  mustache_template: ^2.0.2
+
+  # Utilities
+  equatable: ^2.0.5
+
+  # Firebase Services
+  cloud_firestore: ^6.1.0
+  cloud_functions: ^6.0.1
+  firebase_ai: ^3.6.0
+  firebase_auth: ^6.1.2
+  firebase_remote_config: ^6.1.2
+  firebase_storage: ^13.0.1
+
+  # UI
+  gap: ^3.0.1
+  google_fonts: ^6.2.1
+  shimmer: ^3.0.0
+
+  # Image & Media Cache
+  cached_network_image: ^3.4.1
+
+  # File & Web
+  file_picker: ^10.2.0
+  flutter_inappwebview: ^6.1.5
+  url_launcher: ^6.3.1
+
+  # Core package dependency
+  core:
+    path: ../core
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+  # Code Generation
+  build_runner: ^2.4.13
+  freezed: ^3.2.3
+  json_serializable: ^6.11.2
