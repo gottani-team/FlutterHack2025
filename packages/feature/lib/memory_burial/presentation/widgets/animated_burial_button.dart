@@ -115,7 +115,8 @@ class _AnimatedBurialButtonState extends State<AnimatedBurialButton>
     // completedに移行した時点でクリスタルが表示されていなければ開始
     if (widget.phase == ButtonPhase.completed &&
         oldWidget.phase != ButtonPhase.completed) {
-      if (!_crystalFadeController.isAnimating && _crystalFadeController.value < 1.0) {
+      if (!_crystalFadeController.isAnimating &&
+          _crystalFadeController.value < 1.0) {
         _crystalFadeController.forward(from: 0);
       }
     }
@@ -134,8 +135,7 @@ class _AnimatedBurialButtonState extends State<AnimatedBurialButton>
   Widget build(BuildContext context) {
     final progress = (widget.textLength / 10.0).clamp(0.0, 1.0);
 
-    final isProcessingOrCompleted =
-        widget.phase == ButtonPhase.processing ||
+    final isProcessingOrCompleted = widget.phase == ButtonPhase.processing ||
         widget.phase == ButtonPhase.completed;
 
     // ボタンのサイズと位置
@@ -218,7 +218,8 @@ class _AnimatedBurialButtonState extends State<AnimatedBurialButton>
             right: 0,
             child: Center(
               child: GestureDetector(
-                onTap: widget.phase == ButtonPhase.ready ? widget.onPressed : null,
+                onTap:
+                    widget.phase == ButtonPhase.ready ? widget.onPressed : null,
                 child: AnimatedContainer(
                   duration: const Duration(milliseconds: 800),
                   curve: Curves.easeOutCubic,
@@ -249,7 +250,8 @@ class _AnimatedBurialButtonState extends State<AnimatedBurialButton>
     // processing中は矢印がフェードアウトし、その後クリスタルがフェードイン
     if (widget.phase == ButtonPhase.processing) {
       return AnimatedBuilder(
-        animation: Listenable.merge([_arrowFadeAnimation, _crystalFadeAnimation]),
+        animation:
+            Listenable.merge([_arrowFadeAnimation, _crystalFadeAnimation]),
         builder: (context, child) {
           // 矢印とクリスタルを重ねて表示
           return Stack(
@@ -275,7 +277,8 @@ class _AnimatedBurialButtonState extends State<AnimatedBurialButton>
                     child: CustomPaint(
                       key: const ValueKey('diamond'),
                       size: const Size(48, 48),
-                      painter: _CrystalPainter(opacity: _crystalFadeAnimation.value),
+                      painter:
+                          _CrystalPainter(opacity: _crystalFadeAnimation.value),
                     ),
                   ),
                 ),
