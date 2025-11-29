@@ -43,9 +43,13 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
 
   // 3D Model IDs
   static const String _crystal3DModelId = 'crystal-3d-model';
-  // Local asset for crystal 3D model (from feature package)
+  // Remote GLB model for testing (Mapbox sample)
+  // TODO: Replace with local asset once iOS asset loading is resolved
+  // https://github.com/nacky235/rock/blob/main/rock.glb
+  // static const String _crystal3DModelUri =
+  // 'https://raw.githubusercontent.com/KhronosGroup/glTF-Sample-Models/master/2.0/Duck/glTF-Binary/Duck.glb';
   static const String _crystal3DModelUri =
-      'asset://packages/feature/assets/models/rock.glb';
+      'https://raw.githubusercontent.com/nacky235/rock/main/rock.glb';
 
   // Map configuration constants
   static const double _defaultPitch = 45.0; // Tilt angle for 3D view
@@ -568,9 +572,10 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
             id: layerId,
             sourceId: sourceId,
           );
-          modelLayer.modelId = _crystal3DModelId;
-          modelLayer.modelScale = [0.5, 0.5, 0.5]; // Adjust scale as needed
-          modelLayer.modelRotation = [0, 0, 0];
+          // Use model URI directly instead of registered model ID
+          modelLayer.modelId = _crystal3DModelUri;
+          modelLayer.modelScale = [10.0, 10.0, 10.0];
+          modelLayer.modelRotation = [0.0, 0.0, 0.0];
           modelLayer.modelType = ModelType.COMMON_3D;
 
           await style.addLayer(modelLayer);
