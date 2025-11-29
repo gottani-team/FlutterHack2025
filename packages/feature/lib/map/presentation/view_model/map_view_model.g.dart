@@ -62,7 +62,7 @@ final class MapViewModelProvider
   }
 }
 
-String _$mapViewModelHash() => r'46c9a65b7f52ebd49669d7f2551c79e9bb1d9e2f';
+String _$mapViewModelHash() => r'5effb4014ffffb6336b71fb4c2065509158317fc';
 
 /// ViewModel for the Map View screen.
 ///
