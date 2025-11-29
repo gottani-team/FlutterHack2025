@@ -67,7 +67,7 @@ class HomePage extends ConsumerWidget {
               ),
               const SizedBox(height: 16),
               ElevatedButton(
-                onPressed: () => context.go('/crystal/VHcT1phkkO44FoARv6f3'),
+                onPressed: () => context.push('/crystal/VHcT1phkkO44FoARv6f3'),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color(0xFF1E88E5),
                 ),

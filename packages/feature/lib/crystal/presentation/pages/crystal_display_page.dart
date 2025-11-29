@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:core/presentation/widgets/glass_card_widget.dart';
 import 'package:core/presentation/widgets/ripple_effect_widget.dart';
 import 'package:core/presentation/widgets/shimmer_background_widget.dart';
@@ -12,7 +10,7 @@ import '../widgets/crystal_image_widget.dart';
 
 /// Crystal display page that shows a crystal with its memory text
 /// This is a read-only view without tapping interaction
-class CrystalDisplayPage extends ConsumerWidget {
+class CrystalDisplayPage extends ConsumerStatefulWidget {
   const CrystalDisplayPage({
     super.key,
     required this.crystalId,
@@ -21,24 +19,95 @@ class CrystalDisplayPage extends ConsumerWidget {
   final String crystalId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final crystalAsync = ref.watch(crystalProvider(crystalId));
+  ConsumerState<CrystalDisplayPage> createState() => _CrystalDisplayPageState();
+}
+
+class _CrystalDisplayPageState extends ConsumerState<CrystalDisplayPage>
+    with SingleTickerProviderStateMixin {
+  static const _defaultColor = Color(0xFFD3CCCA);
+
+  late AnimationController _colorController;
+  late Animation<Color?> _colorAnimation;
+  Color? _targetColor;
+
+  @override
+  void initState() {
+    super.initState();
+    _colorController = AnimationController(
+      duration: const Duration(milliseconds: 500),
+      vsync: this,
+    );
+    _colorAnimation = ColorTween(
+      begin: _defaultColor,
+      end: _defaultColor,
+    ).animate(
+      CurvedAnimation(
+        parent: _colorController,
+        curve: Curves.easeInOut,
+      ),
+    );
+  }
+
+  @override
+  void dispose() {
+    _colorController.dispose();
+    super.dispose();
+  }
+
+  void _updateTargetColor(Color newColor) {
+    if (_targetColor != newColor) {
+      _targetColor = newColor;
+      _colorAnimation = ColorTween(
+        begin: _colorAnimation.value ?? _defaultColor,
+        end: newColor,
+      ).animate(
+        CurvedAnimation(
+          parent: _colorController,
+          curve: Curves.easeInOut,
+        ),
+      );
+      _colorController.forward(from: 0);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final crystalAsync = ref.watch(crystalProvider(widget.crystalId));
     final screenSize = MediaQuery.of(context).size;
     final topPadding = MediaQuery.of(context).padding.top;
 
     // Crystal dimensions
-    final crystalSize = screenSize.width * 0.5;
+    final crystalSize = screenSize.width * 0.6;
 
-    // Shadow dimensions
-    final shadowWidth = crystalSize * 0.6;
-    final shadowHeight = crystalSize * 0.2;
+    // Content positioning
+    const crystalTopOffset = -40;
+    final crystalAreaHeight = crystalSize * 1.5;
+    final textCardTopOffset =
+        topPadding + crystalTopOffset + crystalAreaHeight - 40;
+
+    // Trigger color animation when crystal data loads
+    if (crystalAsync.value != null) {
+      final emotionColor = Color(
+        crystalAsync.value!.aiMetadata.emotionType.colorHex,
+      );
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _updateTargetColor(emotionColor);
+      });
+    }
 
     return Scaffold(
-      backgroundColor: const Color(0xFF9ACCFD),
-      body: ShimmerBackgroundWidget(
-        dotSpacing: 10,
-        dotSize: 2,
-        dotColor: Colors.black,
+      backgroundColor: _defaultColor,
+      body: AnimatedBuilder(
+        animation: _colorAnimation,
+        builder: (context, child) {
+          return ShimmerBackgroundWidget(
+            dotSpacing: 10,
+            dotSize: 2,
+            dotColor: Colors.black,
+            backgroundColor: _colorAnimation.value ?? _defaultColor,
+            child: child!,
+          );
+        },
         child: crystalAsync.when(
           loading: () => const Center(
             child: CircularProgressIndicator(
@@ -64,62 +133,50 @@ class CrystalDisplayPage extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
                 ElevatedButton(
-                  onPressed: () => ref.invalidate(crystalProvider(crystalId)),
+                  onPressed: () =>
+                      ref.invalidate(crystalProvider(widget.crystalId)),
                   child: const Text('Retry'),
                 ),
               ],
             ),
           ),
-          data: (crystal) => Column(
+          data: (crystal) => Stack(
             children: [
-              // Top padding
-              SizedBox(height: topPadding + 20),
-
-              // Crystal with ripple effect
-              SizedBox(
-                height: crystalSize * 1.5,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    // Ripple effect behind crystal
-                    RippleEffectWidget(
-                      baseSize: crystalSize * 2.5,
-                    ),
-                    // Crystal image centered
-                    CrystalImageWidget(
-                      imageUrl: mockCrystalImageUrl,
-                      size: crystalSize,
-                    ),
-                  ],
-                ),
-              ),
-
-              // Shadow below crystal
-              SizedBox(
-                width: shadowWidth,
-                height: shadowHeight,
-                child: ImageFiltered(
-                  imageFilter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                  child: Container(
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.all(
-                        Radius.elliptical(
-                          shadowWidth / 2,
-                          shadowHeight / 2,
-                        ),
+              // Crystal with ripple effect - positioned from top
+              Positioned(
+                top: topPadding + crystalTopOffset,
+                left: 0,
+                right: 0,
+                child: SizedBox(
+                  height: crystalAreaHeight,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      // Ripple effect behind crystal
+                      RippleEffectWidget(
+                        baseSize: crystalSize * 3,
+                        borderColor: const Color(0x2AFFFFFF),
+                        borderWidth: 15,
+                        blurSigma: 8,
+                        animationDuration: const Duration(seconds: 4),
                       ),
-                      color: const Color(0x40000000),
-                    ),
+                      // Crystal image centered
+                      CrystalImageWidget(
+                        imageUrl: mockCrystalImageUrl,
+                        size: crystalSize,
+                      ),
+                    ],
                   ),
                 ),
               ),
 
-              const SizedBox(height: 24),
-
-              // Memory text card
-              Expanded(
+              // Memory text card - overlapping the ripple
+              Positioned(
+                top: textCardTopOffset,
+                left: 24,
+                right: 24,
+                bottom: 0,
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: Column(
                     children: [
                       // Text card with gradient border

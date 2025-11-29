@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
 /// A ripple effect widget that displays animated expanding circles like water ripples.
 ///
@@ -15,6 +16,7 @@ class RippleEffectWidget extends StatefulWidget {
     this.blurSigma = 12,
     this.animationDuration = const Duration(seconds: 3),
     this.rippleCount = 3,
+    this.enableHaptic = true,
   });
 
   /// The maximum size the ripples can grow to
@@ -35,6 +37,9 @@ class RippleEffectWidget extends StatefulWidget {
   /// Number of ripple circles
   final int rippleCount;
 
+  /// Whether to trigger haptic feedback with each ripple
+  final bool enableHaptic;
+
   @override
   State<RippleEffectWidget> createState() => _RippleEffectWidgetState();
 }
@@ -42,6 +47,7 @@ class RippleEffectWidget extends StatefulWidget {
 class _RippleEffectWidgetState extends State<RippleEffectWidget>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
+  late List<bool> _rippleTriggered;
 
   @override
   void initState() {
@@ -50,11 +56,37 @@ class _RippleEffectWidgetState extends State<RippleEffectWidget>
       duration: widget.animationDuration,
       vsync: this,
     );
+
+    // Track which ripples have triggered haptic in current cycle
+    _rippleTriggered = List.filled(widget.rippleCount, false);
+
+    if (widget.enableHaptic) {
+      _controller.addListener(_checkHaptic);
+    }
+
     _controller.repeat();
+  }
+
+  void _checkHaptic() {
+    for (var i = 0; i < widget.rippleCount; i++) {
+      final staggerOffset = i / widget.rippleCount;
+      final animationValue = (_controller.value + staggerOffset) % 1.0;
+
+      // Trigger haptic when ripple starts (animationValue near 0)
+      if (animationValue < 0.05 && !_rippleTriggered[i]) {
+        HapticFeedback.lightImpact();
+        _rippleTriggered[i] = true;
+      }
+      // Reset trigger when ripple is past the start
+      if (animationValue > 0.1) {
+        _rippleTriggered[i] = false;
+      }
+    }
   }
 
   @override
   void dispose() {
+    _controller.removeListener(_checkHaptic);
     _controller.dispose();
     super.dispose();
   }
