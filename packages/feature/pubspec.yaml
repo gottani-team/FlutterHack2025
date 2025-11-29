@@ -60,7 +60,6 @@ dependencies:
   # Core package dependency
   core:
     path: ../core
-  go_router: ^17.0.0
 
 flutter:
   assets:
