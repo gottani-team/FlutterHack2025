@@ -28,9 +28,7 @@ class JournalRepositoryImpl implements JournalRepository {
           .collection('collected_crystals');
 
   @override
-  Future<Result<List<CollectedCrystal>>> getCollectedCrystals({
-    int limit = 50,
-  }) async {
+  Future<Result<List<CollectedCrystal>>> getAllCollectedCrystals() async {
     final userIdResult = await _authRepository.requireUserId();
     switch (userIdResult) {
       case Failure(error: final failure):
@@ -38,28 +36,28 @@ class JournalRepositoryImpl implements JournalRepository {
       case Success(value: final userId):
         try {
           dev.log(
-            '[JournalRepo] getCollectedCrystals: userId=$userId, limit=$limit',
+            '[JournalRepo] getAllCollectedCrystals: userId=$userId',
           );
 
           // Note: Firestoreのフィールド名はsnake_case
+          // ページングなしで全件取得
           final snapshot = await _collectedCrystalsRef(userId)
               .orderBy('deciphered_at', descending: true)
-              .limit(limit)
               .get();
 
           dev.log(
-            '[JournalRepo] getCollectedCrystals: Found ${snapshot.docs.length} crystals',
+            '[JournalRepo] getAllCollectedCrystals: Found ${snapshot.docs.length} crystals',
           );
 
           final crystals = snapshot.docs.map((doc) {
             dev.log(
-              '[JournalRepo] getCollectedCrystals: Processing doc ${doc.id}, data=${doc.data()}',
+              '[JournalRepo] getAllCollectedCrystals: Processing doc ${doc.id}, data=${doc.data()}',
             );
             return CollectedCrystalModel.fromFirestore(doc).toEntity();
           }).toList();
 
           dev.log(
-            '[JournalRepo] getCollectedCrystals: Success with ${crystals.length} crystals',
+            '[JournalRepo] getAllCollectedCrystals: Success with ${crystals.length} crystals',
           );
           return Result.success(crystals);
         } on FirebaseException catch (e) {

@@ -6,12 +6,12 @@ import '../entities/crystal.dart';
 /// マップ表示用のクリスタル取得を管理する。
 /// FR-001〜FR-005に対応。
 abstract class CrystalRepository {
-  /// 利用可能なクリスタル一覧を取得（デモ用）
+  /// 利用可能なクリスタルをランダムに取得
   ///
   /// [limit]: 最大取得件数（デフォルト20）
   ///
-  /// Returns: status='available' のクリスタル一覧
-  Future<Result<List<Crystal>>> getAvailableCrystals({
+  /// Returns: status='available' のクリスタルからランダムに選択された一覧
+  Future<Result<List<Crystal>>> getRandomAvailableCrystals({
     int limit = 20,
   });
 
@@ -34,12 +34,12 @@ abstract class CrystalRepository {
     int limit = 50,
   });
 
-  /// 利用可能なクリスタルをリアルタイムで監視
+  /// 利用可能なクリスタルをリアルタイムで監視（ランダム選択）
   ///
   /// [limit]: 最大取得件数（デフォルト20）
   ///
-  /// Returns: クリスタル一覧のStream
-  Stream<Result<List<Crystal>>> watchAvailableCrystals({
+  /// Returns: ランダムに選択されたクリスタル一覧のStream
+  Stream<Result<List<Crystal>>> watchRandomAvailableCrystals({
     int limit = 20,
   });
 }

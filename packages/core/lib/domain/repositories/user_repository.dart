@@ -59,6 +59,18 @@ abstract class UserRepository {
     required int amount,
   });
 
+  /// カルマを指定値に設定（デバッグ用）
+  ///
+  /// [amount]: 設定するカルマ値
+  ///
+  /// Returns: 設定後のカルマ残高
+  ///
+  /// Errors:
+  /// - AuthFailure: 未認証の場合
+  Future<Result<int>> setKarma({
+    required int amount,
+  });
+
   /// 現在のユーザー情報をリアルタイムで監視
   ///
   /// Returns: ユーザー情報のStream

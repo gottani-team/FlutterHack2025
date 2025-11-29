@@ -286,6 +286,55 @@ class UserRepositoryImpl implements UserRepository {
   }
 
   @override
+  Future<Result<int>> setKarma({
+    required int amount,
+  }) async {
+    final userIdResult = await _authRepository.requireUserId();
+    switch (userIdResult) {
+      case Success(value: final userId):
+        dev.log('[UserRepo] setKarma: userId=$userId, amount=$amount');
+        try {
+          final docRef = _usersRef.doc(userId);
+
+          return await _firestore.runTransaction((transaction) async {
+            final doc = await transaction.get(docRef);
+
+            if (!doc.exists) {
+              dev.log('[UserRepo] setKarma: User not found');
+              throw const CoreFailure.notFound(message: 'User not found');
+            }
+
+            dev.log('[UserRepo] setKarma: Setting karma to $amount');
+            transaction.update(docRef, {'current_karma': amount});
+
+            return Result.success(amount);
+          });
+        } on CoreFailure catch (e) {
+          return Result.failure(e);
+        } on FirebaseException catch (e) {
+          dev.log(
+            '[UserRepo] setKarma: FirebaseException code=${e.code}, message=${e.message}',
+          );
+          return Result.failure(
+            CoreFailure.network(
+              message: e.message ?? 'Failed to set karma',
+              code: e.code,
+            ),
+          );
+        } catch (e) {
+          dev.log('[UserRepo] setKarma: Unknown error: $e');
+          return Result.failure(
+            CoreFailure.unknown(
+              message: 'Failed to set karma: ${e.toString()}',
+            ),
+          );
+        }
+      case Failure(error: final failure):
+        return Result.failure(failure);
+    }
+  }
+
+  @override
   Stream<Result<User?>> watchCurrentUser() {
     // キャッシュされたユーザーIDを使用（Streamなので同期的にアクセス）
     final userId = _authRepository.cachedUserId;

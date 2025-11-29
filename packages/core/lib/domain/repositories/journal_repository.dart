@@ -10,17 +10,13 @@ import '../entities/collected_crystal.dart';
 /// すべてのメソッドは現在認証中のユーザーに対して動作する。
 /// 未認証の場合はCoreFailure.authを返す。
 abstract class JournalRepository {
-  /// 解読したクリスタル一覧を取得
+  /// 解読したクリスタル一覧を全て取得
   ///
-  /// [limit]: 最大取得件数（デフォルト50）
-  ///
-  /// Returns: 解読日時降順のクリスタル一覧
+  /// Returns: 解読日時降順のクリスタル一覧（全件）
   ///
   /// Errors:
   /// - AuthFailure: 未認証の場合
-  Future<Result<List<CollectedCrystal>>> getCollectedCrystals({
-    int limit = 50,
-  });
+  Future<Result<List<CollectedCrystal>>> getAllCollectedCrystals();
 
   /// 特定の解読済みクリスタルを取得
   ///
