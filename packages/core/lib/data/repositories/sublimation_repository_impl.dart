@@ -10,16 +10,23 @@ import '../../domain/entities/crystal_status.dart';
 import '../../domain/entities/emotion_type.dart';
 import '../../domain/failures/core_failure.dart';
 import '../../domain/repositories/sublimation_repository.dart';
+import '../datasources/karma_evaluation_service.dart';
 import '../models/ai_metadata_model.dart';
 import '../models/crystal_model.dart';
 
 /// 昇華リポジトリの実装
 ///
-/// ダミーAIロジックを使用してテキストを評価し、クリスタルを作成する。
+/// Firebase AI Logic を使用してテキストを評価し、クリスタルを作成する。
+/// AI評価が失敗した場合はフォールバックとしてダミーロジックを使用。
 class SublimationRepositoryImpl implements SublimationRepository {
-  SublimationRepositoryImpl(this._firestore);
+  SublimationRepositoryImpl(
+    this._firestore, {
+    KarmaEvaluationService? karmaEvaluationService,
+  }) : _karmaEvaluationService =
+            karmaEvaluationService ?? KarmaEvaluationService();
 
   final FirebaseFirestore _firestore;
+  final KarmaEvaluationService _karmaEvaluationService;
   final _random = Random();
 
   CollectionReference<Map<String, dynamic>> get _crystalsRef =>
@@ -46,16 +53,24 @@ class SublimationRepositoryImpl implements SublimationRepository {
         );
       }
 
-      // ダミーAIロジック: テキストから感情タイプとスコアを算出
-      final emotionType = _analyzeEmotion(secretText);
-      final score = _calculateScore(secretText);
+      // Firebase AI Logic で評価を試行、失敗時はフォールバック
+      AIMetadata aiMetadata;
+      try {
+        dev.log('[SublimationRepo] evaluate: Calling Firebase AI...');
+        aiMetadata = await _karmaEvaluationService.evaluate(secretText);
+        dev.log('[SublimationRepo] evaluate: AI evaluation success');
+      } catch (e) {
+        dev.log('[SublimationRepo] evaluate: AI evaluation failed, using fallback: $e');
+        // フォールバック: ダミーAIロジック
+        final emotionType = _analyzeEmotion(secretText);
+        final score = _calculateScore(secretText);
+        aiMetadata = AIMetadata(
+          emotionType: emotionType,
+          score: score,
+        );
+      }
 
-      dev.log('[SublimationRepo] evaluate: emotion=$emotionType, score=$score');
-
-      final aiMetadata = AIMetadata(
-        emotionType: emotionType,
-        score: score,
-      );
+      dev.log('[SublimationRepo] evaluate: emotion=${aiMetadata.emotionType}, score=${aiMetadata.score}');
 
       return Result.success(
         EvaluationResult(

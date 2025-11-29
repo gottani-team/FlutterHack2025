@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 // Domain Repositories
@@ -12,6 +13,8 @@ import '../domain/repositories/user_repository.dart';
 
 // Data Sources
 import 'datasources/firebase_auth_service.dart';
+import 'datasources/karma_evaluation_service.dart';
+import 'datasources/secret_text_generator_service.dart';
 
 // Repository Implementations
 import 'repositories/auth_repository_impl.dart';
@@ -67,11 +70,30 @@ final userRepositoryProvider = Provider<UserRepository>((ref) {
 
 // ========== Sublimation (昇華) ==========
 
+/// Firebase Remote Config Provider
+///
+/// カルマ評価プロンプトなどの設定値を取得するためのRemote Configインスタンス。
+final remoteConfigProvider = Provider<FirebaseRemoteConfig>((ref) {
+  return FirebaseRemoteConfig.instance;
+});
+
+/// KarmaEvaluationService Provider
+///
+/// Firebase AI Logic を使用してテキストを評価するサービス。
+final karmaEvaluationServiceProvider = Provider<KarmaEvaluationService>((ref) {
+  return KarmaEvaluationService(
+    remoteConfig: ref.watch(remoteConfigProvider),
+  );
+});
+
 /// SublimationRepository Provider
 ///
 /// Feature層はこのプロバイダーを使用して昇華（秘密→クリスタル変換）機能にアクセスする。
 final sublimationRepositoryProvider = Provider<SublimationRepository>((ref) {
-  return SublimationRepositoryImpl(ref.watch(firestoreProvider));
+  return SublimationRepositoryImpl(
+    ref.watch(firestoreProvider),
+    karmaEvaluationService: ref.watch(karmaEvaluationServiceProvider),
+  );
 });
 
 // ========== Crystal ==========
@@ -99,4 +121,14 @@ final deciphermentRepositoryProvider = Provider<DeciphermentRepository>((ref) {
 /// Feature層はこのプロバイダーを使用してジャーナル（収集クリスタル）管理機能にアクセスする。
 final journalRepositoryProvider = Provider<JournalRepository>((ref) {
   return JournalRepositoryImpl(ref.watch(firestoreProvider));
+});
+
+// ========== Debug Services ==========
+
+/// SecretTextGeneratorService Provider
+///
+/// デバッグ用: 指定した感情とカルマ値に基づいて秘密テキストを生成する。
+final secretTextGeneratorServiceProvider =
+    Provider<SecretTextGeneratorService>((ref) {
+  return SecretTextGeneratorService();
 });
