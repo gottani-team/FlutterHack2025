@@ -1,0 +1,36 @@
+{
+  "dart.testAdditionalArgs": [],
+  "dart.flutterAdditionalArgs": [],
+  "dart.flutterTestAdditionalArgs": [],
+  "dart.flutterSdkPath": "~/.local/share/mise/installs/flutter/3.38.1-stable",
+  "files.exclude": {
+    "**/.git": true,
+    "**/.DS_Store": true,
+    "**/Thumbs.db": true,
+    "**/.dart_tool": true,
+  },
+  "search.exclude": {
+    "**/**.dart_tool": true,
+    "**/**.freezed.dart": true,
+    "**/**.g.dart": true,
+    "**/**.mocks.dart": true,
+    "**/build": true,
+  },
+  "explorer.fileNesting.expand": true,
+  "explorer.fileNesting.patterns": {
+    "*.dart": "$(capture).g.dart, $(capture).freezed.dart, $(capture).mocks.dart, $(capture).inject.dart"
+  },
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": {
+    "source.fixAll": "explicit",
+    "source.organizeImports": "explicit"
+  },
+  "explorer.fileNesting.enabled": true,
+  "yaml.schemas": {},
+  "[json]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode"
+  },
+  "[markdown]": {
+    "editor.defaultFormatter": "DavidAnson.vscode-markdownlint"
+  },
+}

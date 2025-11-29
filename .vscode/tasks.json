@@ -1,0 +1,143 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "workspace > pub get",
+      "type": "shell",
+      "command": "mise",
+      "args": ["exec", "flutter", "--", "flutter", "pub", "get"],
+      "problemMatcher": [],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      },
+      "presentation": {
+        "reveal": "silent",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "current > pub get",
+      "type": "shell",
+      "command": "mise",
+      "args": [
+        "exec",
+        "flutter",
+        "--",
+        "flutter",
+        "pub",
+        "get"
+      ],
+      "problemMatcher": [],
+      "group": "build",
+      "presentation": {
+        "reveal": "silent",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "current > build_runner > build",
+      "type": "shell",
+      "command": "mise",
+      "args": [
+        "exec",
+        "flutter",
+        "--",
+        "flutter",
+        "pub",
+        "run",
+        "build_runner",
+        "build",
+        "--delete-conflicting-outputs"
+      ],
+      "problemMatcher": [],
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "current > build_runner > watch",
+      "type": "shell",
+      "command": "mise",
+      "args": [
+        "exec",
+        "flutter",
+        "--",
+        "pub",
+        "run",
+        "build_runner",
+        "watch",
+        "--delete-conflicting-outputs"
+      ],
+      "problemMatcher": [],
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "dedicated",
+        "focus": true
+      },
+      "isBackground": true
+    },
+    {
+      "label": "current > analyze",
+      "type": "shell",
+      "command": "mise",
+      "args": ["exec", "flutter", "--", "flutter", "analyze"],
+      "problemMatcher": [],
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "current > test",
+      "type": "shell",
+      "command": "mise",
+      "args": ["exec", "flutter", "--", "flutter", "test"],
+      "problemMatcher": [],
+      "group": "test",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "workspace > clean",
+      "type": "shell",
+      "command": "mise",
+      "args": ["exec", "flutter", "--", "flutter", "clean"],
+      "problemMatcher": [],
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "mise > install",
+      "type": "shell",
+      "command": "mise",
+      "args": ["install"],
+      "problemMatcher": [],
+      "group": "build",
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    },
+    {
+      "label": "mise > list",
+      "type": "shell",
+      "command": "mise",
+      "args": ["list"],
+      "problemMatcher": [],
+      "presentation": {
+        "reveal": "always",
+        "panel": "shared"
+      }
+    }
+  ]
+}

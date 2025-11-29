@@ -1,0 +1,10 @@
+{
+    "recommendations": [
+        "Dart-Code.flutter",
+        "Dart-Code.dart-code",
+        "streetsidesoftware.code-spell-checker",
+        "bierner.markdown-mermaid",
+        "bpruitt-goddard.mermaid-markdown-syntax-highlighting",
+        "esbenp.prettier-vscode",
+    ]
+}
