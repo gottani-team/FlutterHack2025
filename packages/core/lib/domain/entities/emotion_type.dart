@@ -75,21 +75,21 @@ enum EmotionType {
   int get colorHex {
     switch (this) {
       case EmotionType.happiness:
-        return 0xFFFF69B4; // ピンク
+        return 0xFFFDAB9A; // ピンク
       case EmotionType.enjoyment:
-        return 0xFFFFA500; // オレンジ
+        return 0xFFFFE17C; // オレンジ
       case EmotionType.relief:
-        return 0xFF32CD32; // 緑
+        return 0xFFB8FB5A; // 緑
       case EmotionType.anticipation:
-        return 0xFFFFD700; // 黄
+        return 0xFF5ADEFB; // 黄
       case EmotionType.sadness:
-        return 0xFF4169E1; // 青
+        return 0xFF855AFB; // 青
       case EmotionType.embarrassment:
-        return 0xFF9370DB; // 紫
+        return 0xFFFB5AE9; // 紫
       case EmotionType.anger:
-        return 0xFFDC143C; // 赤
+        return 0xFFFB5A5D; // 赤
       case EmotionType.emptiness:
-        return 0xFF708090; // 灰
+        return 0xFF878787; // 灰
     }
   }
 

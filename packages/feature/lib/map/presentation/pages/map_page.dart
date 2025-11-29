@@ -2,6 +2,7 @@ import 'dart:math' as math;
 
 import 'package:core/presentation/widgets/glass_app_bar_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 
@@ -134,7 +135,7 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
               title: 'HIMITSU no SECRET',
               icon: Icons.grid_view,
               onIconPressed: () {
-                // TODO: Open settings
+                context.push('/crystals');
               },
             ),
           ),

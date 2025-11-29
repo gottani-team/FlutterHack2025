@@ -200,7 +200,7 @@ class _CrystalDisplayPageState extends ConsumerState<CrystalDisplayPage>
 
                       // Done button
                       GestureDetector(
-                        onTap: () => context.go('/'),
+                        onTap: () => context.pop(),
                         child: const GlassCardWidget(
                           padding: EdgeInsets.symmetric(vertical: 14),
                           borderRadius: 12,

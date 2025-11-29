@@ -19,6 +19,7 @@ class GlassCardWidget extends StatelessWidget {
     this.blurSigma = 2,
     this.borderWidth = 1,
     this.gradientAngle = 55,
+    this.borderColor,
   });
 
   /// The widget to display inside the card
@@ -42,6 +43,10 @@ class GlassCardWidget extends StatelessWidget {
   /// Angle of the gradient in degrees
   final double gradientAngle;
 
+  /// Optional solid border color. When provided, uses a solid border
+  /// instead of the default gradient border.
+  final Color? borderColor;
+
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
@@ -53,19 +58,22 @@ class GlassCardWidget extends StatelessWidget {
           decoration: BoxDecoration(
             color: backgroundColor,
             borderRadius: BorderRadius.circular(borderRadius),
-            border: GradientBoxBorder(
-              gradient: LinearGradient(
-                transform: GradientRotation(gradientAngle * 3.14159 / 180),
-                colors: [
-                  Colors.white,
-                  Colors.white.withValues(alpha: 0.0),
-                  Colors.white.withValues(alpha: 0.0),
-                  Colors.white,
-                ],
-                stops: const [0.0, 0.3, 0.7, 1.0],
-              ),
-              width: borderWidth,
-            ),
+            border: borderColor != null
+                ? Border.all(color: borderColor!, width: borderWidth)
+                : GradientBoxBorder(
+                    gradient: LinearGradient(
+                      transform:
+                          GradientRotation(gradientAngle * 3.14159 / 180),
+                      colors: [
+                        Colors.white,
+                        Colors.white.withValues(alpha: 0.0),
+                        Colors.white.withValues(alpha: 0.0),
+                        Colors.white,
+                      ],
+                      stops: const [0.0, 0.3, 0.7, 1.0],
+                    ),
+                    width: borderWidth,
+                  ),
           ),
           child: child,
         ),
