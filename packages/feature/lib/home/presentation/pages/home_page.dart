@@ -51,8 +51,7 @@ class HomePage extends ConsumerWidget {
                   extra: {
                     'crystalId': 'test-crystal-001',
                     'crystalImageUrl': 'assets/images/test-crystal.png',
-                    'memoryText':
-                        'This is a test memory from the crystal. '
+                    'memoryText': 'This is a test memory from the crystal. '
                         'The ancient voices whisper through time, '
                         'carrying stories of those who came before. '
                         'Feel the warmth of forgotten summers, '
@@ -64,6 +63,14 @@ class HomePage extends ConsumerWidget {
                   backgroundColor: EmotionType.passion.color,
                 ),
                 child: const Text('Test Crystal Mining'),
+              ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => context.goNamed('repository-test'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.deepPurple,
+                ),
+                child: const Text('Repository Test Screen'),
               ),
             ],
           ),
