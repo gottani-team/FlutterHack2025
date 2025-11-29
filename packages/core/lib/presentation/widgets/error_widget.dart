@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 
 class ErrorDisplayWidget extends StatelessWidget {
   const ErrorDisplayWidget({
-    super.key,
     required this.message,
+    super.key,
     this.onRetry,
   });
 
@@ -45,4 +45,3 @@ class ErrorDisplayWidget extends StatelessWidget {
     );
   }
 }
-
