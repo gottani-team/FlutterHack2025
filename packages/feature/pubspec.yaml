@@ -50,6 +50,13 @@ dependencies:
   flutter_inappwebview: ^6.1.5
   url_launcher: ^6.3.1
 
+  # Map (for Chimyaku map view)
+  mapbox_maps_flutter: ^2.4.0
+  # Note: geolocator and permission_handler are provided by core package
+
+  # Audio (for resonance sound effects)
+  audioplayers: ^6.1.0
+
   # Core package dependency
   core:
     path: ../core
