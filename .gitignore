@@ -68,3 +68,8 @@ app.*.map.json
 
 # Mise/Rtx
 .mise/
+
+# Node.js
+node_modules/
+package-lock.json
+yarn.lock
