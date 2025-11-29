@@ -12,8 +12,7 @@ class RepositoryTestPage extends ConsumerStatefulWidget {
   const RepositoryTestPage({super.key});
 
   @override
-  ConsumerState<RepositoryTestPage> createState() =>
-      _RepositoryTestPageState();
+  ConsumerState<RepositoryTestPage> createState() => _RepositoryTestPageState();
 }
 
 class _RepositoryTestPageState extends ConsumerState<RepositoryTestPage> {
@@ -30,11 +29,20 @@ class _RepositoryTestPageState extends ConsumerState<RepositoryTestPage> {
   int _targetKarma = 50;
   bool _isGenerating = false;
 
+  // カルマ設定用
+  final _karmaController = TextEditingController(text: '100');
+
   @override
   void initState() {
     super.initState();
     _addLog('テスト画面を初期化しました');
     _checkInitialAuthState();
+  }
+
+  @override
+  void dispose() {
+    _karmaController.dispose();
+    super.dispose();
   }
 
   Future<void> _checkInitialAuthState() async {
@@ -101,6 +109,31 @@ class _RepositoryTestPageState extends ConsumerState<RepositoryTestPage> {
       _logs.clear();
     });
     _addLog('ログをクリアしました');
+  }
+
+  Future<void> _setKarma([int? value]) async {
+    if (_currentUserId == null) {
+      _addLog('❌ 先に認証してください');
+      return;
+    }
+
+    final amount = value ?? int.tryParse(_karmaController.text);
+    if (amount == null || amount < 0) {
+      _addLog('❌ 無効なカルマ値です');
+      return;
+    }
+
+    _addLog('▶ カルマを $amount に設定中...');
+    final userRepo = ref.read(userRepositoryProvider);
+    final result = await userRepo.setKarma(amount: amount);
+
+    switch (result) {
+      case Success(value: final karma):
+        setState(() => _currentKarma = karma);
+        _addLog('✅ カルマを $karma に設定しました');
+      case Failure(error: final e):
+        _addLog('❌ カルマ設定失敗: ${e.message}');
+    }
   }
 
   @override
@@ -200,6 +233,9 @@ class _RepositoryTestPageState extends ConsumerState<RepositoryTestPage> {
                   _buildTestButton('カルマ残高取得', _testGetKarma),
                   _buildTestButton('カルマ+10加算', _testAddKarma),
                   _buildTestButton('カルマ-5減算', _testSubtractKarma),
+                  const SizedBox(height: 8),
+                  // カルマ設定UI
+                  _buildKarmaSettingSection(),
                   const SizedBox(height: 16),
 
                   // SublimationRepository
@@ -298,6 +334,66 @@ class _RepositoryTestPageState extends ConsumerState<RepositoryTestPage> {
     );
   }
 
+  Widget _buildKarmaSettingSection() {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.orange.shade50,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: Colors.orange.shade200),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text(
+            '💎 カルマを任意の値に設定',
+            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: _karmaController,
+                  keyboardType: TextInputType.number,
+                  decoration: const InputDecoration(
+                    hintText: 'カルマ値',
+                    border: OutlineInputBorder(),
+                    contentPadding: EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    isDense: true,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              ElevatedButton(
+                onPressed: () => _setKarma(),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange,
+                  foregroundColor: Colors.white,
+                ),
+                child: const Text('設定'),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Wrap(
+            spacing: 8,
+            runSpacing: 4,
+            children: [0, 50, 100, 500, 1000].map((value) {
+              return ActionChip(
+                label: Text('$value'),
+                onPressed: () => _setKarma(value),
+              );
+            }).toList(),
+          ),
+        ],
+      ),
+    );
+  }
+
   Widget _buildTestButton(String label, Future<void> Function() onPressed) {
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
@@ -384,8 +480,8 @@ class _RepositoryTestPageState extends ConsumerState<RepositoryTestPage> {
           Slider(
             value: _targetKarma.toDouble(),
             min: 10,
-            max: 100,
-            divisions: 9,
+            max: 20000,
+            divisions: 100,
             label: '$_targetKarma',
             onChanged: (value) {
               setState(() {
@@ -442,7 +538,9 @@ class _RepositoryTestPageState extends ConsumerState<RepositoryTestPage> {
         emotionType: _selectedEmotion,
         targetKarma: _targetKarma,
       );
-      _addLog('   ✅ 生成完了: "${secretText.substring(0, secretText.length.clamp(0, 30))}..."');
+      _addLog(
+        '   ✅ 生成完了: "${secretText.substring(0, secretText.length.clamp(0, 30))}..."',
+      );
 
       // 2. 評価
       _addLog('   2. 秘密を評価中...');
@@ -635,8 +733,7 @@ class _RepositoryTestPageState extends ConsumerState<RepositoryTestPage> {
 
   Future<void> _testEvaluate() async {
     final repo = ref.read(sublimationRepositoryProvider);
-    final secretText =
-        'これは誰にも言えない秘密です。本当に恥ずかしい出来事でした。${DateTime.now()}';
+    final secretText = 'これは誰にも言えない秘密です。本当に恥ずかしい出来事でした。${DateTime.now()}';
 
     final result = await repo.evaluate(secretText: secretText);
 
@@ -692,7 +789,7 @@ class _RepositoryTestPageState extends ConsumerState<RepositoryTestPage> {
 
   Future<void> _testGetAvailableCrystals() async {
     final repo = ref.read(crystalRepositoryProvider);
-    final result = await repo.getAvailableCrystals(limit: 10);
+    final result = await repo.getRandomAvailableCrystals(limit: 10);
 
     switch (result) {
       case Success(value: final crystals):
@@ -785,7 +882,8 @@ class _RepositoryTestPageState extends ConsumerState<RepositoryTestPage> {
 
     // 解読可能なクリスタルを探す（自分以外が作成した available なクリスタル）
     final crystalRepo = ref.read(crystalRepositoryProvider);
-    final availableResult = await crystalRepo.getAvailableCrystals(limit: 20);
+    final availableResult =
+        await crystalRepo.getRandomAvailableCrystals(limit: 20);
 
     String? targetCrystalId;
     int? targetKarmaValue;
@@ -837,7 +935,7 @@ class _RepositoryTestPageState extends ConsumerState<RepositoryTestPage> {
     }
 
     final repo = ref.read(journalRepositoryProvider);
-    final result = await repo.getCollectedCrystals(limit: 10);
+    final result = await repo.getAllCollectedCrystals();
 
     switch (result) {
       case Success(value: final crystals):

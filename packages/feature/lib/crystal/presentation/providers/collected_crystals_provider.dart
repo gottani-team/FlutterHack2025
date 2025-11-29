@@ -7,7 +7,7 @@ part 'collected_crystals_provider.g.dart';
 @riverpod
 Future<List<CollectedCrystal>> collectedCrystals(Ref ref) async {
   final journalRepo = ref.read(journalRepositoryProvider);
-  final crystalsResult = await journalRepo.getCollectedCrystals();
+  final crystalsResult = await journalRepo.getAllCollectedCrystals();
 
   switch (crystalsResult) {
     case Success(value: final crystals):

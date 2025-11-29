@@ -15,6 +15,20 @@ class RepositoryTestPage extends ConsumerStatefulWidget {
 class _RepositoryTestPageState extends ConsumerState<RepositoryTestPage> {
   final List<String> _logs = [];
   bool _isRunning = false;
+  final _karmaController = TextEditingController(text: '100');
+  int? _currentKarma;
+
+  @override
+  void initState() {
+    super.initState();
+    _refreshKarma();
+  }
+
+  @override
+  void dispose() {
+    _karmaController.dispose();
+    super.dispose();
+  }
 
   void _log(String message) {
     setState(() {
@@ -22,6 +36,42 @@ class _RepositoryTestPageState extends ConsumerState<RepositoryTestPage> {
           '[${DateTime.now().toIso8601String().substring(11, 19)}] $message');
     });
     debugPrint(message);
+  }
+
+  Future<void> _setKarma() async {
+    final amount = int.tryParse(_karmaController.text);
+    if (amount == null || amount < 0) {
+      _log('❌ 無効なカルマ値です');
+      return;
+    }
+
+    setState(() => _isRunning = true);
+    try {
+      final userRepo = ref.read(userRepositoryProvider);
+      final result = await userRepo.setKarma(amount: amount);
+
+      switch (result) {
+        case Success(value: final karma):
+          setState(() => _currentKarma = karma);
+          _log('✅ カルマを $karma に設定しました');
+        case Failure(error: final e):
+          _log('❌ カルマ設定失敗: $e');
+      }
+    } finally {
+      setState(() => _isRunning = false);
+    }
+  }
+
+  Future<void> _refreshKarma() async {
+    final userRepo = ref.read(userRepositoryProvider);
+    final result = await userRepo.getKarma();
+
+    switch (result) {
+      case Success(value: final karma):
+        setState(() => _currentKarma = karma);
+      case Failure():
+        break;
+    }
   }
 
   Future<void> _runDeciphermentTest() async {
@@ -111,7 +161,7 @@ class _RepositoryTestPageState extends ConsumerState<RepositoryTestPage> {
 
       // 4. 利用可能なクリスタルを取得
       _log('4. 利用可能なクリスタルを取得...');
-      final availableResult = await crystalRepo.getAvailableCrystals(limit: 10);
+      final availableResult = await crystalRepo.getRandomAvailableCrystals(limit: 10);
       switch (availableResult) {
         case Success(value: final crystals):
           _log('   ✅ 取得件数: ${crystals.length}');
@@ -169,9 +219,7 @@ class _RepositoryTestPageState extends ConsumerState<RepositoryTestPage> {
 
       // 8. ジャーナルを確認
       _log('8. ジャーナル（収集クリスタル）を確認...');
-      final journalResult = await journalRepo.getCollectedCrystals(
-        limit: 10,
-      );
+      final journalResult = await journalRepo.getAllCollectedCrystals();
       switch (journalResult) {
         case Success(value: final collected):
           _log('   ✅ 収集件数: ${collected.length}');
@@ -252,6 +300,77 @@ class _RepositoryTestPageState extends ConsumerState<RepositoryTestPage> {
       ),
       body: Column(
         children: [
+          // カルマ設定UI
+          Container(
+            padding: const EdgeInsets.all(16),
+            color: Colors.orange.shade50,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Text(
+                      '💎 カルマ設定',
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    const Spacer(),
+                    if (_currentKarma != null)
+                      Text(
+                        '現在: $_currentKarma',
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          color: Colors.deepOrange,
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextField(
+                        controller: _karmaController,
+                        keyboardType: TextInputType.number,
+                        decoration: const InputDecoration(
+                          hintText: 'カルマ値を入力',
+                          border: OutlineInputBorder(),
+                          contentPadding: EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 8,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: _isRunning ? null : _setKarma,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.orange,
+                        foregroundColor: Colors.white,
+                      ),
+                      child: const Text('設定'),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Wrap(
+                  spacing: 8,
+                  children: [0, 50, 100, 500, 1000].map((value) {
+                    return ActionChip(
+                      label: Text('$value'),
+                      onPressed: _isRunning
+                          ? null
+                          : () {
+                              _karmaController.text = '$value';
+                              _setKarma();
+                            },
+                    );
+                  }).toList(),
+                ),
+              ],
+            ),
+          ),
+          const Divider(height: 1),
           Padding(
             padding: const EdgeInsets.all(16),
             child: ElevatedButton(

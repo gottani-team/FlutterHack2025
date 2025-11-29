@@ -3,7 +3,6 @@ import 'dart:developer' as dev;
 
 import 'package:firebase_ai/firebase_ai.dart';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
-import 'package:mustache_template/mustache_template.dart';
 
 import '../../domain/entities/ai_metadata.dart';
 import '../../domain/entities/emotion_type.dart';
@@ -12,6 +11,20 @@ import '../../domain/entities/emotion_type.dart';
 ///
 /// Firebase AI Logic (Gemini) を使用して秘密テキストを評価し、
 /// 感情タイプとスコアを算出する。
+///
+/// AIは以下の形式でレスポンスを返します:
+/// `#BEGIN:{karma}:{emotion}:#END`
+/// 例: `#BEGIN:12456:Happiness:#END`
+///
+/// カルマ値の範囲:
+/// - ~100: 価値のない、秘密ではない、感情がない
+/// - ~1000: 感情がややこめられている
+/// - ~5000: 一個人の秘密、他人の知る価値のあるもの
+/// - ~10000: 本人の中で墓場まで持っていきたくなるような秘密
+/// - ~25000: 社会的的にもその秘密が知られることでインパクトのあるもの
+/// - 25000~: 絶対に知られてはいけない（最上位カルマ）
+///
+/// これらのカルマ値は0-100のスコアに正規化されます。
 class KarmaEvaluationService {
   KarmaEvaluationService({
     FirebaseRemoteConfig? remoteConfig,
@@ -29,29 +42,37 @@ class KarmaEvaluationService {
   ///
   /// Returns: 評価結果（感情タイプとスコア）
   Future<AIMetadata> evaluate(String secretText) async {
-    dev.log('[KarmaEvaluationService] evaluate: textLength=${secretText.length}');
+    dev.log(
+      '[KarmaEvaluationService] evaluate: textLength=${secretText.length}',
+    );
 
     // Remote Config からプロンプトとモデル名を取得
     final promptTemplate = _remoteConfig.getString(_promptKey);
     if (promptTemplate.isEmpty) {
       dev.log('[KarmaEvaluationService] WARNING: Prompt template is empty');
-      throw Exception('Karma evaluation prompt not configured in Remote Config');
+      throw Exception(
+        'Karma evaluation prompt not configured in Remote Config',
+      );
     }
 
     final modelsJson = _remoteConfig.getString(_modelsKey);
     final modelsMap = modelsJson.isNotEmpty
         ? json.decode(modelsJson) as Map<String, dynamic>
         : <String, dynamic>{};
-    final modelName = modelsMap['evaluateKarma'] as String? ?? 'gemini-2.5-flash';
+    final modelName =
+        modelsMap['evaluateKarma'] as String? ?? 'gemini-2.5-flash';
 
     dev.log('[KarmaEvaluationService] Using model: $modelName');
 
     // Mustache テンプレートをレンダリング
-    final renderedPrompt = Template(promptTemplate).renderString({
-      'secretText': secretText,
-    });
+    final renderedPrompt = "$promptTemplate\n秘密文章: $secretText";
 
-    dev.log('[KarmaEvaluationService] Rendered prompt length: ${renderedPrompt.length}');
+    dev.log(
+      '[KarmaEvaluationService] Rendered prompt length: ${renderedPrompt.length}',
+    );
+    dev.log(
+      '[KarmaEvaluationService] Rendered prompt: $renderedPrompt',
+    );
 
     // Firebase AI で評価を実行
     final model = FirebaseAI.googleAI().generativeModel(model: modelName);
@@ -74,15 +95,51 @@ class KarmaEvaluationService {
 
   /// AIレスポンスをパースしてAIMetadataを生成
   ///
-  /// 期待されるJSON形式:
-  /// ```json
-  /// {
-  ///   "emotion": "happiness",
-  ///   "score": 75
-  /// }
-  /// ```
+  /// 期待される形式:
+  /// 1. JSON形式: `{"emotion": "happiness", "score": 75}`
+  /// 2. BEGIN/END形式: `#BEGIN:{karma}:{emotion}:#END`
+  ///    例: `#BEGIN:12456:Happiness:#END`
+  ///
+  /// カルマ値の範囲:
+  /// - ~100: 価値のない、秘密ではない、感情がない
+  /// - ~1000: 感情がややこめられている
+  /// - ~5000: 一個人の秘密、他人の知る価値のあるもの
+  /// - ~10000: 本人の中で墓場まで持っていきたくなるような秘密
+  /// - ~25000: 社会的的にもその秘密が知られることでインパクトのあるもの
+  /// - 25000~: 絶対に知られてはいけない（最上位カルマ）
   AIMetadata _parseResponse(String responseText) {
+    dev.log(
+      '[KarmaEvaluationService] _parseResponse: responseText=$responseText',
+    );
     try {
+      // #BEGIN:{karma}:{emotion}:#END形式をチェック
+      // 例: #BEGIN:12456:Happiness:#END
+      final beginEndPattern = RegExp(r'#BEGIN:(\d+):([^:]+):#END');
+      final beginEndMatch = beginEndPattern.firstMatch(responseText);
+
+      if (beginEndMatch != null) {
+        // #BEGIN:#END形式の場合
+        final karmaStr = beginEndMatch.group(1);
+        final emotionStr = beginEndMatch.group(2);
+
+        if (karmaStr != null && emotionStr != null) {
+          final karmaValue = int.tryParse(karmaStr) ?? 100;
+
+          // 感情タイプをパース（大文字小文字を無視）
+          final emotionType =
+              EmotionType.fromJson(emotionStr.trim().toLowerCase());
+
+          dev.log(
+            '[KarmaEvaluationService] Parsed from BEGIN/END: karma=$karmaValue, emotion=$emotionType',
+          );
+
+          return AIMetadata(
+            emotionType: emotionType,
+            score: karmaValue,
+          );
+        }
+      }
+
       // JSON部分を抽出（マークダウンコードブロックを考慮）
       final jsonStr = _extractJson(responseText);
       final parsed = json.decode(jsonStr) as Map<String, dynamic>;
@@ -91,9 +148,11 @@ class KarmaEvaluationService {
       final score = (parsed['score'] as num?)?.toInt() ?? 50;
 
       final emotionType = EmotionType.fromJson(emotionStr);
-      final clampedScore = score.clamp(0, 100);
+      final clampedScore = score;
 
-      dev.log('[KarmaEvaluationService] Parsed: emotion=$emotionType, score=$clampedScore');
+      dev.log(
+        '[KarmaEvaluationService] Parsed from JSON: emotion=$emotionType, score=$clampedScore',
+      );
 
       return AIMetadata(
         emotionType: emotionType,

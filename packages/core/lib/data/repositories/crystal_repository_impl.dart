@@ -1,4 +1,5 @@
 import 'dart:developer' as dev;
+import 'dart:math';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -23,26 +24,33 @@ class CrystalRepositoryImpl implements CrystalRepository {
       _firestore.collection('crystals');
 
   @override
-  Future<Result<List<Crystal>>> getAvailableCrystals({
+  Future<Result<List<Crystal>>> getRandomAvailableCrystals({
     int limit = 20,
   }) async {
     try {
-      dev.log('[CrystalRepo] getAvailableCrystals: limit=$limit');
+      dev.log('[CrystalRepo] getRandomAvailableCrystals: limit=$limit');
 
       // Note: Firestoreフィールドはsnake_case
+      // 全ての利用可能なクリスタルを取得してランダムに選択
       final snapshot = await _crystalsRef
           .where('status', isEqualTo: 'available')
-          .orderBy('created_at', descending: true)
-          .limit(limit)
           .get();
 
       dev.log(
-        '[CrystalRepo] getAvailableCrystals: Found ${snapshot.docs.length} crystals',
+        '[CrystalRepo] getRandomAvailableCrystals: Found ${snapshot.docs.length} total crystals',
       );
 
-      final crystals = snapshot.docs.map((doc) {
+      final allCrystals = snapshot.docs.map((doc) {
         return CrystalModel.fromFirestore(doc).toEntity();
       }).toList();
+
+      // ランダムにシャッフルして指定件数を取得
+      allCrystals.shuffle(Random());
+      final crystals = allCrystals.take(limit).toList();
+
+      dev.log(
+        '[CrystalRepo] getRandomAvailableCrystals: Returning ${crystals.length} random crystals',
+      );
 
       return Result.success(crystals);
     } on FirebaseException catch (e) {
@@ -148,28 +156,35 @@ class CrystalRepositoryImpl implements CrystalRepository {
   }
 
   @override
-  Stream<Result<List<Crystal>>> watchAvailableCrystals({
+  Stream<Result<List<Crystal>>> watchRandomAvailableCrystals({
     int limit = 20,
   }) {
     dev.log(
-      '[CrystalRepo] watchAvailableCrystals: Starting stream, limit=$limit',
+      '[CrystalRepo] watchRandomAvailableCrystals: Starting stream, limit=$limit',
     );
     // Note: Firestoreフィールドはsnake_case
+    // 全件取得してランダムに選択
     return _crystalsRef
         .where('status', isEqualTo: 'available')
-        .orderBy('created_at', descending: true)
-        .limit(limit)
         .snapshots()
         .map((snapshot) {
       dev.log(
-        '[CrystalRepo] watchAvailableCrystals: Received ${snapshot.docs.length} crystals',
+        '[CrystalRepo] watchRandomAvailableCrystals: Received ${snapshot.docs.length} total crystals',
       );
-      final crystals = snapshot.docs.map((doc) {
+      final allCrystals = snapshot.docs.map((doc) {
         return CrystalModel.fromFirestore(doc).toEntity();
       }).toList();
+
+      // ランダムにシャッフルして指定件数を取得
+      allCrystals.shuffle(Random());
+      final crystals = allCrystals.take(limit).toList();
+
+      dev.log(
+        '[CrystalRepo] watchRandomAvailableCrystals: Returning ${crystals.length} random crystals',
+      );
       return Result.success(crystals);
     }).handleError((error) {
-      dev.log('[CrystalRepo] watchAvailableCrystals: Stream error: $error');
+      dev.log('[CrystalRepo] watchRandomAvailableCrystals: Stream error: $error');
       if (error is FirebaseException) {
         return Result.failure(
           CoreFailure.network(
