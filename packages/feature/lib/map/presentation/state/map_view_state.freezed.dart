@@ -62,6 +62,18 @@ mixin _$MapViewState {
   /// Whether map is following user location
   bool get isFollowingUser;
 
+  /// Remote crystals fetched from Firestore (keyed by crystal ID)
+  Map<String, core.Crystal> get remoteCrystals;
+
+  /// Current user's karma balance, null if not yet loaded
+  int? get currentKarma;
+
+  /// Whether map style has finished loading
+  bool get isMapStyleLoaded;
+
+  /// Whether initial location has been set and camera moved
+  bool get hasSetInitialLocation;
+
   /// Create a copy of MapViewState
   /// with the given fields replaced by the non-null parameter values.
   @JsonKey(includeFromJson: false, includeToJson: false)
@@ -108,32 +120,45 @@ mixin _$MapViewState {
             (identical(other.mapZoomLevel, mapZoomLevel) ||
                 other.mapZoomLevel == mapZoomLevel) &&
             (identical(other.isFollowingUser, isFollowingUser) ||
-                other.isFollowingUser == isFollowingUser));
+                other.isFollowingUser == isFollowingUser) &&
+            const DeepCollectionEquality()
+                .equals(other.remoteCrystals, remoteCrystals) &&
+            (identical(other.currentKarma, currentKarma) ||
+                other.currentKarma == currentKarma) &&
+            (identical(other.isMapStyleLoaded, isMapStyleLoaded) ||
+                other.isMapStyleLoaded == isMapStyleLoaded) &&
+            (identical(other.hasSetInitialLocation, hasSetInitialLocation) ||
+                other.hasSetInitialLocation == hasSetInitialLocation));
   }
 
   @override
-  int get hashCode => Object.hash(
-      runtimeType,
-      userLocation,
-      permissionStatus,
-      gpsAccuracyLevel,
-      const DeepCollectionEquality().hash(visibleCrystallizationAreas),
-      proximityPhase,
-      approachingCrystal,
-      distanceToClosestCrystal,
-      pulseIntensity,
-      isHapticActive,
-      isLoading,
-      errorMessage,
-      isBackgroundMode,
-      mapCenterLatitude,
-      mapCenterLongitude,
-      mapZoomLevel,
-      isFollowingUser);
+  int get hashCode => Object.hashAll([
+        runtimeType,
+        userLocation,
+        permissionStatus,
+        gpsAccuracyLevel,
+        const DeepCollectionEquality().hash(visibleCrystallizationAreas),
+        proximityPhase,
+        approachingCrystal,
+        distanceToClosestCrystal,
+        pulseIntensity,
+        isHapticActive,
+        isLoading,
+        errorMessage,
+        isBackgroundMode,
+        mapCenterLatitude,
+        mapCenterLongitude,
+        mapZoomLevel,
+        isFollowingUser,
+        const DeepCollectionEquality().hash(remoteCrystals),
+        currentKarma,
+        isMapStyleLoaded,
+        hasSetInitialLocation
+      ]);
 
   @override
   String toString() {
-    return 'MapViewState(userLocation: $userLocation, permissionStatus: $permissionStatus, gpsAccuracyLevel: $gpsAccuracyLevel, visibleCrystallizationAreas: $visibleCrystallizationAreas, proximityPhase: $proximityPhase, approachingCrystal: $approachingCrystal, distanceToClosestCrystal: $distanceToClosestCrystal, pulseIntensity: $pulseIntensity, isHapticActive: $isHapticActive, isLoading: $isLoading, errorMessage: $errorMessage, isBackgroundMode: $isBackgroundMode, mapCenterLatitude: $mapCenterLatitude, mapCenterLongitude: $mapCenterLongitude, mapZoomLevel: $mapZoomLevel, isFollowingUser: $isFollowingUser)';
+    return 'MapViewState(userLocation: $userLocation, permissionStatus: $permissionStatus, gpsAccuracyLevel: $gpsAccuracyLevel, visibleCrystallizationAreas: $visibleCrystallizationAreas, proximityPhase: $proximityPhase, approachingCrystal: $approachingCrystal, distanceToClosestCrystal: $distanceToClosestCrystal, pulseIntensity: $pulseIntensity, isHapticActive: $isHapticActive, isLoading: $isLoading, errorMessage: $errorMessage, isBackgroundMode: $isBackgroundMode, mapCenterLatitude: $mapCenterLatitude, mapCenterLongitude: $mapCenterLongitude, mapZoomLevel: $mapZoomLevel, isFollowingUser: $isFollowingUser, remoteCrystals: $remoteCrystals, currentKarma: $currentKarma, isMapStyleLoaded: $isMapStyleLoaded, hasSetInitialLocation: $hasSetInitialLocation)';
   }
 }
 
@@ -159,7 +184,11 @@ abstract mixin class $MapViewStateCopyWith<$Res> {
       double? mapCenterLatitude,
       double? mapCenterLongitude,
       double mapZoomLevel,
-      bool isFollowingUser});
+      bool isFollowingUser,
+      Map<String, core.Crystal> remoteCrystals,
+      int? currentKarma,
+      bool isMapStyleLoaded,
+      bool hasSetInitialLocation});
 }
 
 /// @nodoc
@@ -190,6 +219,10 @@ class _$MapViewStateCopyWithImpl<$Res> implements $MapViewStateCopyWith<$Res> {
     Object? mapCenterLongitude = freezed,
     Object? mapZoomLevel = null,
     Object? isFollowingUser = null,
+    Object? remoteCrystals = null,
+    Object? currentKarma = freezed,
+    Object? isMapStyleLoaded = null,
+    Object? hasSetInitialLocation = null,
   }) {
     return _then(_self.copyWith(
       userLocation: freezed == userLocation
@@ -255,6 +288,22 @@ class _$MapViewStateCopyWithImpl<$Res> implements $MapViewStateCopyWith<$Res> {
       isFollowingUser: null == isFollowingUser
           ? _self.isFollowingUser
           : isFollowingUser // ignore: cast_nullable_to_non_nullable
+              as bool,
+      remoteCrystals: null == remoteCrystals
+          ? _self.remoteCrystals
+          : remoteCrystals // ignore: cast_nullable_to_non_nullable
+              as Map<String, core.Crystal>,
+      currentKarma: freezed == currentKarma
+          ? _self.currentKarma
+          : currentKarma // ignore: cast_nullable_to_non_nullable
+              as int?,
+      isMapStyleLoaded: null == isMapStyleLoaded
+          ? _self.isMapStyleLoaded
+          : isMapStyleLoaded // ignore: cast_nullable_to_non_nullable
+              as bool,
+      hasSetInitialLocation: null == hasSetInitialLocation
+          ? _self.hasSetInitialLocation
+          : hasSetInitialLocation // ignore: cast_nullable_to_non_nullable
               as bool,
     ));
   }
@@ -367,7 +416,11 @@ extension MapViewStatePatterns on MapViewState {
             double? mapCenterLatitude,
             double? mapCenterLongitude,
             double mapZoomLevel,
-            bool isFollowingUser)?
+            bool isFollowingUser,
+            Map<String, core.Crystal> remoteCrystals,
+            int? currentKarma,
+            bool isMapStyleLoaded,
+            bool hasSetInitialLocation)?
         $default, {
     required TResult orElse(),
   }) {
@@ -390,7 +443,11 @@ extension MapViewStatePatterns on MapViewState {
             _that.mapCenterLatitude,
             _that.mapCenterLongitude,
             _that.mapZoomLevel,
-            _that.isFollowingUser);
+            _that.isFollowingUser,
+            _that.remoteCrystals,
+            _that.currentKarma,
+            _that.isMapStyleLoaded,
+            _that.hasSetInitialLocation);
       case _:
         return orElse();
     }
@@ -427,7 +484,11 @@ extension MapViewStatePatterns on MapViewState {
             double? mapCenterLatitude,
             double? mapCenterLongitude,
             double mapZoomLevel,
-            bool isFollowingUser)
+            bool isFollowingUser,
+            Map<String, core.Crystal> remoteCrystals,
+            int? currentKarma,
+            bool isMapStyleLoaded,
+            bool hasSetInitialLocation)
         $default,
   ) {
     final _that = this;
@@ -449,7 +510,11 @@ extension MapViewStatePatterns on MapViewState {
             _that.mapCenterLatitude,
             _that.mapCenterLongitude,
             _that.mapZoomLevel,
-            _that.isFollowingUser);
+            _that.isFollowingUser,
+            _that.remoteCrystals,
+            _that.currentKarma,
+            _that.isMapStyleLoaded,
+            _that.hasSetInitialLocation);
     }
   }
 
@@ -483,7 +548,11 @@ extension MapViewStatePatterns on MapViewState {
             double? mapCenterLatitude,
             double? mapCenterLongitude,
             double mapZoomLevel,
-            bool isFollowingUser)?
+            bool isFollowingUser,
+            Map<String, core.Crystal> remoteCrystals,
+            int? currentKarma,
+            bool isMapStyleLoaded,
+            bool hasSetInitialLocation)?
         $default,
   ) {
     final _that = this;
@@ -505,7 +574,11 @@ extension MapViewStatePatterns on MapViewState {
             _that.mapCenterLatitude,
             _that.mapCenterLongitude,
             _that.mapZoomLevel,
-            _that.isFollowingUser);
+            _that.isFollowingUser,
+            _that.remoteCrystals,
+            _that.currentKarma,
+            _that.isMapStyleLoaded,
+            _that.hasSetInitialLocation);
       case _:
         return null;
     }
@@ -532,8 +605,13 @@ class _MapViewState extends MapViewState {
       this.mapCenterLatitude,
       this.mapCenterLongitude,
       this.mapZoomLevel = 17.5,
-      this.isFollowingUser = true})
+      this.isFollowingUser = true,
+      final Map<String, core.Crystal> remoteCrystals = const {},
+      this.currentKarma,
+      this.isMapStyleLoaded = false,
+      this.hasSetInitialLocation = false})
       : _visibleCrystallizationAreas = visibleCrystallizationAreas,
+        _remoteCrystals = remoteCrystals,
         super._();
 
   /// Current user location, null if not yet acquired
@@ -618,6 +696,32 @@ class _MapViewState extends MapViewState {
   @JsonKey()
   final bool isFollowingUser;
 
+  /// Remote crystals fetched from Firestore (keyed by crystal ID)
+  final Map<String, core.Crystal> _remoteCrystals;
+
+  /// Remote crystals fetched from Firestore (keyed by crystal ID)
+  @override
+  @JsonKey()
+  Map<String, core.Crystal> get remoteCrystals {
+    if (_remoteCrystals is EqualUnmodifiableMapView) return _remoteCrystals;
+    // ignore: implicit_dynamic_type
+    return EqualUnmodifiableMapView(_remoteCrystals);
+  }
+
+  /// Current user's karma balance, null if not yet loaded
+  @override
+  final int? currentKarma;
+
+  /// Whether map style has finished loading
+  @override
+  @JsonKey()
+  final bool isMapStyleLoaded;
+
+  /// Whether initial location has been set and camera moved
+  @override
+  @JsonKey()
+  final bool hasSetInitialLocation;
+
   /// Create a copy of MapViewState
   /// with the given fields replaced by the non-null parameter values.
   @override
@@ -664,32 +768,45 @@ class _MapViewState extends MapViewState {
             (identical(other.mapZoomLevel, mapZoomLevel) ||
                 other.mapZoomLevel == mapZoomLevel) &&
             (identical(other.isFollowingUser, isFollowingUser) ||
-                other.isFollowingUser == isFollowingUser));
+                other.isFollowingUser == isFollowingUser) &&
+            const DeepCollectionEquality()
+                .equals(other._remoteCrystals, _remoteCrystals) &&
+            (identical(other.currentKarma, currentKarma) ||
+                other.currentKarma == currentKarma) &&
+            (identical(other.isMapStyleLoaded, isMapStyleLoaded) ||
+                other.isMapStyleLoaded == isMapStyleLoaded) &&
+            (identical(other.hasSetInitialLocation, hasSetInitialLocation) ||
+                other.hasSetInitialLocation == hasSetInitialLocation));
   }
 
   @override
-  int get hashCode => Object.hash(
-      runtimeType,
-      userLocation,
-      permissionStatus,
-      gpsAccuracyLevel,
-      const DeepCollectionEquality().hash(_visibleCrystallizationAreas),
-      proximityPhase,
-      approachingCrystal,
-      distanceToClosestCrystal,
-      pulseIntensity,
-      isHapticActive,
-      isLoading,
-      errorMessage,
-      isBackgroundMode,
-      mapCenterLatitude,
-      mapCenterLongitude,
-      mapZoomLevel,
-      isFollowingUser);
+  int get hashCode => Object.hashAll([
+        runtimeType,
+        userLocation,
+        permissionStatus,
+        gpsAccuracyLevel,
+        const DeepCollectionEquality().hash(_visibleCrystallizationAreas),
+        proximityPhase,
+        approachingCrystal,
+        distanceToClosestCrystal,
+        pulseIntensity,
+        isHapticActive,
+        isLoading,
+        errorMessage,
+        isBackgroundMode,
+        mapCenterLatitude,
+        mapCenterLongitude,
+        mapZoomLevel,
+        isFollowingUser,
+        const DeepCollectionEquality().hash(_remoteCrystals),
+        currentKarma,
+        isMapStyleLoaded,
+        hasSetInitialLocation
+      ]);
 
   @override
   String toString() {
-    return 'MapViewState(userLocation: $userLocation, permissionStatus: $permissionStatus, gpsAccuracyLevel: $gpsAccuracyLevel, visibleCrystallizationAreas: $visibleCrystallizationAreas, proximityPhase: $proximityPhase, approachingCrystal: $approachingCrystal, distanceToClosestCrystal: $distanceToClosestCrystal, pulseIntensity: $pulseIntensity, isHapticActive: $isHapticActive, isLoading: $isLoading, errorMessage: $errorMessage, isBackgroundMode: $isBackgroundMode, mapCenterLatitude: $mapCenterLatitude, mapCenterLongitude: $mapCenterLongitude, mapZoomLevel: $mapZoomLevel, isFollowingUser: $isFollowingUser)';
+    return 'MapViewState(userLocation: $userLocation, permissionStatus: $permissionStatus, gpsAccuracyLevel: $gpsAccuracyLevel, visibleCrystallizationAreas: $visibleCrystallizationAreas, proximityPhase: $proximityPhase, approachingCrystal: $approachingCrystal, distanceToClosestCrystal: $distanceToClosestCrystal, pulseIntensity: $pulseIntensity, isHapticActive: $isHapticActive, isLoading: $isLoading, errorMessage: $errorMessage, isBackgroundMode: $isBackgroundMode, mapCenterLatitude: $mapCenterLatitude, mapCenterLongitude: $mapCenterLongitude, mapZoomLevel: $mapZoomLevel, isFollowingUser: $isFollowingUser, remoteCrystals: $remoteCrystals, currentKarma: $currentKarma, isMapStyleLoaded: $isMapStyleLoaded, hasSetInitialLocation: $hasSetInitialLocation)';
   }
 }
 
@@ -717,7 +834,11 @@ abstract mixin class _$MapViewStateCopyWith<$Res>
       double? mapCenterLatitude,
       double? mapCenterLongitude,
       double mapZoomLevel,
-      bool isFollowingUser});
+      bool isFollowingUser,
+      Map<String, core.Crystal> remoteCrystals,
+      int? currentKarma,
+      bool isMapStyleLoaded,
+      bool hasSetInitialLocation});
 }
 
 /// @nodoc
@@ -749,6 +870,10 @@ class __$MapViewStateCopyWithImpl<$Res>
     Object? mapCenterLongitude = freezed,
     Object? mapZoomLevel = null,
     Object? isFollowingUser = null,
+    Object? remoteCrystals = null,
+    Object? currentKarma = freezed,
+    Object? isMapStyleLoaded = null,
+    Object? hasSetInitialLocation = null,
   }) {
     return _then(_MapViewState(
       userLocation: freezed == userLocation
@@ -814,6 +939,22 @@ class __$MapViewStateCopyWithImpl<$Res>
       isFollowingUser: null == isFollowingUser
           ? _self.isFollowingUser
           : isFollowingUser // ignore: cast_nullable_to_non_nullable
+              as bool,
+      remoteCrystals: null == remoteCrystals
+          ? _self._remoteCrystals
+          : remoteCrystals // ignore: cast_nullable_to_non_nullable
+              as Map<String, core.Crystal>,
+      currentKarma: freezed == currentKarma
+          ? _self.currentKarma
+          : currentKarma // ignore: cast_nullable_to_non_nullable
+              as int?,
+      isMapStyleLoaded: null == isMapStyleLoaded
+          ? _self.isMapStyleLoaded
+          : isMapStyleLoaded // ignore: cast_nullable_to_non_nullable
+              as bool,
+      hasSetInitialLocation: null == hasSetInitialLocation
+          ? _self.hasSetInitialLocation
+          : hasSetInitialLocation // ignore: cast_nullable_to_non_nullable
               as bool,
     ));
   }
