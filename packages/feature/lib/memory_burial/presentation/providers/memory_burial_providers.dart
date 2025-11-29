@@ -96,9 +96,9 @@ final memoryTextProvider = NotifierProvider<MemoryTextNotifier, String>(
   MemoryTextNotifier.new,
 );
 
-/// ボタン有効化の状態（ニックネーム必須 + テキスト10文字以上）
+/// ボタン有効化の状態（ニックネーム必須 + テキスト10文字以上250文字以内）
 final isButtonEnabledProvider = Provider<bool>((ref) {
   final nickname = ref.watch(nicknameProvider);
   final text = ref.watch(memoryTextProvider);
-  return nickname.isNotEmpty && text.length >= 10 && text.length <= 500;
+  return nickname.isNotEmpty && text.length >= 10 && text.length <= 250;
 });

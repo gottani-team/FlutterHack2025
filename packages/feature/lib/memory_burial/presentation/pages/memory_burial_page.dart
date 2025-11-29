@@ -107,7 +107,7 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
   Future<void> _handleBuryAction() async {
     final nickname = ref.read(nicknameProvider);
     final memoryText = ref.read(memoryTextProvider);
-    if (nickname.isEmpty || memoryText.length < 10 || memoryText.length > 500)
+    if (nickname.isEmpty || memoryText.length < 10 || memoryText.length > 250)
       return;
 
     // キーボードを閉じる
@@ -420,6 +420,7 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
             child: AnimatedBurialButton(
               phase: buttonPhase,
               textLength: memoryText.length,
+              isEnabled: isButtonEnabled,
               onPressed:
                   buttonPhase == ButtonPhase.ready ? _handleBuryAction : null,
             ),
@@ -493,7 +494,7 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
     return TextField(
       controller: _textController,
       focusNode: _textFocusNode,
-      maxLength: 500,
+      maxLength: 250,
       maxLines: null,
       minLines: 5,
       keyboardType: TextInputType.multiline,
@@ -508,7 +509,7 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
         height: 1.6,
       ),
       inputFormatters: [
-        LengthLimitingTextInputFormatter(500),
+        LengthLimitingTextInputFormatter(250),
       ],
       decoration: InputDecoration(
         hintText: 'あなたの言葉',

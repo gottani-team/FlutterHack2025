@@ -25,11 +25,13 @@ class AnimatedBurialButton extends StatefulWidget {
     required this.phase,
     required this.onPressed,
     this.textLength = 0,
+    this.isEnabled = false,
   });
 
   final ButtonPhase phase;
   final VoidCallback? onPressed;
   final int textLength;
+  final bool isEnabled;
 
   @override
   State<AnimatedBurialButton> createState() => _AnimatedBurialButtonState();
@@ -41,11 +43,15 @@ class _AnimatedBurialButtonState extends State<AnimatedBurialButton>
   late AnimationController _entryEffectController;
   late AnimationController _arrowFadeController;
   late AnimationController _crystalFadeController;
+  late AnimationController _shapeAnimationController;
 
   // エフェクトのアニメーション
   late Animation<double> _entryAnimation;
   late Animation<double> _arrowFadeAnimation;
   late Animation<double> _crystalFadeAnimation;
+  late Animation<double> _positionAnimation;
+  late Animation<double> _widthAnimation;
+  late Animation<double> _heightAnimation;
 
   @override
   void initState() {
@@ -91,6 +97,45 @@ class _AnimatedBurialButtonState extends State<AnimatedBurialButton>
         curve: const Interval(0.0, 0.7, curve: Curves.easeOutCubic),
       ),
     );
+
+    // 形状・位置アニメーション
+    _shapeAnimationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
+
+    // 位置アニメーション（ease out）
+    _positionAnimation = CurvedAnimation(
+      parent: _shapeAnimationController,
+      curve: Curves.easeOut,
+    );
+
+    // 幅アニメーション: 65 → 160（固定）
+    _widthAnimation = Tween<double>(begin: 65, end: 160).animate(
+      CurvedAnimation(
+        parent: _shapeAnimationController,
+        curve: const Interval(0.0, 0.4, curve: Curves.easeOut),
+      ),
+    );
+
+    // 高さアニメーション: 104 → 160（円） → 280（オーバーシュート） → 240（最終形）
+    _heightAnimation = TweenSequence<double>([
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 104, end: 160)
+            .chain(CurveTween(curve: Curves.easeOut)),
+        weight: 25,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 160, end: 280)
+            .chain(CurveTween(curve: Curves.easeOut)),
+        weight: 35,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 280, end: 240)
+            .chain(CurveTween(curve: Curves.easeInOut)),
+        weight: 40,
+      ),
+    ]).animate(_shapeAnimationController);
   }
 
   @override
@@ -102,6 +147,7 @@ class _AnimatedBurialButtonState extends State<AnimatedBurialButton>
         oldWidget.phase != ButtonPhase.processing) {
       _entryEffectController.forward(from: 0);
       _arrowFadeController.forward(from: 0);
+      _shapeAnimationController.forward(from: 0);
 
       // 文字が集まりきる頃（2.5秒アニメーションの終盤）にクリスタルが浮かび上がる
       // 文字がボタンに吸い込まれてクリスタルになる感じ
@@ -128,120 +174,120 @@ class _AnimatedBurialButtonState extends State<AnimatedBurialButton>
     _entryEffectController.dispose();
     _arrowFadeController.dispose();
     _crystalFadeController.dispose();
+    _shapeAnimationController.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final progress = (widget.textLength / 10.0).clamp(0.0, 1.0);
-
     final isProcessingOrCompleted = widget.phase == ButtonPhase.processing ||
         widget.phase == ButtonPhase.completed;
+    final isReady = widget.phase == ButtonPhase.ready;
 
-    // ボタンのサイズと位置
-    final double buttonWidth;
-    final double buttonHeight;
-    final double buttonTopOffset;
-    final double arcsCenterY;
-    final double arcsIntensity;
-    final _ButtonIcon icon;
+    // アイコン
+    final icon = widget.phase == ButtonPhase.completed
+        ? _ButtonIcon.diamond
+        : _ButtonIcon.arrowDown;
 
-    if (isProcessingOrCompleted) {
-      buttonWidth = 160;
-      buttonHeight = 240;
-      buttonTopOffset = 146;
-      arcsCenterY = 266;
-      arcsIntensity = 1.0;
-      // processing中も矢印を表示（徐々にフェードアウト）、completed後はクリスタル
-      icon = widget.phase == ButtonPhase.completed
-          ? _ButtonIcon.diamond
-          : _ButtonIcon.arrowDown;
-    } else {
-      buttonWidth = 65 + (160 - 65) * progress;
-      buttonHeight = 104 + (160 - 104) * progress;
-      buttonTopOffset = 148 - (148 - 120) * progress;
-      arcsCenterY = 200;
-      arcsIntensity = progress * 0.8;
-      icon = _ButtonIcon.arrowDown;
-    }
+    return AnimatedBuilder(
+      animation: _shapeAnimationController,
+      builder: (context, child) {
+        // アニメーション中の値を再計算
+        final animButtonWidth = isProcessingOrCompleted
+            ? _widthAnimation.value
+            : 65.0;
+        final animButtonHeight = isProcessingOrCompleted
+            ? _heightAnimation.value
+            : 104.0;
+        final animButtonTopOffset = isProcessingOrCompleted
+            ? 148 - (148 - 146) * _positionAnimation.value
+            : 148.0;
+        final animArcsCenterY = isProcessingOrCompleted
+            ? 200 + (266 - 200) * _positionAnimation.value
+            : 200.0;
+        final animArcsIntensity = isProcessingOrCompleted
+            ? _positionAnimation.value
+            : (isReady ? 0.5 : 0.0);
+        final animButtonBottomY = animButtonTopOffset + animButtonHeight;
 
-    // ボタンの下端位置
-    final buttonBottomY = buttonTopOffset + buttonHeight;
+        return SizedBox(
+          width: 400,
+          height: 500, // エフェクト用に高さを拡大
+          child: Stack(
+            alignment: Alignment.center,
+            clipBehavior: Clip.none,
+            children: [
+              // 大気圏突入エフェクト（ボタンの下に配置）
+              if (isProcessingOrCompleted)
+                AnimatedBuilder(
+                  animation: _entryAnimation,
+                  builder: (context, child) {
+                    return CustomPaint(
+                      size: const Size(400, 500),
+                      painter: _AtmosphericEntryPainter(
+                        progress: _entryAnimation.value,
+                        buttonBottomY: animButtonBottomY,
+                        buttonWidth: animButtonWidth,
+                        buttonHeight: animButtonHeight,
+                      ),
+                    );
+                  },
+                ),
 
-    return SizedBox(
-      width: 400,
-      height: 500, // エフェクト用に高さを拡大
-      child: Stack(
-        alignment: Alignment.center,
-        clipBehavior: Clip.none,
-        children: [
-          // 大気圏突入エフェクト（ボタンの下に配置）
-          if (isProcessingOrCompleted)
-            AnimatedBuilder(
-              animation: _entryAnimation,
-              builder: (context, child) {
-                return CustomPaint(
-                  size: const Size(400, 500),
-                  painter: _AtmosphericEntryPainter(
-                    progress: _entryAnimation.value,
-                    buttonBottomY: buttonBottomY,
-                    buttonWidth: buttonWidth,
-                    buttonHeight: buttonHeight,
-                  ),
-                );
-              },
-            ),
-
-          // 同心円
-          Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 400,
-            child: AnimatedOpacity(
-              opacity: arcsIntensity,
-              duration: const Duration(milliseconds: 200),
-              child: _ConcentricArcs(
-                controller: _rotationController,
-                intensity: arcsIntensity.clamp(0.1, 1.0),
-                centerY: arcsCenterY,
-              ),
-            ),
-          ),
-
-          // ボタン本体
-          AnimatedPositioned(
-            duration: const Duration(milliseconds: 800),
-            curve: Curves.easeOutCubic,
-            top: buttonTopOffset,
-            left: 0,
-            right: 0,
-            child: Center(
-              child: GestureDetector(
-                onTap:
-                    widget.phase == ButtonPhase.ready ? widget.onPressed : null,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 800),
-                  curve: Curves.easeOutCubic,
-                  width: buttonWidth,
-                  height: buttonHeight,
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(buttonWidth / 2),
-                    color: const Color(0xFFFF3C00).withOpacity(0.22),
-                    border: Border.all(
-                      color: const Color(0xFFFF3C00).withOpacity(0.3),
-                      width: 1.5,
-                    ),
-                  ),
-                  child: Center(
-                    child: _buildAnimatedIcon(icon),
+              // 同心円
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                height: 400,
+                child: AnimatedOpacity(
+                  opacity: animArcsIntensity,
+                  duration: const Duration(milliseconds: 200),
+                  child: _ConcentricArcs(
+                    controller: _rotationController,
+                    intensity: animArcsIntensity.clamp(0.1, 1.0),
+                    centerY: animArcsCenterY,
                   ),
                 ),
               ),
-            ),
+
+              // ボタン本体
+              Positioned(
+                top: animButtonTopOffset,
+                left: 0,
+                right: 0,
+                child: Center(
+                  child: GestureDetector(
+                    onTap: widget.phase == ButtonPhase.ready && widget.isEnabled
+                        ? widget.onPressed
+                        : null,
+                    child: Container(
+                      width: animButtonWidth,
+                      height: animButtonHeight,
+                      decoration: BoxDecoration(
+                        borderRadius:
+                            BorderRadius.circular(animButtonWidth / 2),
+                        color: widget.isEnabled
+                            ? const Color(0xFFFF3C00).withOpacity(0.22)
+                            : const Color(0xFF9E9E9E).withOpacity(0.22),
+                        border: Border.all(
+                          color: widget.isEnabled
+                              ? const Color(0xFFFF3C00).withOpacity(0.3)
+                              : const Color(0xFF9E9E9E).withOpacity(0.3),
+                          width: 1.5,
+                        ),
+                      ),
+                      child: Center(
+                        child: _buildAnimatedIcon(icon),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
