@@ -11,9 +11,8 @@ import '../datasources/firestore_collection_service.dart';
 /// Firestore Collection Service を使用してコレクション管理機能を提供する。
 /// 統計情報の計算とエラーハンドリングを担当。
 class CollectionRepositoryImpl implements CollectionRepository {
-  final FirestoreCollectionService _collectionService;
-
   CollectionRepositoryImpl(this._collectionService);
+  final FirestoreCollectionService _collectionService;
 
   @override
   Future<Result<List<MemoryCrystal>>> getExcavatedCrystals({
@@ -56,7 +55,8 @@ class CollectionRepositoryImpl implements CollectionRepository {
     } catch (e, stackTrace) {
       return Result.failure(
         CoreFailure.unknown(
-          message: 'Unexpected error getting excavated crystals: $e\n$stackTrace',
+          message:
+              'Unexpected error getting excavated crystals: $e\n$stackTrace',
         ),
       );
     }
@@ -91,11 +91,13 @@ class CollectionRepositoryImpl implements CollectionRepository {
         if (model.excavatedAt != null) {
           final excavatedAt = model.excavatedAt!.toDate();
 
-          if (firstExcavatedAt == null || excavatedAt.isBefore(firstExcavatedAt)) {
+          if (firstExcavatedAt == null ||
+              excavatedAt.isBefore(firstExcavatedAt)) {
             firstExcavatedAt = excavatedAt;
           }
 
-          if (latestExcavatedAt == null || excavatedAt.isAfter(latestExcavatedAt)) {
+          if (latestExcavatedAt == null ||
+              excavatedAt.isAfter(latestExcavatedAt)) {
             latestExcavatedAt = excavatedAt;
           }
         }
@@ -161,7 +163,8 @@ class CollectionRepositoryImpl implements CollectionRepository {
           if (error.code == 'permission-denied') {
             return Result<List<MemoryCrystal>>.failure(
               CoreFailure.permission(
-                message: 'No permission to watch collection: ${error.message ?? ""}',
+                message:
+                    'No permission to watch collection: ${error.message ?? ""}',
               ),
             );
           }

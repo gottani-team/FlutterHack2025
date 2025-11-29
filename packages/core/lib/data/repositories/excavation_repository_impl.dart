@@ -11,9 +11,8 @@ import '../datasources/firestore_excavation_service.dart';
 /// Firestore Excavation Service を使用してクリスタル採掘機能を提供する。
 /// エラーハンドリングとビジネスロジックのマッピングを担当。
 class ExcavationRepositoryImpl implements ExcavationRepository {
-  final FirestoreExcavationService _excavationService;
-
   ExcavationRepositoryImpl(this._excavationService);
+  final FirestoreExcavationService _excavationService;
 
   @override
   Future<Result<MemoryCrystal>> excavateCrystal({
@@ -65,7 +64,7 @@ class ExcavationRepositoryImpl implements ExcavationRepository {
       // ビジネスルール違反のエラーをマッピング
       if (errorMessage.contains('Cannot excavate own crystal')) {
         return Result.failure(
-          CoreFailure.permission(
+          const CoreFailure.permission(
             message: 'Cannot excavate your own crystal',
           ),
         );
@@ -73,7 +72,7 @@ class ExcavationRepositoryImpl implements ExcavationRepository {
 
       if (errorMessage.contains('already excavated')) {
         return Result.failure(
-          CoreFailure.duplicate(
+          const CoreFailure.duplicate(
             message: 'Crystal has already been excavated',
           ),
         );
@@ -131,7 +130,8 @@ class ExcavationRepositoryImpl implements ExcavationRepository {
     } catch (e, stackTrace) {
       return Result.failure(
         CoreFailure.unknown(
-          message: 'Unexpected error checking excavation status: $e\n$stackTrace',
+          message:
+              'Unexpected error checking excavation status: $e\n$stackTrace',
         ),
       );
     }

@@ -12,13 +12,12 @@ import '../models/memory_crystal_model.dart';
 /// - 採掘可能性のチェック
 /// - 競合防止
 class FirestoreExcavationService {
+  FirestoreExcavationService(this._firestore);
   final FirebaseFirestore _firestore;
 
   /// Collection reference for crystals
   CollectionReference<Map<String, dynamic>> get _crystalsRef =>
       _firestore.collection('crystals');
-
-  FirestoreExcavationService(this._firestore);
 
   /// クリスタルを採掘する（Transaction使用）
   ///
@@ -44,7 +43,7 @@ class FirestoreExcavationService {
     final docRef = _crystalsRef.doc(crystalId);
 
     // Transactionで採掘処理を実行
-    return await _firestore.runTransaction<MemoryCrystalModel>(
+    return _firestore.runTransaction<MemoryCrystalModel>(
       (transaction) async {
         // Step 1: クリスタルを取得
         final snapshot = await transaction.get(docRef);
