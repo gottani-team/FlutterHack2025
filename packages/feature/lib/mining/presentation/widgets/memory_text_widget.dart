@@ -103,9 +103,9 @@ class _MemoryTextWidgetState extends State<MemoryTextWidget>
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
                 colors: [
-                  const Color(0xFF9ACCFD).withValues(alpha: 0.0),
-                  const Color(0xFF9ACCFD).withValues(alpha: 0.9),
-                  const Color(0xFF9ACCFD),
+                  const Color(0x009ACCFD), // 0% opacity
+                  const Color(0xE69ACCFD), // 90% opacity
+                  const Color(0xFF9ACCFD), // 100% opacity
                 ],
                 stops: const [0.0, 0.3, 1.0],
               ),

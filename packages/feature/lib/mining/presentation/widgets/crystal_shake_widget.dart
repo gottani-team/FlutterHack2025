@@ -2,23 +2,23 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 
-/// Widget that wraps a child and provides a shake animation on demand
+/// Widget that wraps a child and provides a rotation animation on tap
 class CrystalShakeWidget extends StatefulWidget {
   const CrystalShakeWidget({
     super.key,
     required this.child,
-    this.shakeDuration = const Duration(milliseconds: 150),
-    this.shakeIntensity = 10.0,
+    this.rotateDuration = const Duration(milliseconds: 300),
+    this.rotateAngle = 0.08, // radians (~4.5 degrees)
   });
 
-  /// The widget to apply shake animation to
+  /// The widget to apply rotation animation to
   final Widget child;
 
-  /// Duration of the shake animation
-  final Duration shakeDuration;
+  /// Duration of the rotation animation
+  final Duration rotateDuration;
 
-  /// Maximum offset in pixels for the shake
-  final double shakeIntensity;
+  /// Maximum rotation angle in radians
+  final double rotateAngle;
 
   @override
   State<CrystalShakeWidget> createState() => CrystalShakeWidgetState();
@@ -27,24 +27,26 @@ class CrystalShakeWidget extends StatefulWidget {
 class CrystalShakeWidgetState extends State<CrystalShakeWidget>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
-  late Animation<Offset> _animation;
+  late Animation<double> _animation;
   final Random _random = Random();
 
   @override
   void initState() {
     super.initState();
     _controller = AnimationController(
-      duration: widget.shakeDuration,
+      duration: widget.rotateDuration,
       vsync: this,
     );
 
-    _animation = Tween<Offset>(
-      begin: Offset.zero,
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.elasticOut,
-    ));
+    _animation = Tween<double>(
+      begin: 0,
+      end: 0,
+    ).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeOut,
+      ),
+    );
   }
 
   @override
@@ -53,38 +55,35 @@ class CrystalShakeWidgetState extends State<CrystalShakeWidget>
     super.dispose();
   }
 
-  /// Trigger the shake animation
+  /// Trigger the rotation animation
   void shake() {
-    // Generate random offset direction
-    final dx = (_random.nextDouble() - 0.5) * 2 * widget.shakeIntensity;
-    final dy = (_random.nextDouble() - 0.5) * 2 * widget.shakeIntensity;
+    // Random direction: left (-1) or right (1)
+    final direction = _random.nextBool() ? 1.0 : -1.0;
+    final angle = widget.rotateAngle * direction;
 
-    _animation = TweenSequence<Offset>([
+    _animation = TweenSequence<double>([
       TweenSequenceItem(
-        tween: Tween<Offset>(
-          begin: Offset.zero,
-          end: Offset(dx, dy),
-        ),
+        tween: Tween<double>(begin: 0, end: angle),
         weight: 1,
       ),
       TweenSequenceItem(
-        tween: Tween<Offset>(
-          begin: Offset(dx, dy),
-          end: Offset(-dx * 0.5, -dy * 0.5),
-        ),
+        tween: Tween<double>(begin: angle, end: -angle * 0.5),
         weight: 1,
       ),
       TweenSequenceItem(
-        tween: Tween<Offset>(
-          begin: Offset(-dx * 0.5, -dy * 0.5),
-          end: Offset.zero,
-        ),
+        tween: Tween<double>(begin: -angle * 0.5, end: angle * 0.25),
         weight: 1,
       ),
-    ]).animate(CurvedAnimation(
-      parent: _controller,
-      curve: Curves.easeOut,
-    ));
+      TweenSequenceItem(
+        tween: Tween<double>(begin: angle * 0.25, end: 0),
+        weight: 1,
+      ),
+    ]).animate(
+      CurvedAnimation(
+        parent: _controller,
+        curve: Curves.easeOut,
+      ),
+    );
 
     _controller.forward(from: 0);
   }
@@ -92,14 +91,14 @@ class CrystalShakeWidgetState extends State<CrystalShakeWidget>
   @override
   Widget build(BuildContext context) {
     // RepaintBoundary isolates this animation from parent repaints
-    // ensuring shake animation runs at 60fps without triggering
+    // ensuring rotation animation runs at 60fps without triggering
     // unnecessary repaints in the parent widget tree
     return RepaintBoundary(
       child: AnimatedBuilder(
         animation: _controller,
         builder: (context, child) {
-          return Transform.translate(
-            offset: _animation.value,
+          return Transform.rotate(
+            angle: _animation.value,
             child: child,
           );
         },

@@ -21,26 +21,9 @@ class CrystalDisplayWidget extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       width: size,
       height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        boxShadow: [
-          // Outer glow
-          BoxShadow(
-            color: glowColor.withValues(alpha: 0.3),
-            blurRadius: 40,
-            spreadRadius: 10,
-          ),
-          // Inner glow
-          BoxShadow(
-            color: glowColor.withValues(alpha: 0.2),
-            blurRadius: 20,
-            spreadRadius: 5,
-          ),
-        ],
-      ),
       child: ClipOval(
         child: imageUrl.isNotEmpty ? _buildImage() : _buildPlaceholder(),
       ),
@@ -70,8 +53,8 @@ class CrystalDisplayWidget extends StatelessWidget {
       decoration: BoxDecoration(
         gradient: RadialGradient(
           colors: [
-            glowColor.withValues(alpha: 0.6),
-            glowColor.withValues(alpha: 0.2),
+            glowColor.withOpacity(0.6),
+            glowColor.withOpacity(0.2),
             Colors.transparent,
           ],
           stops: const [0.0, 0.5, 1.0],
@@ -81,7 +64,7 @@ class CrystalDisplayWidget extends StatelessWidget {
         child: Icon(
           Icons.diamond_outlined,
           size: size * 0.5,
-          color: glowColor.withValues(alpha: 0.8),
+          color: glowColor.withOpacity(0.8),
         ),
       ),
     );

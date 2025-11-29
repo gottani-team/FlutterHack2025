@@ -1,14 +1,16 @@
+import 'dart:ui';
+
 import 'package:audioplayers/audioplayers.dart';
 import 'package:core/presentation/widgets/shimmer_background_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 
 import '../providers/mining_providers.dart';
 import '../state/mining_state.dart';
 import '../widgets/crystal_display_widget.dart';
 import '../widgets/crystal_shake_widget.dart';
-import '../widgets/memory_text_widget.dart';
 
 /// Result data returned when mining session completes
 class MiningResult {
@@ -30,6 +32,7 @@ class MiningPage extends ConsumerStatefulWidget {
     super.key,
     required this.crystalId,
     required this.crystalImageUrl,
+    required this.crystalLabel,
     required this.memoryText,
     this.glowColor,
     this.onComplete,
@@ -37,6 +40,7 @@ class MiningPage extends ConsumerStatefulWidget {
 
   final String crystalId;
   final String crystalImageUrl;
+  final String crystalLabel;
   final String memoryText;
   final Color? glowColor;
 
@@ -136,7 +140,12 @@ class _MiningPageState extends ConsumerState<MiningPage>
   }
 
   void _onTextRevealComplete() {
-    ref.read(miningProvider.notifier).onTextRevealComplete();
+    // Delay to match crystal animation, then mark text as revealed
+    Future.delayed(const Duration(milliseconds: 700), () {
+      if (mounted) {
+        ref.read(miningProvider.notifier).onTextRevealComplete();
+      }
+    });
   }
 
   Future<void> _onDismiss() async {
@@ -153,17 +162,17 @@ class _MiningPageState extends ConsumerState<MiningPage>
         );
         await widget.onComplete!(result);
 
-        // Success - pop the screen
+        // Success - go back to home
         if (mounted) {
-          Navigator.of(context).pop(result);
+          context.go('/');
         }
       } catch (e) {
         // Error - show error state
         notifier.onCompletionError(e.toString());
       }
     } else {
-      // No callback - just pop
-      Navigator.of(context).pop();
+      // No callback - just go back to home
+      context.go('/');
     }
   }
 
@@ -173,59 +182,150 @@ class _MiningPageState extends ConsumerState<MiningPage>
 
   @override
   Widget build(BuildContext context) {
+    // Listen for phase changes to trigger text reveal
+    ref.listen<MiningUIState>(miningProvider, (previous, next) {
+      if (previous?.phase != MiningPhase.revealing &&
+          next.phase == MiningPhase.revealing) {
+        _onTextRevealComplete();
+      }
+    });
+
     final miningState = ref.watch(miningProvider);
     final screenSize = MediaQuery.of(context).size;
-    final crystalSize = screenSize.width * 0.7;
+    final topPadding = MediaQuery.of(context).padding.top;
+
+    // Crystal sizes for different states
+    final largeCrystalSize = screenSize.width * 1.05;
+    final smallCrystalSize = screenSize.width * 0.35;
+
+    // Determine if we're in revealed state
+    final isRevealed = miningState.phase == MiningPhase.revealing ||
+        miningState.phase == MiningPhase.reading ||
+        miningState.phase == MiningPhase.completing ||
+        miningState.phase == MiningPhase.error;
+
+    // Animated values
+    final crystalSize = isRevealed ? smallCrystalSize : largeCrystalSize;
+    final crystalTop = isRevealed
+        ? topPadding + 40
+        : (screenSize.height - largeCrystalSize) / 2;
+
+    // Shadow dimensions
+    final shadowWidth = crystalSize * 0.6;
+    final shadowHeight = crystalSize * 0.2;
 
     return Scaffold(
       backgroundColor: const Color(0xFF9ACCFD),
       body: Stack(
         children: [
-          // Shimmer background with animated dots
+          // Shimmer background with grid of dots
           const Positioned.fill(
-            child: ShimmerBackgroundWidget(),
+            child: ShimmerBackgroundWidget(
+              dotSpacing: 10,
+              dotSize: 2,
+              dotColor: Colors.black,
+            ),
           ),
 
-          // Crystal in the center
-          Positioned.fill(
-            child: Center(
+          // Full screen tap area (only during tapping phase)
+          if (miningState.phase == MiningPhase.tapping)
+            Positioned.fill(
               child: GestureDetector(
                 onTap: _onCrystalTap,
-                child: CrystalShakeWidget(
-                  key: _shakeKey,
-                  child: CrystalDisplayWidget(
-                    imageUrl: widget.crystalImageUrl,
-                    glowColor: widget.glowColor ?? Colors.blue,
-                    size: crystalSize,
+                behavior: HitTestBehavior.opaque,
+              ),
+            ),
+
+          // Crystal and shadow
+          Positioned(
+            left: 0,
+            right: 0,
+            top: 0,
+            bottom: 0,
+            child: Column(
+              children: [
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 600),
+                  curve: Curves.easeOutCubic,
+                  height: crystalTop,
+                ),
+                IgnorePointer(
+                  child: CrystalShakeWidget(
+                    key: _shakeKey,
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 600),
+                      curve: Curves.easeOutCubic,
+                      width: crystalSize,
+                      height: crystalSize,
+                      child: CrystalDisplayWidget(
+                        imageUrl: widget.crystalImageUrl,
+                        glowColor: widget.glowColor ?? Colors.blue,
+                        size: crystalSize,
+                      ),
+                    ),
+                  ),
+                ),
+                // Shadow
+                AnimatedContainer(
+                  duration: const Duration(milliseconds: 600),
+                  curve: Curves.easeOutCubic,
+                  width: shadowWidth,
+                  height: shadowHeight,
+                  child: ImageFiltered(
+                    imageFilter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.all(
+                          Radius.elliptical(shadowWidth / 2, shadowHeight / 2),
+                        ),
+                        color: const Color(0x40000000),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          // Crystal label (overlapping bottom of crystal when revealed)
+          if (isRevealed)
+            Positioned(
+              left: 0,
+              right: 0,
+              top: crystalTop + smallCrystalSize - 32,
+              child: AnimatedOpacity(
+                duration: const Duration(milliseconds: 400),
+                opacity: miningState.phase == MiningPhase.revealing ? 0.0 : 1.0,
+                child: Center(
+                  child: Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    decoration: BoxDecoration(
+                      color: const Color(0x33000000),
+                      borderRadius: BorderRadius.circular(20),
+                    ),
+                    child: Text(
+                      widget.crystalLabel,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
 
-          // Tap progress indicator
-          if (miningState.phase == MiningPhase.tapping)
+          // Memory text and comments (below crystal when revealed)
+          if (isRevealed)
             Positioned(
-              bottom: 100,
               left: 0,
               right: 0,
-              child: _buildProgressIndicator(miningState),
+              top: crystalTop + smallCrystalSize + 24,
+              bottom: 0,
+              child: _buildRevealedContent(miningState),
             ),
-
-          // Memory text rising from bottom
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: MemoryTextWidget(
-              text: widget.memoryText,
-              isVisible: miningState.phase == MiningPhase.revealing ||
-                  miningState.phase == MiningPhase.reading ||
-                  miningState.phase == MiningPhase.completing ||
-                  miningState.phase == MiningPhase.error,
-              onAnimationComplete: _onTextRevealComplete,
-            ),
-          ),
 
           // Loading overlay during completion
           if (miningState.phase == MiningPhase.completing)
@@ -238,69 +338,100 @@ class _MiningPageState extends ConsumerState<MiningPage>
             Positioned.fill(
               child: _buildErrorOverlay(miningState.errorMessage),
             ),
-
-          // Dismiss button (only visible after text is fully revealed and not in completing/error state)
-          if (miningState.isTextFullyRevealed &&
-              miningState.phase == MiningPhase.reading)
-            Positioned(
-              top: MediaQuery.of(context).padding.top + 16,
-              right: 16,
-              child: _buildDismissButton(),
-            ),
         ],
       ),
     );
   }
 
-  Widget _buildProgressIndicator(MiningUIState state) {
+  Widget _buildRevealedContent(MiningUIState miningState) {
     const darkBlue = Color(0xFF1A3A5C);
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          'Tap to reveal',
-          style: TextStyle(
-            color: darkBlue.withValues(alpha: 0.7),
-            fontSize: 14,
-          ),
-        ),
-        const SizedBox(height: 8),
-        SizedBox(
-          width: 100,
-          child: LinearProgressIndicator(
-            value: state.progress,
-            backgroundColor: darkBlue.withValues(alpha: 0.2),
-            valueColor: AlwaysStoppedAnimation<Color>(
-              widget.glowColor ?? Colors.blue,
-            ),
-          ),
-        ),
-        const SizedBox(height: 4),
-        Text(
-          '${state.tapCount}/${state.tapThreshold}',
-          style: TextStyle(
-            color: darkBlue.withValues(alpha: 0.5),
-            fontSize: 12,
-          ),
-        ),
-      ],
-    );
-  }
 
-  Widget _buildDismissButton() {
-    const darkBlue = Color(0xFF1A3A5C);
-    return IconButton(
-      onPressed: _onDismiss,
-      icon: Container(
-        padding: const EdgeInsets.all(8),
-        decoration: BoxDecoration(
-          color: darkBlue.withValues(alpha: 0.2),
-          shape: BoxShape.circle,
-        ),
-        child: const Icon(
-          Icons.close,
-          color: darkBlue,
-          size: 24,
+    return AnimatedOpacity(
+      duration: const Duration(milliseconds: 400),
+      opacity: miningState.phase == MiningPhase.revealing ? 0.0 : 1.0,
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Memory text card
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: const Color(0xB3FFFFFF),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Text(
+                widget.memoryText,
+                style: const TextStyle(
+                  color: darkBlue,
+                  fontSize: 16,
+                  height: 1.7,
+                  fontWeight: FontWeight.w400,
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // 返信 (Replies) section
+            const Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                '返信',
+                style: TextStyle(
+                  color: Color(0x991A3A5C),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+
+            // Reply card placeholder
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: const Color(0xB3FFFFFF),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: const Text(
+                'まだ返信はありません',
+                style: TextStyle(
+                  color: Color(0x991A3A5C),
+                  fontSize: 14,
+                  height: 1.6,
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+
+            // 返信する button
+            if (miningState.isTextFullyRevealed)
+              SizedBox(
+                width: double.infinity,
+                child: OutlinedButton(
+                  onPressed: _onDismiss,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: darkBlue,
+                    side: const BorderSide(color: darkBlue, width: 1),
+                    padding: const EdgeInsets.symmetric(vertical: 14),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                  ),
+                  child: const Text(
+                    '返信する',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                ),
+              ),
+            const SizedBox(height: 40),
+          ],
         ),
       ),
     );
@@ -308,7 +439,7 @@ class _MiningPageState extends ConsumerState<MiningPage>
 
   Widget _buildLoadingOverlay() {
     return Container(
-      color: Colors.black.withValues(alpha: 0.7),
+      color: const Color(0xB3000000), // Black 70% opacity
       child: Center(
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -319,10 +450,10 @@ class _MiningPageState extends ConsumerState<MiningPage>
               ),
             ),
             const SizedBox(height: 16),
-            Text(
+            const Text(
               'Saving...',
               style: TextStyle(
-                color: Colors.white.withValues(alpha: 0.8),
+                color: Color(0xCCFFFFFF), // White 80% opacity
                 fontSize: 16,
               ),
             ),
@@ -334,7 +465,7 @@ class _MiningPageState extends ConsumerState<MiningPage>
 
   Widget _buildErrorOverlay(String? errorMessage) {
     return Container(
-      color: Colors.black.withValues(alpha: 0.7),
+      color: const Color(0xB3000000), // Black 70% opacity
       child: Center(
         child: Padding(
           padding: const EdgeInsets.all(32),
@@ -359,8 +490,8 @@ class _MiningPageState extends ConsumerState<MiningPage>
                 const SizedBox(height: 8),
                 Text(
                   errorMessage,
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.6),
+                  style: const TextStyle(
+                    color: Color(0x99FFFFFF), // White 60% opacity
                     fontSize: 14,
                   ),
                   textAlign: TextAlign.center,
