@@ -62,7 +62,7 @@ class _RotatingArcsEffectState extends State<RotatingArcsEffect>
                 painter: _ArcPainter(
                   radius: 130,
                   sweepAngle: 250,
-                  color: const Color(0xFF5AADE0).withOpacity(0.35),
+                  color: const Color(0xFFF37255).withOpacity(0.35),
                 ),
               ),
             ),
@@ -81,7 +81,7 @@ class _RotatingArcsEffectState extends State<RotatingArcsEffect>
                 painter: _ArcPainter(
                   radius: 100,
                   sweepAngle: 180,
-                  color: const Color(0xFF5AADE0).withOpacity(0.3),
+                  color: const Color(0xFFF37255).withOpacity(0.3),
                 ),
               ),
             ),
@@ -100,7 +100,7 @@ class _RotatingArcsEffectState extends State<RotatingArcsEffect>
                 painter: _ArcPainter(
                   radius: 70,
                   sweepAngle: 90,
-                  color: const Color(0xFF5AADE0).withOpacity(0.25),
+                  color: const Color(0xFFF37255).withOpacity(0.25),
                 ),
               ),
             ),
@@ -200,7 +200,7 @@ class _RadialLightPainter extends CustomPainter {
           Colors.white.withOpacity(0.1 * intensity),
           Colors.white.withOpacity(0.5 * intensity),
           Colors.white.withOpacity(0.7 * intensity),
-          const Color(0xFF7EC8E3).withOpacity(0.5 * intensity),
+          const Color(0xFFFFB8A8).withOpacity(0.5 * intensity),
         ],
         stops: const [0.0, 0.3, 0.6, 1.0],
       ).createShader(Rect.fromLTWH(0, 0, size.width, size.height));
@@ -275,8 +275,8 @@ class _ShadowPainter extends CustomPainter {
     final outerPaint = Paint()
       ..shader = RadialGradient(
         colors: [
-          const Color(0xFF5A9EC4).withOpacity(0.5 * intensity),
-          const Color(0xFF5A9EC4).withOpacity(0.2 * intensity),
+          const Color(0xFFF37255).withOpacity(0.5 * intensity),
+          const Color(0xFFF37255).withOpacity(0.2 * intensity),
           Colors.transparent,
         ],
         stops: const [0.0, 0.5, 1.0],

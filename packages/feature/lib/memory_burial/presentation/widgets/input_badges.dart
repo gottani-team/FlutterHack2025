@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 /// バッジの共通スタイル定数
 class _BadgeStyle {
-  static const Color primaryColor = Color(0xFF5558F3);
+  static const Color primaryColor = Color(0xFFF37255);
   static const Color backgroundColor = Color(0x99FFFFFF); // white 60%
   static const double fontSize = 10;
   static const double paddingHorizontal = 6;

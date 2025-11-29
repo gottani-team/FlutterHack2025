@@ -116,8 +116,13 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
 
   /// アニメーション完了時の処理
   void _onAnimationComplete() {
-    setState(() {
-      _phase = _ScreenPhase.crystalDisplay;
+    // クリスタルが表示されてから少し待ってから次の画面へ
+    Future.delayed(const Duration(milliseconds: 1500), () {
+      if (mounted) {
+        setState(() {
+          _phase = _ScreenPhase.crystalDisplay;
+        });
+      }
     });
   }
 
@@ -338,7 +343,8 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
             cursorColor: textColor,
             cursorWidth: 2.0,
             showCursor: true,
-              style: TextStyle(
+            textInputAction: TextInputAction.next,
+            style: TextStyle(
               color: textColor,
               fontSize: 16,
               fontWeight: FontWeight.w500,
@@ -361,6 +367,10 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
             ),
             onChanged: (value) {
               ref.read(nicknameProvider.notifier).update(value);
+            },
+            onSubmitted: (_) {
+              // エンターを押したらテキスト入力欄にフォーカス移動
+              _textFocusNode.requestFocus();
             },
           ),
         ),

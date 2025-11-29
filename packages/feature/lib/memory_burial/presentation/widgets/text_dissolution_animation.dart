@@ -11,7 +11,7 @@ class TextDissolutionAnimation extends StatefulWidget {
     super.key,
     required this.text,
     required this.onComplete,
-    this.duration = const Duration(milliseconds: 4000),
+    this.duration = const Duration(milliseconds: 2500),
   });
 
   /// 分解するテキスト
@@ -157,9 +157,9 @@ class _DissolutionPainter extends CustomPainter {
 
     if (adjustedProgress <= 0) return;
 
-    // フェーズ1: 散らばり (0.0 ~ 0.3)
-    // フェーズ2: 浮遊 (0.3 ~ 0.6)
-    // フェーズ3: 吸い込み (0.6 ~ 1.0)
+    // フェーズ1: 散らばり (0.0 ~ 0.15) - 短め
+    // フェーズ2: 浮遊 (0.15 ~ 0.3) - 短め
+    // フェーズ3: 吸い込み (0.3 ~ 1.0) - 長め
 
     // 初期位置（テキストが表示されていた位置付近）
     final row = charData.index ~/ 15;
@@ -184,9 +184,9 @@ class _DissolutionPainter extends CustomPainter {
     double scale;
     double rotation;
 
-    if (adjustedProgress < 0.3) {
-      // フェーズ1: 散らばり
-      final phaseProgress = adjustedProgress / 0.3;
+    if (adjustedProgress < 0.15) {
+      // フェーズ1: 散らばり（短め）
+      final phaseProgress = adjustedProgress / 0.15;
       final easedProgress = Curves.easeOutCubic.transform(phaseProgress);
 
       currentPos = Offset.lerp(startPos, scatterPos, easedProgress)!;
@@ -194,13 +194,13 @@ class _DissolutionPainter extends CustomPainter {
       scale = 1.0 + (easedProgress * 0.2);
       rotation =
           charData.initialRotation + (easedProgress * charData.rotationSpeed);
-    } else if (adjustedProgress < 0.6) {
-      // フェーズ2: 浮遊
-      final phaseProgress = (adjustedProgress - 0.3) / 0.3;
+    } else if (adjustedProgress < 0.3) {
+      // フェーズ2: 浮遊（短め）
+      final phaseProgress = (adjustedProgress - 0.15) / 0.15;
 
       // わずかに揺れる動き
-      final wobbleX = math.sin(phaseProgress * math.pi * 4) * 5;
-      final wobbleY = math.cos(phaseProgress * math.pi * 3) * 3;
+      final wobbleX = math.sin(phaseProgress * math.pi * 2) * 5;
+      final wobbleY = math.cos(phaseProgress * math.pi * 1.5) * 3;
 
       currentPos = Offset(
         scatterPos.dx + wobbleX,
@@ -209,18 +209,18 @@ class _DissolutionPainter extends CustomPainter {
       opacity = 1.0;
       scale = 1.2 - (phaseProgress * 0.1);
       rotation = charData.initialRotation +
-          (0.3 * charData.rotationSpeed) +
-          (phaseProgress * charData.rotationSpeed * 0.5);
+          (0.15 * charData.rotationSpeed) +
+          (phaseProgress * charData.rotationSpeed * 0.3);
     } else {
-      // フェーズ3: 吸い込み
-      final phaseProgress = (adjustedProgress - 0.6) / 0.4;
+      // フェーズ3: 吸い込み（長め）
+      final phaseProgress = (adjustedProgress - 0.3) / 0.7;
       final easedProgress = Curves.easeInQuart.transform(phaseProgress);
 
       currentPos = Offset.lerp(scatterPos, targetPosition, easedProgress)!;
       opacity = (1.0 - easedProgress * 1.5).clamp(0.0, 1.0);
       scale = (1.1 - easedProgress * 0.9).clamp(0.1, 1.1);
       rotation = charData.initialRotation +
-          (0.8 * charData.rotationSpeed) +
+          (0.45 * charData.rotationSpeed) +
           (easedProgress * math.pi * 2);
     }
 

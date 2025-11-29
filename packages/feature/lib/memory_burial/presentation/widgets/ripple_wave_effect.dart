@@ -93,40 +93,40 @@ class _AtmosphericEntryPainter extends CustomPainter {
     // === 衝撃波エフェクト ===
     // ボタンの外側に、弓状の衝撃波が広がる
     
-    // 1. 最外層の衝撃波（青、最も離れている）
+    // 1. 最外層の衝撃波（最も離れている）
     _drawShockwave(
       canvas: canvas,
       centerX: centerX,
       startY: buttonBottomY + 120 * p,  // ボタンから離れた位置
       width: 360 * p,
       curveDepth: 80 * p,
-      color: const Color(0xFF5B9BD5),
+      color: const Color(0xFFFF3C00),
       opacity: 0.25 * alpha * p,
       blur: 35,
       strokeWidth: 20,
     );
     
-    // 2. 中間層の衝撃波（水色）
+    // 2. 中間層の衝撃波
     _drawShockwave(
       canvas: canvas,
       centerX: centerX,
       startY: buttonBottomY + 80 * p,
       width: 300 * p,
       curveDepth: 60 * p,
-      color: const Color(0xFF7EC8E3),
+      color: const Color(0xFFF37255),
       opacity: 0.4 * alpha * p,
       blur: 25,
       strokeWidth: 25,
     );
     
-    // 3. 内層の衝撃波（シアン、ボタンに近い）
+    // 3. 内層の衝撃波（ボタンに近い）
     _drawShockwave(
       canvas: canvas,
       centerX: centerX,
       startY: buttonBottomY + 45 * p,
       width: 240 * p,
       curveDepth: 45 * p,
-      color: const Color(0xFFB8E4F0),
+      color: const Color(0xFFFFB8A8),
       opacity: 0.6 * alpha * p,
       blur: 18,
       strokeWidth: 22,
@@ -227,7 +227,7 @@ class _AtmosphericEntryPainter extends CustomPainter {
         [
           Colors.white.withOpacity(0.95 * opacity),
           Colors.white.withOpacity(0.6 * opacity),
-          const Color(0xFFE0F8FF).withOpacity(0.3 * opacity),
+          const Color(0xFFFFE8E0).withOpacity(0.3 * opacity),
           Colors.transparent,
         ],
         [0.0, 0.3, 0.6, 1.0],

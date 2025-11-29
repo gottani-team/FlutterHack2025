@@ -86,7 +86,7 @@ class _CrystalDisplayState extends State<CrystalDisplay>
                     painter: _ArcPainter(
                       radius: 130,
                       sweepAngle: 250, // 250度の円弧
-                      color: const Color(0xFF5AADE0).withOpacity(0.35),
+                      color: const Color(0xFFF37255).withOpacity(0.35),
                     ),
                   ),
                 ),
@@ -105,7 +105,7 @@ class _CrystalDisplayState extends State<CrystalDisplay>
                     painter: _ArcPainter(
                       radius: 100,
                       sweepAngle: 180, // 180度の円弧
-                      color: const Color(0xFF5AADE0).withOpacity(0.3),
+                      color: const Color(0xFFF37255).withOpacity(0.3),
                     ),
                   ),
                 ),
@@ -124,7 +124,7 @@ class _CrystalDisplayState extends State<CrystalDisplay>
                     painter: _ArcPainter(
                       radius: 70,
                       sweepAngle: 90, // 90度の円弧
-                      color: const Color(0xFF5AADE0).withOpacity(0.25),
+                      color: const Color(0xFFF37255).withOpacity(0.25),
                     ),
                   ),
                 ),
@@ -236,15 +236,15 @@ class _CrystalGlow extends StatelessWidget {
       decoration: BoxDecoration(
         shape: BoxShape.circle,
         boxShadow: [
-          // 外側の大きなグロー（青色）
+          // 外側の大きなグロー
           BoxShadow(
-            color: const Color(0xFF5AADE0).withOpacity(0.3),
+            color: const Color(0xFFF37255).withOpacity(0.3),
             blurRadius: 50,
             spreadRadius: 20,
           ),
-          // 内側のグロー（より明るい青）
+          // 内側のグロー
           BoxShadow(
-            color: const Color(0xFF7EC8E3).withOpacity(0.25),
+            color: const Color(0xFFFFB8A8).withOpacity(0.25),
             blurRadius: 30,
             spreadRadius: 10,
           ),

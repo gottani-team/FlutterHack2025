@@ -22,20 +22,9 @@ class MemoryBurialBackground extends StatelessWidget {
   Widget build(BuildContext context) {
     return Stack(
       children: [
-        // グラデーション背景
+        // 背景色
         Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [
-                Color(0xFFA4D4F4), // 薄い水色
-                Color(0xFF8BC4EA), // やや濃い水色
-                Color(0xFFB8E0F7), // 明るい水色
-              ],
-              stops: [0.0, 0.5, 1.0],
-            ),
-          ),
+          color: const Color(0xFFD3CCCA),
         ),
         // ドットパターン
         CustomPaint(
@@ -61,7 +50,7 @@ class DotPatternPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = const Color(0xFF7AB8D9).withOpacity(0.3)
+      ..color = const Color(0xFFF37255).withOpacity(0.2)
       ..style = PaintingStyle.fill;
 
     const spacing = 20.0;
@@ -105,7 +94,7 @@ class ConcentricRingsPainter extends CustomPainter {
       final radius = baseRadius + (animationValue * 20.0);
       final opacity = (0.15 - (animationValue * 0.1)).clamp(0.05, 0.2);
 
-      paint.color = const Color(0xFF5A9EC4).withOpacity(opacity);
+      paint.color = const Color(0xFFF37255).withOpacity(opacity);
 
       canvas.drawCircle(centerPoint, radius, paint);
     }

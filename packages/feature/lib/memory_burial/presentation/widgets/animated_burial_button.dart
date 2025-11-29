@@ -39,9 +39,13 @@ class _AnimatedBurialButtonState extends State<AnimatedBurialButton>
     with TickerProviderStateMixin {
   late AnimationController _rotationController;
   late AnimationController _entryEffectController;
+  late AnimationController _arrowFadeController;
+  late AnimationController _crystalFadeController;
   
   // エフェクトのアニメーション
   late Animation<double> _entryAnimation;
+  late Animation<double> _arrowFadeAnimation;
+  late Animation<double> _crystalFadeAnimation;
 
   @override
   void initState() {
@@ -61,6 +65,32 @@ class _AnimatedBurialButtonState extends State<AnimatedBurialButton>
       parent: _entryEffectController,
       curve: Curves.easeOutCubic,
     );
+    
+    // 矢印フェードアウトアニメーション（下降中に徐々に薄くなる）
+    _arrowFadeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1500),
+    );
+    
+    _arrowFadeAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(
+      CurvedAnimation(
+        parent: _arrowFadeController,
+        curve: const Interval(0.3, 1.0, curve: Curves.easeInQuart),
+      ),
+    );
+    
+    // クリスタルフェードインアニメーション（矢印が消えた後に浮かんでくる）
+    _crystalFadeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2000),
+    );
+    
+    _crystalFadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
+      CurvedAnimation(
+        parent: _crystalFadeController,
+        curve: const Interval(0.0, 0.7, curve: Curves.easeOutCubic),
+      ),
+    );
   }
 
   @override
@@ -71,6 +101,23 @@ class _AnimatedBurialButtonState extends State<AnimatedBurialButton>
     if (widget.phase == ButtonPhase.processing &&
         oldWidget.phase != ButtonPhase.processing) {
       _entryEffectController.forward(from: 0);
+      _arrowFadeController.forward(from: 0);
+      
+      // 文字が集まりきる頃（2.5秒アニメーションの終盤）にクリスタルが浮かび上がる
+      // 文字がボタンに吸い込まれてクリスタルになる感じ
+      Future.delayed(const Duration(milliseconds: 2000), () {
+        if (mounted && widget.phase == ButtonPhase.processing) {
+          _crystalFadeController.forward(from: 0);
+        }
+      });
+    }
+    
+    // completedに移行した時点でクリスタルが表示されていなければ開始
+    if (widget.phase == ButtonPhase.completed &&
+        oldWidget.phase != ButtonPhase.completed) {
+      if (!_crystalFadeController.isAnimating && _crystalFadeController.value < 1.0) {
+        _crystalFadeController.forward(from: 0);
+      }
     }
   }
 
@@ -78,6 +125,8 @@ class _AnimatedBurialButtonState extends State<AnimatedBurialButton>
   void dispose() {
     _rotationController.dispose();
     _entryEffectController.dispose();
+    _arrowFadeController.dispose();
+    _crystalFadeController.dispose();
     super.dispose();
   }
 
@@ -103,9 +152,10 @@ class _AnimatedBurialButtonState extends State<AnimatedBurialButton>
       buttonTopOffset = 146;
       arcsCenterY = 266;
       arcsIntensity = 1.0;
+      // processing中も矢印を表示（徐々にフェードアウト）、completed後はクリスタル
       icon = widget.phase == ButtonPhase.completed 
           ? _ButtonIcon.diamond 
-          : _ButtonIcon.verticalLine;
+          : _ButtonIcon.arrowDown;
     } else {
       buttonWidth = 65 + (160 - 65) * progress;
       buttonHeight = 104 + (160 - 104) * progress;
@@ -176,17 +226,14 @@ class _AnimatedBurialButtonState extends State<AnimatedBurialButton>
                   height: buttonHeight,
                   decoration: BoxDecoration(
                     borderRadius: BorderRadius.circular(buttonWidth / 2),
-                    color: const Color(0xFF0D00FF).withOpacity(0.22),
+                    color: const Color(0xFFFF3C00).withOpacity(0.22),
                     border: Border.all(
-                      color: const Color(0xFF5A9EC4).withOpacity(0.3),
+                      color: const Color(0xFFFF3C00).withOpacity(0.3),
                       width: 1.5,
                     ),
                   ),
                   child: Center(
-                    child: AnimatedSwitcher(
-                      duration: const Duration(milliseconds: 200),
-                      child: _buildIcon(icon),
-                    ),
+                    child: _buildAnimatedIcon(icon),
                   ),
                 ),
               ),
@@ -197,33 +244,80 @@ class _AnimatedBurialButtonState extends State<AnimatedBurialButton>
     );
   }
 
-  Widget _buildIcon(_ButtonIcon icon) {
-    return switch (icon) {
-      _ButtonIcon.arrowDown => const Icon(
-          Icons.arrow_downward,
-          key: ValueKey('arrow'),
-          color: Colors.white,
-          size: 28,
-        ),
-      _ButtonIcon.verticalLine => Container(
-          key: const ValueKey('line'),
-          width: 3,
-          height: 24,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(2),
-          ),
-        ),
-      _ButtonIcon.diamond => CustomPaint(
-          key: const ValueKey('diamond'),
-          size: const Size(32, 32),
-          painter: _DiamondPainter(),
-        ),
-    };
+  /// アニメーション付きアイコンを構築
+  Widget _buildAnimatedIcon(_ButtonIcon icon) {
+    // processing中は矢印がフェードアウトし、その後クリスタルがフェードイン
+    if (widget.phase == ButtonPhase.processing) {
+      return AnimatedBuilder(
+        animation: Listenable.merge([_arrowFadeAnimation, _crystalFadeAnimation]),
+        builder: (context, child) {
+          // 矢印とクリスタルを重ねて表示
+          return Stack(
+            alignment: Alignment.center,
+            children: [
+              // 矢印（フェードアウト）
+              if (_arrowFadeAnimation.value > 0)
+                Opacity(
+                  opacity: _arrowFadeAnimation.value,
+                  child: const Icon(
+                    Icons.arrow_downward,
+                    key: ValueKey('arrow'),
+                    color: Colors.white,
+                    size: 28,
+                  ),
+                ),
+              // クリスタル（フェードイン + 下から浮かんでくる）
+              if (_crystalFadeAnimation.value > 0)
+                Transform.translate(
+                  offset: Offset(0, 30.0 * (1.0 - _crystalFadeAnimation.value)),
+                  child: Opacity(
+                    opacity: _crystalFadeAnimation.value,
+                    child: CustomPaint(
+                      key: const ValueKey('diamond'),
+                      size: const Size(48, 48),
+                      painter: _CrystalPainter(opacity: _crystalFadeAnimation.value),
+                    ),
+                  ),
+                ),
+            ],
+          );
+        },
+      );
+    }
+    
+    // completed時はクリスタルを表示
+    if (widget.phase == ButtonPhase.completed) {
+      return AnimatedBuilder(
+        animation: _crystalFadeAnimation,
+        builder: (context, child) {
+          // 下から上へ浮かんでくる動き
+          final offsetY = 30.0 * (1.0 - _crystalFadeAnimation.value);
+          return Transform.translate(
+            offset: Offset(0, offsetY),
+            child: Opacity(
+              opacity: _crystalFadeAnimation.value,
+              child: CustomPaint(
+                key: const ValueKey('diamond'),
+                size: const Size(48, 48),
+                painter: _CrystalPainter(opacity: _crystalFadeAnimation.value),
+              ),
+            ),
+          );
+        },
+      );
+    }
+    
+    // 通常時は矢印
+    return const Icon(
+      Icons.arrow_downward,
+      key: ValueKey('arrow'),
+      color: Colors.white,
+      size: 28,
+    );
   }
 }
 
-enum _ButtonIcon { arrowDown, verticalLine, diamond }
+enum _ButtonIcon { arrowDown, diamond }
 
 /// 大気圏突入エフェクト
 class _AtmosphericEntryPainter extends CustomPainter {
@@ -307,9 +401,9 @@ class _AtmosphericEntryPainter extends CustomPainter {
         Offset(centerX, startY),
         Offset(centerX, startY + height),
         [
-          const Color(0xFF7EC8E3).withOpacity(0.5 * intensity),
-          const Color(0xFF5AADE0).withOpacity(0.4 * intensity),
-          const Color(0xFF5AADE0).withOpacity(0.15 * intensity),
+          const Color(0xFFFFB8A8).withOpacity(0.5 * intensity),
+          const Color(0xFFF37255).withOpacity(0.4 * intensity),
+          const Color(0xFFF37255).withOpacity(0.15 * intensity),
           Colors.transparent,
         ],
         [0.0, 0.25, 0.6, 1.0],
@@ -352,9 +446,9 @@ class _AtmosphericEntryPainter extends CustomPainter {
         Offset(centerX, startY),
         Offset(centerX, startY + height),
         [
-          const Color(0xFFB8E4F0).withOpacity(0.7 * intensity),
-          const Color(0xFF7EC8E3).withOpacity(0.5 * intensity),
-          const Color(0xFF7EC8E3).withOpacity(0.2 * intensity),
+          const Color(0xFFFFD5C8).withOpacity(0.7 * intensity),
+          const Color(0xFFFFB8A8).withOpacity(0.5 * intensity),
+          const Color(0xFFFFB8A8).withOpacity(0.2 * intensity),
           Colors.transparent,
         ],
         [0.0, 0.3, 0.6, 1.0],
@@ -403,7 +497,7 @@ class _AtmosphericEntryPainter extends CustomPainter {
         [
           Colors.white.withOpacity(0.9 * intensity),
           Colors.white.withOpacity(0.5 * intensity),
-          const Color(0xFFE0F8FF).withOpacity(0.3 * intensity),
+          const Color(0xFFFFE8E0).withOpacity(0.3 * intensity),
           Colors.transparent,
         ],
         [0.0, 0.4, 0.7, 1.0],
@@ -535,13 +629,13 @@ class _ConcentricArcsPainter extends CustomPainter {
       ..strokeWidth = 1.5
       ..strokeCap = StrokeCap.round;
 
-    paint.color = const Color(0xFF5AADE0).withOpacity(0.3 * intensity);
+    paint.color = const Color(0xFFF37255).withOpacity(0.3 * intensity);
     _drawArc(canvas, center, 200, 250, rotation * 2 * math.pi, paint);
 
-    paint.color = const Color(0xFF5AADE0).withOpacity(0.25 * intensity);
+    paint.color = const Color(0xFFF37255).withOpacity(0.25 * intensity);
     _drawArc(canvas, center, 150, 180, -rotation * 2 * math.pi * 0.7, paint);
 
-    paint.color = const Color(0xFF5AADE0).withOpacity(0.2 * intensity);
+    paint.color = const Color(0xFFF37255).withOpacity(0.2 * intensity);
     _drawArc(canvas, center, 100, 120, rotation * 2 * math.pi * 0.5, paint);
   }
 
@@ -566,52 +660,67 @@ class _ConcentricArcsPainter extends CustomPainter {
   }
 }
 
-/// ダイヤモンドアイコン
-class _DiamondPainter extends CustomPainter {
+/// クリスタルアイコン（添付画像のような宝石デザイン）
+class _CrystalPainter extends CustomPainter {
+  _CrystalPainter({this.opacity = 1.0});
+  
+  final double opacity;
+  
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = Colors.white
+      ..color = Colors.white.withOpacity(opacity)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.0
+      ..strokeCap = StrokeCap.round
       ..strokeJoin = StrokeJoin.round;
 
-    final centerX = size.width / 2;
-    final centerY = size.height / 2;
-
-    final path = Path()
-      ..moveTo(centerX, 0)
-      ..lineTo(size.width * 0.85, centerY * 0.6)
-      ..lineTo(size.width, centerY)
-      ..lineTo(centerX, size.height)
-      ..lineTo(0, centerY)
-      ..lineTo(size.width * 0.15, centerY * 0.6)
+    final w = size.width;
+    final h = size.height;
+    
+    // クリスタルの各頂点を定義（添付画像に合わせた形状）
+    // 上部の頂点
+    final top = Offset(w * 0.5, 0);
+    // 上部左右の角
+    final topLeft = Offset(w * 0.15, h * 0.25);
+    final topRight = Offset(w * 0.85, h * 0.25);
+    // 中間左右の角（最も広い部分）
+    final midLeft = Offset(0, h * 0.4);
+    final midRight = Offset(w, h * 0.4);
+    // 下部の頂点
+    final bottom = Offset(w * 0.5, h);
+    
+    // 外側の輪郭を描画
+    final outlinePath = Path()
+      ..moveTo(top.dx, top.dy)
+      ..lineTo(topRight.dx, topRight.dy)
+      ..lineTo(midRight.dx, midRight.dy)
+      ..lineTo(bottom.dx, bottom.dy)
+      ..lineTo(midLeft.dx, midLeft.dy)
+      ..lineTo(topLeft.dx, topLeft.dy)
       ..close();
-
-    canvas.drawPath(path, paint);
-
-    canvas.drawLine(
-      Offset(size.width * 0.15, centerY * 0.6),
-      Offset(size.width * 0.85, centerY * 0.6),
-      paint,
-    );
-    canvas.drawLine(
-      Offset(size.width * 0.15, centerY * 0.6),
-      Offset(centerX, size.height),
-      paint,
-    );
-    canvas.drawLine(
-      Offset(size.width * 0.85, centerY * 0.6),
-      Offset(centerX, size.height),
-      paint,
-    );
-    canvas.drawLine(
-      Offset(centerX, 0),
-      Offset(centerX, centerY * 0.6),
-      paint,
-    );
+    
+    canvas.drawPath(outlinePath, paint);
+    
+    // 内部の線（クリスタルのカット面）
+    // 上部から中央への線
+    canvas.drawLine(top, Offset(w * 0.35, h * 0.25), paint);
+    canvas.drawLine(top, Offset(w * 0.65, h * 0.25), paint);
+    
+    // 横の区切り線
+    canvas.drawLine(topLeft, topRight, paint);
+    
+    // 下部への斜め線
+    canvas.drawLine(topLeft, bottom, paint);
+    canvas.drawLine(topRight, bottom, paint);
+    
+    // 中央から下への線
+    canvas.drawLine(Offset(w * 0.35, h * 0.25), bottom, paint);
+    canvas.drawLine(Offset(w * 0.65, h * 0.25), bottom, paint);
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _CrystalPainter oldDelegate) {
+    return oldDelegate.opacity != opacity;
+  }
 }
