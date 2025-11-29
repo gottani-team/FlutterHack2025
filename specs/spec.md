@@ -1,221 +1,371 @@
-# Feature Specification: Chimyaku (地脈) - Memory Crystal Location-Based Experience
+# Feature Specification: Chimyaku (地脈) - Dark Fantasy Location-Based Secret Exchange
 
 **Feature Branch**: `001-chimyaku-app`
 **Created**: 2025-11-29
+**Updated**: 2025-11-29
 **Status**: Draft
-**Input**: User description: "@docs/IDEA.md のアプリケーションを開発します。仕様を策定し、画面設計や仕様、利用技術について詰めてください。"
 
-## User Scenarios & Testing *(mandatory)*
+## Theme
 
-### User Story 1 - Memory Burial and Crystallization (Priority: P1)
+**「文脈を地脈へ、そして金脈へ」**
 
-A user wants to preserve their personal memory by transforming it into a unique crystal and embedding it into the world's energy flow (地脈) at their current location.
+人間の誰にも言えない「文脈（秘密の記憶）」は、エネルギーとなって「地脈」を流れ、やがて価値ある「金脈（想晶）」となって地表に現れる。
 
-**Why this priority**: This is the core content creation mechanism that enables the entire experience. Without user-generated memories, there are no crystals to discover. This creates the foundational value proposition and generates content for all other features.
+これは、自らの秘密を「カルマ（業）」という通貨に変え、そのカルマを使って他者の秘密を暴く、**背徳のダークファンタジー位置情報ゲーム**である。
 
-**Independent Test**: Can be fully tested by having a user input memory text, generate a crystal with AI, and successfully save it to their current location. Delivers immediate value as users can see their memory transformed into a unique visual artifact.
+## Core Game Loop
 
-**Acceptance Scenarios**:
+1. **昇華 (Sublimate):** 墓場まで持っていくような秘密をアプリに吐き出す。AIがその「重さ」を判定し、対価として「カルマ（ポイント）」が付与される。
+2. **流転 (Flow):** 吐き出された秘密は「想晶（メモリ・クリスタル）」となり、地図上の地脈に沿ってランダムに移動し続ける。
+3. **探索 (Hunt):** プレイヤーは地図と鼓動（ハプティクス）を頼りに、高カルマの想晶を探し回る。
+4. **解読 (Decipher):** 発見した想晶に貯めたカルマを支払うことで、封印を解き、中身の秘密を覗き見る。一度解読された想晶は消滅する（早い者勝ち）。
 
-1. **Given** a user is at the Memory Burial screen, **When** they enter memory text (minimum 10 characters) and tap the crystallization button, **Then** the system displays a magical particle animation and generates a unique crystal image with an emotion type classification
-2. **Given** a crystal has been generated successfully, **When** the user reviews the crystal image and emotion type, **Then** they can confirm burial by long-pressing the "Return to 地脈" button
-3. **Given** the user confirms burial, **When** the long-press action completes, **Then** the system saves the crystal data with current GPS coordinates and displays a success animation
-4. **Given** the user has buried a crystal, **When** they return to the map screen, **Then** the newly buried crystal appears as a glowing crystallization area at that location
+## Terminology (World Building)
 
----
-
-### User Story 2 - Crystal Discovery and Proximity Detection (Priority: P1)
-
-A user explores the map to find crystallization areas where others have buried their memories, experiencing increasing sensory feedback as they approach each crystal.
-
-**Why this priority**: This is the primary exploration mechanic that drives user engagement and movement in the physical world. It transforms mundane locations into discovery opportunities and creates anticipation through progressive sensory feedback.
-
-**Independent Test**: Can be fully tested by placing test crystals on a map, having a user navigate toward them, and verifying that visual/haptic/audio feedback intensifies as distance decreases. Delivers core gameplay value without requiring other features.
-
-**Acceptance Scenarios**:
-
-1. **Given** a user opens the map screen, **When** crystals exist within visible range, **Then** they appear as pulsing light vortexes with colors representing emotion types (red: passion, blue: silence, yellow: joy, green: healing)
-2. **Given** a user is within 100m of a crystal, **When** they enter the proximity zone, **Then** the screen edges begin pulsing with the crystal's color in a heartbeat rhythm
-3. **Given** a user is approaching a crystal, **When** their distance decreases, **Then** haptic vibration intensity and frequency increase, synchronized with visual pulsing
-4. **Given** a user reaches within 25m of a crystal, **When** they cross this threshold, **Then** the screen is enveloped in light and automatically transitions to the Mining screen
+| 元の表現 | ブラッシュアップ後 | 意味・意図 |
+|---------|------------------|-----------|
+| 秘密/記憶 | **想念 (ノエシス)** | 生々しい感情エネルギーの塊 |
+| 金脈/クリスタル | **想晶 (ソウショウ)** | 想念が地表で結晶化したもの。価値を持つ |
+| ポイント/金策 | **カルマ (業)** | この世界における通貨。秘密の重さそのもの |
+| 埋める/流す | **昇華 (ショウカ)** | 秘密を手放し、カルマに変える儀式 |
+| 掘る/見る | **解読 (カイドク)** | カルマを消費して他者の秘密を暴く行為 |
 
 ---
 
-### User Story 3 - Crystal Mining and Memory Reading (Priority: P1)
+## User Scenarios & Testing
 
-A user physically arrives at a crystal location, performs mining actions to shatter the crystal, and immediately reads the revealed memory in the same unified experience. Once mined, the crystal disappears from that location and reappears elsewhere in the world.
+### User Story 1 - Sublimation (昇華) - Secret to Karma (Priority: P1)
 
-**Why this priority**: This completes the core experience loop by providing the reward mechanism for exploration. Users need immediate gratification for their exploration efforts to maintain engagement. The mining and reading flow is seamless, keeping users immersed in the experience.
+A user wants to convert their deepest secret into Karma currency by submitting it to the system for AI evaluation. The user can preview the evaluation result before deciding to actually bury the secret.
 
-**Independent Test**: Can be fully tested by triggering the mining screen, having a user tap to mine a crystal, successfully unlocking and reading the memory text, and verifying the crystal respawns at a new location. Delivers complete value of "discover someone's story" without requiring collection features.
+**Why this priority**: This is the core content creation mechanism that generates both the in-game currency (Karma) and the discoverable content (Crystals). Without user-generated secrets, there's nothing to hunt.
+
+**Independent Test**: Can be fully tested by having a user input secret text, triggering AI analysis, previewing the result, then confirming to receive Karma and create the crystal.
+
+**Two-Step Flow**:
+1. **Evaluate (評価)**: User enters secret text → AI analyzes → Preview result shown (emotion type, rarity, Karma to earn)
+2. **Confirm (確定)**: User reviews preview → Decides to bury or cancel → If confirmed, crystal is created and Karma is awarded
 
 **Acceptance Scenarios**:
 
-1. **Given** a user enters the Mining screen, **When** the screen loads, **Then** a large AI-generated crystal image is displayed in an abstract space with subtle ambient effects
-2. **Given** the crystal is displayed, **When** the user taps on it, **Then** spark effects appear, a metallic sound plays, strong haptic feedback triggers, and visible cracks appear on the crystal
-3. **Given** the user continues tapping, **When** the crystal's durability reaches zero (approximately 5-10 taps), **Then** the crystal shatters with an explosive animation
-4. **Given** the crystal has shattered, **When** the shattering animation completes, **Then** the background transitions to a serene state, ambient sound plays, and the memory text gradually appears with an ink-floating effect on the same screen
-5. **Given** the memory text is fully visible, **When** the user finishes reading and taps the dismiss button, **Then** the crystal is marked as collected, added to their Journal, removed from the original map location, and respawned at a new random location for other users to discover
+1. **Given** a user is at the Sublimation screen, **When** they enter secret text and tap "Evaluate", **Then** the text swirls into a condensing light orb animation while AI analyzes in background
+2. **Given** AI analysis completes, **When** the evaluation result is ready, **Then** the system displays a preview: crystal type (color based on emotion, size based on rarity), emotion name, rarity tier, and Karma amount to be earned
+3. **Given** evaluation preview is displayed, **When** user taps "Bury This Secret", **Then** the crystal is created in Firestore and user's Karma balance increases with satisfying coin-drop sound effects
+4. **Given** evaluation preview is displayed, **When** user taps "Cancel" or back button, **Then** the secret is NOT saved and user returns to input screen (no Karma earned)
+5. **Given** a high-score secret (90+), **When** preview displays, **Then** screen flashes with particle effects and S-Rare crystal animation plays as preview
 
 ---
 
-### User Story 4 - Crystal Journal Collection (Priority: P3)
+### User Story 2 - Exploration Map (探索) - Hunting Crystals (Priority: P1)
 
-A user reviews all crystals they have previously mined in a personal collection gallery, revisiting memories and tracking discovery progress.
+A user explores the dark fantasy map to find pulsating crystals, experiencing intensifying heartbeat feedback as they approach high-value targets.
 
-**Why this priority**: This adds long-term engagement and collection mechanics but is not essential for the core discovery experience. Users can enjoy exploration and memory discovery without needing to review past finds.
+**Why this priority**: This is the primary exploration mechanic that drives physical movement and creates anticipation through sensory feedback differentiated by crystal value.
 
-**Independent Test**: Can be fully tested by populating test data of mined crystals and verifying display, sorting, and detail viewing work correctly. Delivers collection satisfaction independently.
+**Demo Specification**: For the hackathon demo, crystals do NOT use real-time position tracking. Instead:
+- Fetch available crystals from Firestore
+- Assign random coordinates near the demo venue on the client side
+- Refresh/randomize positions on app restart or manual refresh to simulate "movement"
 
 **Acceptance Scenarios**:
 
-1. **Given** a user has mined at least one crystal, **When** they open the Journal screen, **Then** all mined crystals are displayed in a grid with their AI-generated thumbnail images
-2. **Given** crystals are displayed in the Journal, **When** the user taps on a crystal thumbnail, **Then** the detail view opens showing the crystal image, memory text, discovery date, and discovery location name
-3. **Given** a user has not mined any crystals yet, **When** they open the Journal screen, **Then** an empty state message encourages them to explore the map
+1. **Given** a user opens the map screen, **When** crystals exist, **Then** they appear as pulsing light points along the dark map's energy flow (地脈) visualization
+2. **Given** crystals have different Karma values, **When** displayed on map, **Then** higher-value crystals pulse stronger and larger
+3. **Given** a user approaches a crystal (within 100m), **When** they enter the proximity zone, **Then** the "Bio-Sensor" gauge activates and device begins heartbeat vibrations
+4. **Given** approaching a high-Karma crystal, **When** getting closer, **Then** vibrations become heavier and more intense (HapticFeedback.heavyImpact)
+5. **Given** a user reaches within 25m, **When** threshold crossed, **Then** screen seamlessly transitions to Mining screen
+
+---
+
+### User Story 3 - Mining and Deciphering (採掘・解読) - Revealing Secrets (Priority: P1)
+
+A user physically arrives at a crystal location, performs mining actions to shatter the crystal, pays Karma to decipher, and reads the revealed secret. First-come-first-served - once deciphered, the crystal is gone.
+
+**Why this priority**: This completes the core loop by providing the reward mechanism. The tension of "will someone else get it first?" and the reveal of a stranger's secret creates the core engagement.
+
+**Acceptance Scenarios**:
+
+1. **Given** a user enters the Mining screen, **When** screen loads, **Then** a large crystal (asset based on emotion type and rarity) displays with pulsing animation
+2. **Given** the crystal is displayed, **When** user taps it, **Then** sparks fly, metallic sounds play, strong haptic feedback triggers, and visible cracks appear
+3. **Given** user continues tapping, **When** crystal durability reaches zero (5-10 taps), **Then** crystal shatters with explosive animation
+4. **Given** crystal is shattered, **When** animation completes, **Then** transaction dialog appears: "Decipher this crystal? Required Karma: X (You have: Y)"
+5. **Given** user confirms and has sufficient Karma, **When** approved, **Then** Karma deducts, crystal explodes into particles, and secret text floats up from the light
+6. **Given** user doesn't have enough Karma, **When** they try to confirm, **Then** error message displays explaining Karma shortage
+7. **Given** successful decipherment, **When** user closes the screen, **Then** crystal is removed from map (unavailable to others) and added to user's Journal
+
+---
+
+### User Story 4 - Journal Collection (Priority: P3)
+
+A user reviews all secrets they have deciphered in a personal collection gallery, tracking their Karma and discovered secrets.
+
+**Why this priority**: Adds long-term engagement and collection mechanics but not essential for core loop demonstration.
+
+**Acceptance Scenarios**:
+
+1. **Given** a user opens the Journal, **When** they have deciphered crystals, **Then** a grid displays crystal thumbnails with emotion-type colors
+2. **Given** crystals in Journal, **When** user taps one, **Then** detail view shows crystal image, secret text, Karma cost paid, and decipher date
+3. **Given** user has no deciphered crystals, **When** opening Journal, **Then** empty state encourages exploration
+4. **Given** Journal header, **When** displayed, **Then** shows current total Karma balance prominently
 
 ---
 
 ### Edge Cases
 
-- What happens when a user tries to bury a memory without location permissions enabled?
-- How does the system handle AI generation failures or timeouts during crystal creation?
-- What happens when a user enters the proximity zone of multiple crystals simultaneously?
-- How does the system behave when GPS accuracy is poor (>50m error)?
-- What happens if a user loses network connectivity during crystal burial or mining?
-- How does the system handle memory text containing inappropriate content?
-- What happens when a user mines a crystal they previously buried themselves? (They can mine it like any other crystal)
-- How does the app behave when running in the background during proximity detection?
-- What happens when device battery is critically low during active exploration?
-- What happens when two users try to mine the same crystal at the exact same time?
-- How does the system determine where to respawn a crystal after it's been mined?
-- What happens if there are no suitable locations available for crystal respawning?
-- How does the system prevent crystals from respawning in the same location they were just mined from?
+- What happens when a user tries to sublimate without network connectivity?
+- How does the system handle AI analysis failures or timeouts?
+- What happens if two users try to decipher the same crystal simultaneously? (First transaction wins)
+- How does the system behave when GPS accuracy is poor?
+- What happens if a user has 0 Karma and finds a crystal?
+- How does the system handle inappropriate secret content? (Post-MVP moderation)
+- What happens when user tries to decipher their own crystal? (Allowed - no restrictions)
 
-## Requirements *(mandatory)*
+---
+
+## Requirements
 
 ### Functional Requirements
 
 #### Map and Location Features
 
-- **FR-001**: System MUST display a dark-themed fantasy-style map centered on the user's current GPS location
-- **FR-002**: System MUST continuously track user's real-time location and update map position accordingly
-- **FR-003**: System MUST visualize 地脈 energy flow as slowly flowing blue-white particle effects along map features (roads, terrain)
-- **FR-004**: System MUST display crystallization areas as pulsing light vortexes colored by emotion type within visible map range (up to 1km radius)
-- **FR-005**: System MUST NOT display exact pin locations for crystals, only approximate glowing areas
+- **FR-001**: System MUST display a dark-themed fantasy-style map with 地脈 (energy flow) visualization as blue-white flowing particles
+- **FR-002**: System MUST display crystals as pulsing light points, NOT fixed pins, with pulse intensity based on Karma value
+- **FR-003**: System MUST fetch available crystals from Firestore and assign random nearby coordinates (demo mode)
+- **FR-004**: System MUST provide refresh mechanism to re-randomize crystal positions (simulating movement)
+- **FR-005**: System MUST NOT display exact crystal locations, only approximate glowing areas
 
-#### Proximity and Sensory Feedback
+#### Proximity and Sensory Feedback (Bio-Sensor)
 
-- **FR-006**: System MUST detect when user enters 100m radius of any crystal and trigger the "heartbeat phase"
-- **FR-007**: System MUST generate visual pulsing effects at screen edges matching the crystal's emotion color during heartbeat phase
-- **FR-008**: System MUST trigger synchronized haptic vibration pulses (heavy impact) matching the visual heartbeat rhythm
-- **FR-009**: System MUST play resonance sound effects synchronized with visual and haptic pulses
-- **FR-010**: System MUST increase pulse frequency and intensity as user distance decreases from 100m to 25m
-- **FR-011**: System MUST automatically transition to Mining screen when user is within 25m of crystal center
-- **FR-012**: System MUST handle proximity detection for multiple nearby crystals by prioritizing the closest one
+- **FR-006**: System MUST detect when user enters 100m radius of any crystal
+- **FR-007**: System MUST activate "Bio-Sensor" heartbeat gauge on proximity detection
+- **FR-008**: System MUST trigger heartbeat vibrations synchronized with visual pulse
+- **FR-009**: System MUST use HapticFeedback.heavyImpact for high-Karma crystals, lightImpact for low-Karma
+- **FR-010**: System MUST increase vibration intensity and frequency as distance decreases
+- **FR-011**: System MUST automatically transition to Mining screen when within 25m
+- **FR-012**: System MUST prioritize closest crystal when multiple are nearby
 
-#### Memory Burial Flow
+#### Sublimation Flow (Secret → Karma) - Two-Step Process
 
-- **FR-013**: System MUST provide a text input area for memory description with minimum 10 characters and maximum 500 characters
-- **FR-014**: System MUST validate memory text length before allowing crystallization to proceed
-- **FR-015**: System MUST display magical particle condensation animation during AI generation process
-- **FR-016**: System MUST call AI service to analyze memory text and classify emotion type (passion/silence/joy/healing)
-- **FR-017**: System MUST call AI service to generate a unique crystal image based on memory text and emotion analysis
-- **FR-018**: System MUST display generation progress indicator with estimated wait time during AI processing
-- **FR-019**: System MUST show generated crystal image and emotion type name to user for confirmation
-- **FR-020**: System MUST require long-press gesture (minimum 2 seconds) on "Return to 地脈" button to confirm burial
-- **FR-021**: System MUST save crystal data including memory text, emotion type, image URL, creator ID, GPS coordinates, and timestamp
-- **FR-022**: System MUST display light absorption animation when burial is confirmed
-- **FR-023**: System MUST prevent duplicate burial if user accidentally triggers burial action multiple times
+##### Step 1: Evaluation (評価)
 
-#### Crystal Mining and Memory Reading Flow (Unified Screen)
+- **FR-013**: System MUST provide text input for secret (minimum 10, maximum 500 characters)
+- **FR-014**: System MUST provide "Evaluate" button to trigger AI analysis
+- **FR-015**: System MUST display swirling condensation animation during AI processing
+- **FR-016**: System MUST call AI (Gemini) to analyze secret and return: emotion type (8 types) + weight score (0-100)
+- **FR-017**: System MUST display evaluation preview: crystal image, emotion type, rarity tier, and Karma to earn
+- **FR-018**: System MUST NOT save any data to Firestore during evaluation step
 
-- **FR-024**: System MUST display the Mining screen with centered AI-generated crystal image in abstract space
-- **FR-025**: System MUST detect tap gestures on the crystal image
-- **FR-026**: System MUST display spark effects, play metallic sound, and trigger strong haptic feedback for each tap
-- **FR-027**: System MUST visually show progressive crack damage on crystal with each tap
-- **FR-028**: System MUST track crystal durability and reduce it with each tap
-- **FR-029**: System MUST trigger shattering animation when durability reaches zero (after 5-10 taps)
-- **FR-030**: System MUST transition the same screen to a serene reading state after shattering animation completes (no screen transition)
-- **FR-031**: System MUST blur background and play ambient sound when entering reading state
-- **FR-032**: System MUST animate memory text appearance with ink-floating effect (gradual reveal) on the same screen
-- **FR-033**: System MUST display complete memory text in readable format
-- **FR-034**: System MUST provide dismiss/close button to exit the unified Mining/Reading screen
-- **FR-035**: System MUST mark crystal as "discovered" in user's collection upon closing the screen
-- **FR-036**: System MUST save discovery timestamp and location when adding to collection
-- **FR-037**: System MUST remove the crystal from its original map location immediately after it is successfully mined
-- **FR-038**: System MUST respawn the crystal at a new random location after it has been mined
-- **FR-039**: System MUST ensure respawned crystal location is at least 100m away from the original mining location
-- **FR-040**: System MUST handle concurrent mining attempts by allowing only the first user to successfully mine the crystal
-- **FR-041**: System MUST allow users to mine crystals they previously buried themselves (no creator restrictions)
+##### Step 2: Confirmation (確定)
 
-#### Crystal Journal
+- **FR-019**: System MUST display "Bury This Secret" and "Cancel" buttons after evaluation
+- **FR-020**: System MUST save crystal to Firestore with status='available' ONLY when user confirms
+- **FR-021**: System MUST update user's currentKarma balance ONLY when user confirms
+- **FR-022**: System MUST award Karma equal to the weight score
+- **FR-023**: System MUST play escalating celebration effects for higher scores (S-Rare = maximum effects)
+- **FR-024**: System MUST return to input screen without saving if user cancels
 
-- **FR-042**: System MUST display grid layout of all mined crystals using their AI-generated thumbnail images
-- **FR-043**: System MUST sort crystals by discovery date (most recent first) by default
-- **FR-044**: System MUST open crystal detail view when user taps on a thumbnail
-- **FR-045**: System MUST display crystal image, memory text, discovery date, and discovery location name in detail view
-- **FR-046**: System MUST show empty state message when user has not mined any crystals yet
-- **FR-047**: System MUST allow users to navigate back to map from Journal screen
+#### Crystal Asset System
 
-#### User Authentication and Data Management
+- **FR-025**: System MUST categorize crystals by 8 emotion types with corresponding colors:
+  - Happiness (嬉しさ) - Pink (#FF69B4)
+  - Enjoyment (楽しさ) - Orange (#FFA500)
+  - Relief (安心) - Green (#32CD32)
+  - Anticipation (期待) - Yellow (#FFD700)
+  - Sadness (悲しみ) - Blue (#4169E1)
+  - Embarrassment (恥ずかしさ) - Purple (#9370DB)
+  - Anger (怒り) - Red (#DC143C)
+  - Emptiness (虚しさ) - Gray (#708090)
+- **FR-026**: System MUST categorize crystals by 3 rarity tiers: Common (0-59), Rare (60-89), S-Rare (90-100)
+- **FR-027**: System MUST provide 24 pre-made crystal assets (8 emotions × 3 rarities)
+- **FR-028**: System MUST apply pulsing animation to all crystals, with intensity based on rarity
+- **FR-029**: System MUST apply glow effects beneath crystals, with brightness based on rarity
 
-- **FR-048**: System MUST authenticate users and assign unique user IDs
-- **FR-049**: System MUST associate each buried crystal with the creator's user ID
-- **FR-050**: System MUST persist all crystal data (buried and discovered) in cloud storage
-- **FR-051**: System MUST persist user discovery history and collection data
-- **FR-052**: System MUST track mining history to prevent duplicate mining of the same crystal by the same user
+#### Mining Flow
 
-#### Performance and Error Handling
+- **FR-030**: System MUST display centered crystal image with breathing scale animation
+- **FR-031**: System MUST detect tap gestures on crystal
+- **FR-032**: System MUST display spark effects, play metallic sound, trigger haptic feedback per tap
+- **FR-033**: System MUST show progressive crack damage overlay
+- **FR-034**: System MUST shatter crystal after 5-10 taps (durability reaches zero)
+- **FR-035**: System MUST synchronize haptic pulses with visual pulsing animation
 
-- **FR-053**: System MUST request and verify location permissions before allowing map access
-- **FR-054**: System MUST display appropriate error message if location permissions are denied
-- **FR-055**: System MUST handle AI generation failures gracefully with retry option and clear error messaging
-- **FR-056**: System MUST cache map tiles for offline viewing of previously loaded areas
-- **FR-057**: System MUST queue burial actions for retry if network is unavailable
-- **FR-058**: System MUST validate GPS accuracy and warn user if accuracy exceeds 50 meters
-- **FR-059**: System MUST continue proximity detection when app is running in background (within platform limitations)
-- **FR-060**: System MUST handle low battery situations by reducing animation frame rates and haptic intensity
-- **FR-061**: System MUST implement crystal respawn location selection algorithm that distributes crystals across available geographic areas
-- **FR-062**: System MUST prevent crystal respawning in restricted areas (water bodies, private property when detectable)
+#### Decipherment Flow (Karma Transaction)
 
-### Key Entities
+- **FR-036**: System MUST display transaction dialog after mining: "Decipher? Required: X Karma (You have: Y)"
+- **FR-037**: System MUST validate user has sufficient Karma before allowing decipherment
+- **FR-038**: System MUST use Firestore Transaction (via Cloud Function) for atomic decipherment
+- **FR-039**: System MUST verify crystal status='available' at transaction time (first-come-first-served)
+- **FR-040**: System MUST deduct Karma from user balance on successful decipherment
+- **FR-041**: System MUST change crystal status to 'taken' and set decipheredBy
+- **FR-042**: System MUST copy crystal data to user's collected_crystals subcollection
+- **FR-043**: System MUST animate secret text reveal with floating particle effect
+- **FR-044**: System MUST remove crystal from map for all users after decipherment
 
-- **Crystal**: Represents a buried memory that can exist at different locations over time. Contains memory text content, emotion type classification (passion/silence/joy/healing), AI-generated image URL, creator user ID, current GPS coordinates (latitude/longitude that updates when respawned), creation timestamp, unique identifier, mining count (how many times it has been mined), and respawn history.
+#### Journal
 
-- **User**: Represents a person using the app. Contains unique user ID, authentication credentials, discovery history (list of mined crystal IDs with timestamps and locations where they mined them), burial history (list of created crystal IDs), and mining history (prevents duplicate mining of same crystal).
+- **FR-045**: System MUST display current Karma balance prominently
+- **FR-046**: System MUST display grid of deciphered crystals with thumbnails
+- **FR-047**: System MUST sort by decipher date (most recent first)
+- **FR-048**: System MUST show detail view with crystal image, secret text, Karma cost, date
+- **FR-049**: System MUST show empty state when no crystals collected
 
-- **Crystallization Area**: Represents a discoverable location on the map. Derived from Crystal entity's current location. Includes approximate location (not exact coordinates shown on map), visual appearance (pulsing light color based on emotion type), proximity detection radius (100m outer, 25m inner), and current status (active/being-mined/respawning).
+#### Authentication and Data
 
-- **Discovery Record**: Represents a user's successful mining of a crystal at a specific time and place. Contains crystal ID, user ID who discovered it, discovery timestamp, discovery GPS location (where the user was when they mined it, for journal display), and the crystal's location at the time of mining.
+- **FR-050**: System MUST authenticate users anonymously (Firebase Auth)
+- **FR-051**: System MUST persist user Karma balance in Firestore
+- **FR-052**: System MUST persist crystal data with secretText protected until decipherment
+- **FR-053**: System MUST track decipherment history to prevent re-deciphering same crystal
 
-## Success Criteria *(mandatory)*
+---
+
+## Key Entities
+
+### Crystal (想晶)
+
+Represents a sublimated secret that exists in the world until deciphered.
+
+```typescript
+{
+  // Public info (map display)
+  status: 'available' | 'taken',
+  karmaValue: number,           // 0-100, also the cost to decipher
+  imageUrl: string,             // Crystal asset URL
+  aiMetadata: {
+    emotionType: 'happiness' | 'enjoyment' | 'relief' | 'anticipation' |
+                 'sadness' | 'embarrassment' | 'anger' | 'emptiness',
+    score: number               // 0-100 (rarity tier derived from this)
+  },
+  createdAt: Timestamp,
+
+  // Hidden info (protected until decipherment)
+  secretText: string,           // The actual secret
+
+  // Management
+  createdBy: string,            // userId who sublimated
+  decipheredBy: string | null,  // userId who deciphered (null if available)
+  decipheredAt: Timestamp | null
+}
+```
+
+### User
+
+Represents a player in the system.
+
+```typescript
+{
+  currentKarma: number,         // Current Karma balance
+  createdAt: Timestamp
+}
+```
+
+### Collected Crystal (Subcollection: users/{userId}/collected_crystals)
+
+Represents a user's deciphered crystal for Journal display.
+
+```typescript
+{
+  secretText: string,           // The revealed secret
+  imageUrl: string,
+  karmaCost: number,            // How much Karma was paid
+  aiMetadata: { emotionType, score },
+  decipheredAt: Timestamp,
+  originalCreatorId: string
+}
+```
+
+---
+
+## Success Criteria
 
 ### Measurable Outcomes
 
-- **SC-001**: Users can complete the full burial flow (text input → AI generation → confirmation) in under 90 seconds for a typical memory (100-200 characters)
-- **SC-002**: Users experience proximity feedback (visual/haptic/audio) within 2 seconds of entering the 100m detection radius
-- **SC-003**: Crystal mining interaction completes (shattering animation → memory reveal) within 15 seconds of entering the Mining screen
-- **SC-004**: AI crystal generation succeeds for 95% of memory burial attempts within 30 seconds
-- **SC-005**: Users can navigate the map, view crystal locations, and move around without noticeable lag (60fps maintained on target devices)
-- **SC-006**: 80% of users successfully mine their first crystal within 5 minutes of starting exploration
-- **SC-007**: Proximity detection accuracy correctly identifies when users are within 25m of crystals with less than 10% false positives
-- **SC-008**: Users report feeling immersed in the fantasy atmosphere (measured by post-experience survey rating above 4.0/5.0)
-- **SC-009**: Memory text is readable and presentation effects enhance rather than obstruct reading (reading comprehension rate above 90%)
-- **SC-010**: App handles 1000 concurrent users exploring and burying crystals without service degradation
+- **SC-001**: Sublimation flow completes (text → AI analysis → result) in under 30 seconds
+- **SC-002**: Users feel heartbeat feedback within 2 seconds of entering 100m proximity
+- **SC-003**: Mining interaction completes (tapping → shatter → reveal) in under 15 seconds
+- **SC-004**: AI emotion/score analysis succeeds for 95% of sublimation attempts
+- **SC-005**: Map renders smoothly at 60fps with 20+ crystals displayed
+- **SC-006**: Transaction (decipherment) resolves correctly in race conditions (first-come-first-served)
+- **SC-007**: Haptic feedback clearly differentiates between Common, Rare, and S-Rare crystals
+- **SC-008**: Users report feeling the "dark fantasy" atmosphere (survey rating >4.0/5.0)
 
 ### Assumptions
 
-- Users will grant location permissions willingly when they understand the app's core purpose
-- Target devices support haptic feedback (iPhone 6S+ or Android devices with vibration motors)
-- Users have network connectivity during burial and mining actions (offline exploration is acceptable)
-- AI image generation service can produce suitable crystal-like imagery from text prompts
-- GPS accuracy will be sufficient (under 20m) in most outdoor exploration scenarios
-- Users will primarily use the app while walking outdoors, not while driving
-- Memory text will be primarily in Japanese, but the system should support any language
-- Crystal density will naturally distribute through both initial burial and respawning mechanism
-- Crystal respawning will create sustainable exploration opportunities, preventing crystal scarcity in any given area
-- Users will find value in mining the same crystal multiple times as it appears in different locations (each mining is a unique discovery experience)
-- The respawn algorithm will maintain balanced crystal distribution across geographic areas
-- Users will not abuse the system by burying inappropriate content (content moderation may be needed post-MVP)
-- Map tiles and location services are available for the target geographic regions (Japan initially assumed)
-- Concurrent mining conflicts will be rare enough that simple first-come-first-served resolution is acceptable
+- Users will grant location permissions for proximity detection
+- Target devices support haptic feedback (iPhone 6S+ / modern Android)
+- Network connectivity available during sublimation and decipherment
+- Gemini API can reliably analyze text for emotion and "weight"
+- Demo will be conducted in a controlled area where crystal positions can be pre-seeded
+- 24 pre-made crystal assets (8 emotions × 3 rarities) will be sufficient for MVP (no AI image generation)
+- Users understand the "dark secret exchange" concept and find it engaging
+- Concurrent decipherment conflicts will be rare enough for simple transaction resolution
+
+---
+
+## Technical Architecture
+
+### Firebase Structure
+
+**Firestore Collections:**
+- `users/{userId}` - User data and Karma balance
+- `users/{userId}/collected_crystals/{crystalId}` - Deciphered crystal copies
+- `crystals/{crystalId}` - Master crystal data
+
+**Cloud Storage:**
+- `/crystal_images/{emotion}_{rarity}.png` - Pre-made crystal assets
+
+**Cloud Functions (Recommended):**
+- `decipherCrystal(crystalId)` - Atomic transaction for first-come-first-served decipherment
+
+### Security Rules (Simplified for Hackathon)
+
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+      match /collected_crystals/{crystalId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+
+    match /crystals/{crystalId} {
+      allow read: if request.auth != null;
+      allow write: if false; // Cloud Functions only
+    }
+  }
+}
+```
+
+### Crystal Asset Matrix (8 Emotions × 3 Rarities = 24 Assets)
+
+| Emotion | Color | Common (0-59) | Rare (60-89) | S-Rare (90-100) |
+|---------|-------|---------------|--------------|-----------------|
+| Happiness (嬉しさ) | Pink | Small dim pink shard | Glowing pink crystal | Massive pulsing pink cluster |
+| Enjoyment (楽しさ) | Orange | Small dim orange shard | Glowing orange crystal | Massive pulsing orange cluster |
+| Relief (安心) | Green | Small dim green shard | Glowing green crystal | Massive pulsing green cluster |
+| Anticipation (期待) | Yellow | Small dim yellow shard | Glowing yellow crystal | Massive pulsing yellow cluster |
+| Sadness (悲しみ) | Blue | Small dim blue shard | Glowing blue crystal | Massive pulsing blue cluster |
+| Embarrassment (恥ずかしさ) | Purple | Small dim purple shard | Glowing purple crystal | Massive pulsing purple cluster |
+| Anger (怒り) | Red | Small dim red shard | Glowing red crystal | Massive pulsing red cluster |
+| Emptiness (虚しさ) | Gray | Small dim gray shard | Glowing gray crystal | Massive pulsing gray cluster |
+
+---
+
+## Demo Strategy
+
+### Position Simulation
+
+Since real-time crystal movement is complex, the demo uses position randomization:
+
+1. Fetch `status='available'` crystals from Firestore (limit 20)
+2. Client-side assigns random coordinates within ~500m of demo venue
+3. App restart or refresh button re-randomizes positions
+4. This creates illusion of "flowing" crystals without backend complexity
+
+### Developer Testing Features
+
+- Mock location override for testing proximity triggers
+- Karma balance adjustment for testing transaction flows
+- Crystal seeding tool for populating demo area

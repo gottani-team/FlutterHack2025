@@ -66,6 +66,14 @@ class HomePage extends ConsumerWidget {
                 ),
                 child: const Text('Test Crystal Mining'),
               ),
+              const SizedBox(height: 16),
+              ElevatedButton(
+                onPressed: () => context.goNamed('repository-test'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.deepPurple,
+                ),
+                child: const Text('Repository Test Screen'),
+              ),
             ],
           ),
         ),

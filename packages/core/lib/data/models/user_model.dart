@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:json_annotation/json_annotation.dart';
 
+import '../../domain/entities/user.dart';
 import '../../domain/entities/user_session.dart';
 import '../converters/timestamp_converter.dart';
 
@@ -13,7 +14,7 @@ part 'user_model.g.dart';
 class UserModel {
   UserModel({
     required this.id,
-    required this.isAnonymous,
+    required this.currentKarma,
     required this.createdAt,
   });
 
@@ -27,16 +28,20 @@ class UserModel {
     return UserModel.fromJson({'id': doc.id, ...data});
   }
 
-  /// UserSessionエンティティからUserModelを作成
-  factory UserModel.fromEntity(UserSession entity) {
+  /// Userエンティティから作成
+  factory UserModel.fromEntity(User entity) {
     return UserModel(
       id: entity.id,
-      isAnonymous: entity.isAnonymous,
+      currentKarma: entity.currentKarma,
       createdAt: Timestamp.fromDate(entity.createdAt),
     );
   }
+
   final String id;
-  final bool isAnonymous;
+
+  @JsonKey(defaultValue: 0)
+  final int currentKarma;
+
   @TimestampConverter()
   final Timestamp createdAt;
 
@@ -46,15 +51,24 @@ class UserModel {
   /// FirestoreへのMap形式に変換（idは除外）
   Map<String, dynamic> toFirestore() {
     final json = toJson();
-    json.remove('id'); // Firestore document ID is separate
+    json.remove('id');
     return json;
   }
 
-  /// Domain EntityのUserSessionに変換
-  UserSession toEntity() {
+  /// Domain EntityのUserに変換
+  User toEntity() {
+    return User(
+      id: id,
+      currentKarma: currentKarma,
+      createdAt: createdAt.toDate(),
+    );
+  }
+
+  /// Legacy: UserSessionエンティティに変換（移行期間後に削除）
+  UserSession toUserSession() {
     return UserSession(
       id: id,
-      isAnonymous: isAnonymous,
+      isAnonymous: true, // 匿名認証のみサポート
       createdAt: createdAt.toDate(),
     );
   }

@@ -5,15 +5,25 @@ import 'package:json_annotation/json_annotation.dart';
 ///
 /// JsonSerializableで使用するカスタムコンバーター。
 /// FirestoreのGeoPoint型をJSON形式に相互変換する。
-class GeoPointConverter implements JsonConverter<GeoPoint, Map<String, dynamic>> {
+class GeoPointConverter implements JsonConverter<GeoPoint, Object> {
   const GeoPointConverter();
 
   @override
-  GeoPoint fromJson(Map<String, dynamic> json) {
-    return GeoPoint(
-      (json['_latitude'] as num).toDouble(),
-      (json['_longitude'] as num).toDouble(),
-    );
+  GeoPoint fromJson(Object json) {
+    // Firestoreから直接取得した場合はGeoPointオブジェクト
+    if (json is GeoPoint) {
+      return json;
+    }
+
+    // JSONシリアライズされた場合はMap
+    if (json is Map<String, dynamic>) {
+      return GeoPoint(
+        (json['_latitude'] as num).toDouble(),
+        (json['_longitude'] as num).toDouble(),
+      );
+    }
+
+    throw ArgumentError('Invalid GeoPoint format: $json');
   }
 
   @override

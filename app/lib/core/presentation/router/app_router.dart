@@ -2,6 +2,7 @@ import 'package:feature/haiku/presentation/pages/haiku_page.dart';
 import 'package:feature/home/presentation/pages/home_page.dart';
 import 'package:feature/map/presentation/pages/map_page.dart';
 import 'package:feature/mining/presentation/pages/mining_page.dart';
+import 'package:feature/repository_test/presentation/pages/repository_test_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -40,6 +41,11 @@ final routerProvider = Provider<GoRouter>((ref) {
                 extra?['onComplete'] as Future<void> Function(MiningResult)?,
           );
         },
+      ),
+      GoRoute(
+        path: '/repository-test',
+        name: 'repository-test',
+        builder: (context, state) => const RepositoryTestPage(),
       ),
     ],
     errorBuilder: (context, state) => Scaffold(

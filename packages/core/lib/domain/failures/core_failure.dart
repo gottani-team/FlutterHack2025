@@ -65,6 +65,45 @@ abstract class CoreFailure with _$CoreFailure {
     required String message,
   }) = _DuplicateFailure;
 
+  /// カルマ不足エラー
+  ///
+  /// 操作に必要なカルマが不足している。
+  /// - クリスタル解読に必要なカルマが足りない
+  const factory CoreFailure.insufficientKarma({
+    required String message,
+    required int required,
+    required int available,
+  }) = _InsufficientKarmaFailure;
+
+  /// すでに取得済みエラー
+  ///
+  /// クリスタルがすでに他のユーザーに解読されている。
+  /// - 早い者勝ちで負けた場合
+  const factory CoreFailure.alreadyTaken({
+    required String message,
+  }) = _AlreadyTakenFailure;
+
+  /// AI解析エラー
+  ///
+  /// Gemini AIによる解析が失敗した。
+  /// - API呼び出しエラー
+  /// - 解析タイムアウト
+  /// - 不正なレスポンス
+  const factory CoreFailure.aiAnalysis({
+    required String message,
+    String? code,
+  }) = _AIAnalysisFailure;
+
+  /// バリデーションエラー
+  ///
+  /// 入力データがビジネスルールに違反。
+  /// - テキストが10-500文字でない
+  /// - 不正な文字が含まれている
+  const factory CoreFailure.validation({
+    required String message,
+    String? field,
+  }) = _ValidationFailure;
+
   /// 不明なエラー
   ///
   /// 上記のカテゴリに分類できないエラー。
