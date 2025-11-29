@@ -290,32 +290,33 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
         // 入力エリア
         if (_phase == _ScreenPhase.input)
           Positioned(
-            top: MediaQuery.of(context).padding.top + 8 + 44 + 8, // AppBar の下
-            left: 0,
-            right: 0,
-            bottom: MediaQuery.of(context).viewInsets.bottom + 280,
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(32, 16, 32, 0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // ニックネーム欄
-                  _buildNicknameField(
-                    nickname: nickname,
-                    textColor: textColor,
-                    placeholderColor: placeholderColor,
-                  ),
+            top: MediaQuery.of(context).padding.top + 25, // AppBar の下
+            left: 32,
+            right: 32,
+            bottom: MediaQuery.of(context).viewInsets.bottom + 150,
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // ニックネーム欄
+                _buildNicknameField(
+                  nickname: nickname,
+                  textColor: textColor,
+                  placeholderColor: placeholderColor,
+                ),
 
-                  const SizedBox(height: 24),
-
-                  // テキスト欄
-                  _buildTextField(
-                    memoryText: memoryText,
-                    textColor: textColor,
-                    placeholderColor: placeholderColor,
+                const SizedBox(height: 24),
+                SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      _buildTextField(
+                        memoryText: memoryText,
+                        textColor: textColor,
+                        placeholderColor: placeholderColor,
+                      ),
+                    ],
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
 

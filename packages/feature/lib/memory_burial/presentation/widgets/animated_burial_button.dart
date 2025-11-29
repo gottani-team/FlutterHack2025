@@ -41,7 +41,7 @@ class _AnimatedBurialButtonState extends State<AnimatedBurialButton>
   late AnimationController _entryEffectController;
   late AnimationController _arrowFadeController;
   late AnimationController _crystalFadeController;
-  
+
   // エフェクトのアニメーション
   late Animation<double> _entryAnimation;
   late Animation<double> _arrowFadeAnimation;
@@ -54,37 +54,37 @@ class _AnimatedBurialButtonState extends State<AnimatedBurialButton>
       vsync: this,
       duration: const Duration(seconds: 10),
     )..repeat();
-    
+
     // 大気圏突入エフェクト（ボタン移動と同じ1500ms）
     _entryEffectController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
     );
-    
+
     _entryAnimation = CurvedAnimation(
       parent: _entryEffectController,
       curve: Curves.easeOutCubic,
     );
-    
+
     // 矢印フェードアウトアニメーション（下降中に徐々に薄くなる）
     _arrowFadeController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 1500),
     );
-    
+
     _arrowFadeAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(
       CurvedAnimation(
         parent: _arrowFadeController,
         curve: const Interval(0.3, 1.0, curve: Curves.easeInQuart),
       ),
     );
-    
+
     // クリスタルフェードインアニメーション（矢印が消えた後に浮かんでくる）
     _crystalFadeController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 2000),
     );
-    
+
     _crystalFadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
       CurvedAnimation(
         parent: _crystalFadeController,
@@ -96,13 +96,13 @@ class _AnimatedBurialButtonState extends State<AnimatedBurialButton>
   @override
   void didUpdateWidget(AnimatedBurialButton oldWidget) {
     super.didUpdateWidget(oldWidget);
-    
+
     // processingに移行したらエフェクト開始
     if (widget.phase == ButtonPhase.processing &&
         oldWidget.phase != ButtonPhase.processing) {
       _entryEffectController.forward(from: 0);
       _arrowFadeController.forward(from: 0);
-      
+
       // 文字が集まりきる頃（2.5秒アニメーションの終盤）にクリスタルが浮かび上がる
       // 文字がボタンに吸い込まれてクリスタルになる感じ
       Future.delayed(const Duration(milliseconds: 2000), () {
@@ -111,7 +111,7 @@ class _AnimatedBurialButtonState extends State<AnimatedBurialButton>
         }
       });
     }
-    
+
     // completedに移行した時点でクリスタルが表示されていなければ開始
     if (widget.phase == ButtonPhase.completed &&
         oldWidget.phase != ButtonPhase.completed) {
@@ -133,9 +133,9 @@ class _AnimatedBurialButtonState extends State<AnimatedBurialButton>
   @override
   Widget build(BuildContext context) {
     final progress = (widget.textLength / 10.0).clamp(0.0, 1.0);
-    
-    final isProcessingOrCompleted = 
-        widget.phase == ButtonPhase.processing || 
+
+    final isProcessingOrCompleted =
+        widget.phase == ButtonPhase.processing ||
         widget.phase == ButtonPhase.completed;
 
     // ボタンのサイズと位置
@@ -153,8 +153,8 @@ class _AnimatedBurialButtonState extends State<AnimatedBurialButton>
       arcsCenterY = 266;
       arcsIntensity = 1.0;
       // processing中も矢印を表示（徐々にフェードアウト）、completed後はクリスタル
-      icon = widget.phase == ButtonPhase.completed 
-          ? _ButtonIcon.diamond 
+      icon = widget.phase == ButtonPhase.completed
+          ? _ButtonIcon.diamond
           : _ButtonIcon.arrowDown;
     } else {
       buttonWidth = 65 + (160 - 65) * progress;
@@ -284,7 +284,7 @@ class _AnimatedBurialButtonState extends State<AnimatedBurialButton>
         },
       );
     }
-    
+
     // completed時はクリスタルを表示
     if (widget.phase == ButtonPhase.completed) {
       return AnimatedBuilder(
@@ -306,7 +306,7 @@ class _AnimatedBurialButtonState extends State<AnimatedBurialButton>
         },
       );
     }
-    
+
     // 通常時は矢印
     return const Icon(
       Icons.arrow_downward,
@@ -336,12 +336,12 @@ class _AtmosphericEntryPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     if (progress <= 0) return;
-    
+
     final centerX = size.width / 2;
-    
+
     // エフェクトの起点はボタンの下端
     final effectStartY = buttonBottomY;
-    
+
     // アニメーションの強度計算
     // 0.0〜0.1: フェードイン
     // 0.1〜0.5: 最大強度維持
@@ -356,13 +356,13 @@ class _AtmosphericEntryPainter extends CustomPainter {
       final t = (progress - 0.5) / 0.5;
       intensity = 1.0 - Curves.easeIn.transform(t);
     }
-    
+
     // === 外側の青いグラデーションエリア（塗りつぶし） ===
     _drawOuterGlow(canvas, centerX, effectStartY, intensity);
-    
+
     // === 中間の水色エリア（塗りつぶし） ===
     _drawMiddleGlow(canvas, centerX, effectStartY, intensity);
-    
+
     // === 白い三日月形のコア（塗りつぶし） ===
     _drawWhiteCrescent(canvas, centerX, effectStartY, intensity);
   }
@@ -375,11 +375,11 @@ class _AtmosphericEntryPainter extends CustomPainter {
     double intensity,
   ) {
     if (intensity <= 0) return;
-    
+
     // 下に広がる大きな形状
     final width = buttonWidth * 3.5;
     final height = 320.0;
-    
+
     final path = Path();
     path.moveTo(centerX - buttonWidth * 0.5, startY);
     path.quadraticBezierTo(
@@ -395,7 +395,7 @@ class _AtmosphericEntryPainter extends CustomPainter {
       startY,
     );
     path.close();
-    
+
     final paint = Paint()
       ..shader = ui.Gradient.linear(
         Offset(centerX, startY),
@@ -409,7 +409,7 @@ class _AtmosphericEntryPainter extends CustomPainter {
         [0.0, 0.25, 0.6, 1.0],
       )
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 40);
-    
+
     canvas.drawPath(path, paint);
   }
 
@@ -421,10 +421,10 @@ class _AtmosphericEntryPainter extends CustomPainter {
     double intensity,
   ) {
     if (intensity <= 0) return;
-    
+
     final width = buttonWidth * 2.2;
     final height = 180.0;
-    
+
     final path = Path();
     path.moveTo(centerX - buttonWidth * 0.4, startY);
     path.quadraticBezierTo(
@@ -440,7 +440,7 @@ class _AtmosphericEntryPainter extends CustomPainter {
       startY,
     );
     path.close();
-    
+
     final paint = Paint()
       ..shader = ui.Gradient.linear(
         Offset(centerX, startY),
@@ -454,7 +454,7 @@ class _AtmosphericEntryPainter extends CustomPainter {
         [0.0, 0.3, 0.6, 1.0],
       )
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 25);
-    
+
     canvas.drawPath(path, paint);
   }
 
@@ -466,11 +466,11 @@ class _AtmosphericEntryPainter extends CustomPainter {
     double intensity,
   ) {
     if (intensity <= 0) return;
-    
+
     // 三日月形（ボタン直下の白い発光）
     final crescentWidth = buttonWidth * 1.3;
     final crescentHeight = 50.0;
-    
+
     // 外側の弧（下に凸）
     final outerPath = Path();
     outerPath.moveTo(centerX - crescentWidth / 2, startY);
@@ -488,7 +488,7 @@ class _AtmosphericEntryPainter extends CustomPainter {
       startY,
     );
     outerPath.close();
-    
+
     // 外側のグロー
     final outerGlowPaint = Paint()
       ..shader = ui.Gradient.radial(
@@ -503,9 +503,9 @@ class _AtmosphericEntryPainter extends CustomPainter {
         [0.0, 0.4, 0.7, 1.0],
       )
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 20);
-    
+
     canvas.drawPath(outerPath, outerGlowPaint);
-    
+
     // 中間のグロー
     final midGlowPaint = Paint()
       ..shader = ui.Gradient.radial(
@@ -520,13 +520,13 @@ class _AtmosphericEntryPainter extends CustomPainter {
         [0.0, 0.3, 0.6, 1.0],
       )
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 12);
-    
+
     canvas.drawPath(outerPath, midGlowPaint);
-    
+
     // 最も明るいコア（小さい三日月）
     final coreWidth = buttonWidth * 0.9;
     final coreHeight = 30.0;
-    
+
     final corePath = Path();
     corePath.moveTo(centerX - coreWidth / 2, startY + 5);
     corePath.quadraticBezierTo(
@@ -542,13 +542,13 @@ class _AtmosphericEntryPainter extends CustomPainter {
       startY + 5,
     );
     corePath.close();
-    
+
     final corePaint = Paint()
       ..color = Colors.white.withOpacity(intensity)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 5);
-    
+
     canvas.drawPath(corePath, corePaint);
-    
+
     // ハイライト（純白の線）
     final highlightPath = Path();
     highlightPath.moveTo(centerX - coreWidth * 0.35, startY + 8);
@@ -558,14 +558,14 @@ class _AtmosphericEntryPainter extends CustomPainter {
       centerX + coreWidth * 0.35,
       startY + 8,
     );
-    
+
     final highlightPaint = Paint()
       ..style = PaintingStyle.stroke
       ..strokeWidth = 4
       ..strokeCap = StrokeCap.round
       ..color = Colors.white.withOpacity(intensity)
       ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2);
-    
+
     canvas.drawPath(highlightPath, highlightPaint);
   }
 
@@ -663,9 +663,9 @@ class _ConcentricArcsPainter extends CustomPainter {
 /// クリスタルアイコン（添付画像のような宝石デザイン）
 class _CrystalPainter extends CustomPainter {
   _CrystalPainter({this.opacity = 1.0});
-  
+
   final double opacity;
-  
+
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
@@ -677,7 +677,7 @@ class _CrystalPainter extends CustomPainter {
 
     final w = size.width;
     final h = size.height;
-    
+
     // クリスタルの各頂点を定義（添付画像に合わせた形状）
     // 上部の頂点
     final top = Offset(w * 0.5, 0);
@@ -689,7 +689,7 @@ class _CrystalPainter extends CustomPainter {
     final midRight = Offset(w, h * 0.4);
     // 下部の頂点
     final bottom = Offset(w * 0.5, h);
-    
+
     // 外側の輪郭を描画
     final outlinePath = Path()
       ..moveTo(top.dx, top.dy)
@@ -699,21 +699,21 @@ class _CrystalPainter extends CustomPainter {
       ..lineTo(midLeft.dx, midLeft.dy)
       ..lineTo(topLeft.dx, topLeft.dy)
       ..close();
-    
+
     canvas.drawPath(outlinePath, paint);
-    
+
     // 内部の線（クリスタルのカット面）
     // 上部から中央への線
     canvas.drawLine(top, Offset(w * 0.35, h * 0.25), paint);
     canvas.drawLine(top, Offset(w * 0.65, h * 0.25), paint);
-    
+
     // 横の区切り線
     canvas.drawLine(topLeft, topRight, paint);
-    
+
     // 下部への斜め線
     canvas.drawLine(topLeft, bottom, paint);
     canvas.drawLine(topRight, bottom, paint);
-    
+
     // 中央から下への線
     canvas.drawLine(Offset(w * 0.35, h * 0.25), bottom, paint);
     canvas.drawLine(Offset(w * 0.65, h * 0.25), bottom, paint);
