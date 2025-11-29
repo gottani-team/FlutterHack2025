@@ -1,50 +1,219 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+<!--
+同期影響レポート:
+- バージョン変更: なし → 1.0.0 (初回批准)
+- 変更された原則: なし (新規憲章)
+- 追加セクション:
+  - コア原則 (Chimyaku開発のための5つの原則)
+  - 技術標準 (Flutter、Firebase、AI統合要件)
+  - ユーザー体験ガイドライン (没入体験、世界観構築標準)
+  - ガバナンス (改正手順、バージョニングポリシー)
+  - コミュニケーション原則 (日本語優先)
+- 削除セクション: なし (初回バージョン)
+- 更新が必要なテンプレート:
+  - ✅ plan-template.md: Constitution Checkセクションと整合
+  - ✅ spec-template.md: ユーザーストーリー形式と互換
+  - ✅ tasks-template.md: タスク構成が原則を反映
+- フォローアップTODO: なし
+-->
 
-## Core Principles
+# Chimyaku（地脈）プロジェクト憲章
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+## コア原則
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+### I. 世界観への没入体験 (WORLD_IMMERSION)
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+すべての機能は、記憶がエネルギーとして流れる「地脈（Chimyaku）」のファンタジー世界体験を強化しなければならない（MUST）。
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+**要件**:
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+- ビジュアルデザインはダークファンタジー美学と魔法的/神秘的テーマに従う
+- すべてのインタラクションは、記憶が結晶化されたエネルギーというメタファーを強化する
+- UI用語は世界観のコンセプトに沿う：「埋葬（Bury）」「探索（Explore）」「共鳴（Resonate）」「採掘（Mine）」「追体験（Relive）」
+- 没入感を壊す汎用的または非テーマ的なUI要素は使用しない
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+**根拠**: 本プロダクトのコア価値は、ファンタジーのレンズを通じた感情的つながりである。汎用的なUIは体験全体を損なう。
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+### II. 多感覚フィードバック (SENSORY_EXPERIENCE)
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+結晶への接近に関わる機能は、視覚的、聴覚的、触覚的フィードバックを統合しなければならない（MUST）。
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+**要件**:
 
-## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
+- **視覚**: 近接度に同期した画面端の脈動する光エフェクト
+- **触覚**: `HapticFeedback.heavyImpact`または同等の脈動する振動
+- **聴覚**: 視覚/触覚リズムに合致する共鳴音
+- 3つのモダリティすべてが同期され、距離が近づくにつれて強化される必要がある（MUST）
+- パフォーマンス目標: 感覚フィードバックのレイテンシ16ms未満（最低60fps）
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+**根拠**: 「鼓動（heartbeat）」体験は発見の中心である。単一モダリティのフィードバックでは、意図した感情的共鳴を創出できない。
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+### III. AI生成の独自性 (AI_UNIQUENESS)
+
+すべてのユーザー生成記憶結晶は、AI生成された独自のビジュアルと感情分類を持たなければならない（MUST）。
+
+**要件**:
+
+- テキスト入力 → AI感情分類（情熱/静寂/喜び/癒やし）
+- テキスト入力 → AI生成の独自結晶画像（テンプレートやプリセットは使用しない）
+- 生成されたコンテンツはユーザーに表示する前に保存される必要がある（MUST）
+- ローディング状態は魔法的/神秘的アニメーションを使用する（汎用的なスピナーは使用しない）
+- AI失敗時は明確なユーザーフィードバックとともに優雅にデグレードする必要がある（MUST）
+
+**根拠**: 独自性が個人的な投資を生む。テンプレートベースの結晶は、記憶が唯一無二のアーティファクトであるという認識を破壊する。
+
+### IV. クリーンアーキテクチャと機能独立性 (ARCHITECTURE)
+
+コードはクリーンアーキテクチャの原則に従い、厳格な層分離を行わなければならない（MUST）。
+
+**要件**:
+
+- Domain層はDataまたはPresentation層に依存しない（ゼロ依存）
+- DataおよびPresentation層はDomain層のみに依存する
+- 機能パッケージは独立してテスト・デプロイ可能でなければならない（MUST）
+- リポジトリインターフェースはDomainで定義、Dataで実装
+- Presentation層から直接Firebase呼び出しを行わない
+- 各機能は `domain/`、`data/`、`presentation/` として構成される
+
+**アーキテクチャ参照**: 詳細は [docs/ARCHITECTURE.md](../docs/ARCHITECTURE.md) を参照
+
+**根拠**: ハッカソンコンテキストでは並行開発と迅速なイテレーションが必要。密結合は並行作業をブロックし、時間的プレッシャー下でのデバッグを不可能にする。
+
+### V. ハッカソンMVP優先度 (MVP_PRIORITY)
+
+実装は、ハッカソンタイムライン内でコア体験を提供するための厳格な優先順位に従わなければならない（MUST）。
+
+**優先度階層**（順序）:
+
+1. **P1 - コアループ完成**: マップ表示 → 結晶エリア検出 → 近接振動 → 採掘アクション → 記憶表示
+2. **P2 - AI統合**: テキスト入力 → AI感情+画像生成 → Firebaseストレージ
+3. **P3 - ビジュアル洗練**: ダークモードマップ、パーティクルエフェクト、拡張アニメーション（Rive）
+4. **P4 - 二次機能**: コレクション図鑑、サウンドエフェクト、高度なアニメーション
+
+**要件**:
+
+- P1機能がP2作業開始前に完全に機能している必要がある（MUST）
+- タイムボックス化: 機能が進捗なく2時間を超える場合、より低い優先度に延期
+- スコープクリープ禁止: IDEA.mdにない機能は明示的に承認されない限りスコープ外
+- テストはP1コアループに最初にフォーカスする必要がある（MUST）
+
+**根拠**: ハッカソンは時間制約がある。すべてを試みると何も動作しない結果になる。動作するP1は不完全なP2+P3より優れている。
+
+## 技術標準
+
+### Flutter & Firebase要件
+
+**Flutter**:
+
+- バージョン: 3.38.1（miseで管理）
+- Dart SDK: >=3.5.0 <4.0.0
+- 状態管理: Riverpod 3.0+（UIにはhooks_riverpod）
+- コード生成: Freezed + JsonSerializable + Riverpod Generator
+- Material Design 3コンポーネントのみ使用
+
+**Firebase サービス**:
+
+- Authentication: 匿名またはemail/password（デフォルトでセキュア）
+- Firestore: 埋められた記憶用の `crystals` コレクション
+- Cloud Storage: セキュアURLでAI生成画像を保存
+- Cloud Functions: 必要に応じてバックエンドAI統合
+- App Check: 本番デプロイ前に有効化必須（MUST）
+
+**AI統合**:
+
+- プロバイダー: Google Gemini API または OpenAI API
+- 入力: ユーザー記憶テキスト（最大500文字）
+- 出力1: 感情タイプ分類（4カテゴリ）
+- 出力2: 画像生成プロンプト → DALL-E 3または類似
+- タイムアウト: 最大30秒、再試行オプションで優雅に失敗
+
+### 位置情報サービス
+
+**要件**:
+
+- GPS精度: 結晶検出トリガーに25メートル半径
+- 近接検出: 100m半径で「鼓動」フェーズ開始
+- 権限処理: 位置情報権限拒否を優雅に処理
+- バッテリー考慮: 連続ポーリングよりジオフェンシングまたは低電力位置更新を優先
+
+**プライバシー**:
+
+- ユーザー位置は自分の埋めた結晶のみに保存
+- 他ユーザーの結晶位置はGeoPointとして保存（個人識別子とのリンクなし）
+
+## ユーザー体験ガイドライン
+
+### アニメーション & パフォーマンス標準
+
+**フレームレート**:
+
+- すべてのインタラクティブアニメーションに60fps必須（REQUIRED）
+- 背景パーティクルエフェクトに30fps最低（MINIMUM）
+- 結晶「鼓動」フェーズ中のフレームドロップは致命的な失敗（CRITICAL FAILURES）
+
+**アニメーションタイミング**:
+
+- 近接鼓動: 1-2秒のパルス間隔（近接度により減少）
+- 結晶採掘: 破壊に5-10タップ（進捗フィードバック付き）
+- 記憶表示: 2-3秒の段階的テキストフェードイン
+- ローディング状態: 300ms以内に表示、アニメーション付きパーティクルエフェクト
+
+### アクセシビリティ考慮事項
+
+**最低要件**:
+
+- 触覚フィードバックは設定でトグル可能である必要がある（MUST）（アクセシビリティ/バッテリー節約）
+- 視覚エフェクトは音声なしで動作する必要がある（MUST）（聴覚障害者向け）
+- 音声エフェクトは触覚なしで動作する必要がある（MUST）（振動サポートなしユーザー向け）
+- すべてのインタラクティブ要素はスクリーンリーダー用のセマンティックラベルを持つ必要がある（MUST）
+- 「ダークファンタジー」テーマでもWCAG AA標準のコントラスト比を満たす必要がある（MUST）
+
+## コミュニケーション原則
+
+### VI. 日本語優先対応 (JAPANESE_FIRST)
+
+プロジェクトコミュニケーションは日本語を優先言語として使用しなければならない（MUST）。
+
+**要件**:
+
+- すべてのドキュメント、コメント、説明は日本語で記述する
+- AI アシスタントからの応答は日本語で提供される必要がある（MUST）
+- コード内のコメントは日本語で記述する
+- コミット メッセージは日本語または英語（Conventional Commits形式）
+- 変数名、関数名、クラス名は英語（Dart/Flutter規約に従う）
+
+**例外**:
+
+- 技術的な用語やキーワードは英語を使用可能
+- 外部ライブラリのドキュメントは原語のまま
+- コード自体の識別子は英語（国際標準に従う）
+
+**根拠**: チームメンバーの母語が日本語であり、日本語でのコミュニケーションが最も効率的で誤解が少ない。
+
+## ガバナンス
+
+### 改正手順
+
+1. **提案**: 根拠とともに変更案を文書化
+2. **影響分析**: すべての依存テンプレートとコードをレビュー
+3. **承認**: プロジェクトリードの承認またはチームコンセンサスが必要
+4. **移行**: すべてのテンプレート、ガイダンスドキュメント、既存機能を更新
+5. **バージョンバンプ**: セマンティックバージョニング規則に従う
+
+### バージョニングポリシー
+
+- **MAJOR (X.0.0)**: 後方互換性のない原則削除/再定義（例: Architecture原則の削除）
+- **MINOR (x.Y.0)**: 新原則の追加または大幅な拡張（例: Security原則の追加）
+- **PATCH (x.y.Z)**: 明確化、タイポ修正、非セマンティックな改善
+
+### コンプライアンスレビュー
+
+- すべての機能仕様は該当する原則を参照する必要がある（MUST）
+- 計画ドキュメントはConstitution Checkセクションを含む必要がある（MUST）
+- コードレビューは原則への準拠を検証する必要がある（MUST）
+- 原則違反はComplexity Trackingテーブルで正当化を文書化する必要がある（MUST）
+
+### 憲章の権限
+
+この憲章は他のすべての開発プラクティスに優先する。この文書と他のガイダンス間で矛盾が生じた場合、憲章の規則が優先される。
+
+**バージョン**: 1.0.0 | **批准日**: 2025-11-29 | **最終改正日**: 2025-11-29
