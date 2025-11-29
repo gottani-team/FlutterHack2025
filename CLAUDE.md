@@ -4,7 +4,7 @@ Auto-generated from all feature plans. Last updated: 2025-11-29
 
 ## Active Technologies
 
-- Dart >=3.5.0 <4.0.0 / Flutter 3.38.1 (001-firebase-core-repositories)
+- Dart SDK >=3.5.0 <4.0.0 / Flutter 3.38.1 (001-crystal-mining, 001-firebase-core-repositories)
 
 ## Project Structure
 
@@ -15,15 +15,16 @@ tests/
 
 ## Commands
 
-# Add commands for Dart >=3.5.0 <4.0.0 / Flutter 3.38.1
+# Add commands for Dart SDK >=3.5.0 <4.0.0 / Flutter 3.38.1
 
 ## Code Style
 
-Dart >=3.5.0 <4.0.0 / Flutter 3.38.1: Follow standard conventions
+Dart SDK >=3.5.0 <4.0.0 / Flutter 3.38.1: Follow standard conventions
 
 ## Recent Changes
 
-- 001-firebase-core-repositories: Added Dart >=3.5.0 <4.0.0 / Flutter 3.38.1
+- 001-crystal-mining: Added Dart SDK >=3.5.0 <4.0.0 / Flutter 3.38.1
+- 001-firebase-core-repositories: Added Firebase Core Repository Layer
 
 <!-- MANUAL ADDITIONS START -->
 <!-- MANUAL ADDITIONS END -->
