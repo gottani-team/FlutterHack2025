@@ -77,21 +77,18 @@ class CrystalDisplayPage extends ConsumerWidget {
 
               // Crystal with ripple effect
               SizedBox(
-                height: crystalSize * 1.2,
+                height: crystalSize * 1.5,
                 child: Stack(
-                  alignment: Alignment.topCenter,
+                  alignment: Alignment.center,
                   children: [
                     // Ripple effect behind crystal
                     RippleEffectWidget(
-                      baseSize: crystalSize * 1.8,
+                      baseSize: crystalSize * 2.5,
                     ),
                     // Crystal image centered
-                    Positioned(
-                      top: crystalSize * 0.35,
-                      child: CrystalImageWidget(
-                        imageUrl: mockCrystalImageUrl,
-                        size: crystalSize,
-                      ),
+                    CrystalImageWidget(
+                      imageUrl: mockCrystalImageUrl,
+                      size: crystalSize,
                     ),
                   ],
                 ),
