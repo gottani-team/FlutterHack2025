@@ -56,16 +56,20 @@ class CrystalRepositoryImpl implements CrystalRepository {
 
   @override
   Future<Result<Crystal?>> getCrystal(String crystalId) async {
+    dev.log('[CrystalRepo] getCrystal: crystalId=$crystalId');
     try {
       final doc = await _crystalsRef.doc(crystalId).get();
 
       if (!doc.exists) {
+        dev.log('[CrystalRepo] getCrystal: Crystal not found');
         return Result.success(null);
       }
 
       final crystal = CrystalModel.fromFirestore(doc).toEntity();
+      dev.log('[CrystalRepo] getCrystal: Found crystal, status=${crystal.status}');
       return Result.success(crystal);
     } on FirebaseException catch (e) {
+      dev.log('[CrystalRepo] getCrystal: FirebaseException code=${e.code}, message=${e.message}');
       return Result.failure(
         CoreFailure.network(
           message: e.message ?? 'Failed to get crystal',
@@ -73,6 +77,7 @@ class CrystalRepositoryImpl implements CrystalRepository {
         ),
       );
     } catch (e) {
+      dev.log('[CrystalRepo] getCrystal: Unknown error: $e');
       return Result.failure(
         CoreFailure.unknown(
           message: 'Failed to get crystal: ${e.toString()}',
@@ -86,6 +91,7 @@ class CrystalRepositoryImpl implements CrystalRepository {
     required String userId,
     int limit = 50,
   }) async {
+    dev.log('[CrystalRepo] getCreatedCrystals: userId=$userId, limit=$limit');
     try {
       // Note: Firestoreフィールドはsnake_case
       final snapshot = await _crystalsRef
@@ -94,12 +100,15 @@ class CrystalRepositoryImpl implements CrystalRepository {
           .limit(limit)
           .get();
 
+      dev.log('[CrystalRepo] getCreatedCrystals: Found ${snapshot.docs.length} crystals');
+
       final crystals = snapshot.docs.map((doc) {
         return CrystalModel.fromFirestore(doc).toEntity();
       }).toList();
 
       return Result.success(crystals);
     } on FirebaseException catch (e) {
+      dev.log('[CrystalRepo] getCreatedCrystals: FirebaseException code=${e.code}, message=${e.message}');
       return Result.failure(
         CoreFailure.network(
           message: e.message ?? 'Failed to get created crystals',
@@ -107,6 +116,7 @@ class CrystalRepositoryImpl implements CrystalRepository {
         ),
       );
     } catch (e) {
+      dev.log('[CrystalRepo] getCreatedCrystals: Unknown error: $e');
       return Result.failure(
         CoreFailure.unknown(
           message: 'Failed to get created crystals: ${e.toString()}',
@@ -119,6 +129,7 @@ class CrystalRepositoryImpl implements CrystalRepository {
   Stream<Result<List<Crystal>>> watchAvailableCrystals({
     int limit = 20,
   }) {
+    dev.log('[CrystalRepo] watchAvailableCrystals: Starting stream, limit=$limit');
     // Note: Firestoreフィールドはsnake_case
     return _crystalsRef
         .where('status', isEqualTo: 'available')
@@ -126,11 +137,13 @@ class CrystalRepositoryImpl implements CrystalRepository {
         .limit(limit)
         .snapshots()
         .map((snapshot) {
+      dev.log('[CrystalRepo] watchAvailableCrystals: Received ${snapshot.docs.length} crystals');
       final crystals = snapshot.docs.map((doc) {
         return CrystalModel.fromFirestore(doc).toEntity();
       }).toList();
       return Result.success(crystals);
     }).handleError((error) {
+      dev.log('[CrystalRepo] watchAvailableCrystals: Stream error: $error');
       if (error is FirebaseException) {
         return Result.failure(
           CoreFailure.network(
