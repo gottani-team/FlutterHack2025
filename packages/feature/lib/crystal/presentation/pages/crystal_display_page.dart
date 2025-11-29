@@ -1,6 +1,7 @@
 import 'dart:ui';
 
 import 'package:core/presentation/widgets/glass_card_widget.dart';
+import 'package:core/presentation/widgets/ripple_effect_widget.dart';
 import 'package:core/presentation/widgets/shimmer_background_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
@@ -72,12 +73,28 @@ class CrystalDisplayPage extends ConsumerWidget {
           data: (crystal) => Column(
             children: [
               // Top padding
-              SizedBox(height: topPadding + 40),
+              SizedBox(height: topPadding + 20),
 
-              // Crystal image
-              CrystalImageWidget(
-                imageUrl: mockCrystalImageUrl,
-                size: crystalSize,
+              // Crystal with ripple effect
+              SizedBox(
+                height: crystalSize * 1.2,
+                child: Stack(
+                  alignment: Alignment.topCenter,
+                  children: [
+                    // Ripple effect behind crystal
+                    RippleEffectWidget(
+                      baseSize: crystalSize * 1.8,
+                    ),
+                    // Crystal image centered
+                    Positioned(
+                      top: crystalSize * 0.35,
+                      child: CrystalImageWidget(
+                        imageUrl: mockCrystalImageUrl,
+                        size: crystalSize,
+                      ),
+                    ),
+                  ],
+                ),
               ),
 
               // Shadow below crystal
