@@ -32,6 +32,7 @@ class CrystalGridItemWidget extends StatelessWidget {
         // backgroundColor: emotionColor.withValues(alpha: 0.15),
         borderColor: Color(crystal.aiMetadata.emotionType.colorHex),
         borderWidth: 2,
+        useGradientBorder: false,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
