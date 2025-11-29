@@ -43,11 +43,22 @@ class SecretTextGeneratorService {
     }
 
     // 余分な引用符や改行を削除
-    final cleanedText = responseText
-        .trim()
-        .replaceAll(RegExp(r'^[「"\']+'), '')
-        .replaceAll(RegExp(r'[」"\']+$'), '')
-        .trim();
+    var cleanedText = responseText.trim();
+    // 先頭の引用符を削除
+    while (cleanedText.isNotEmpty &&
+        (cleanedText.startsWith('「') ||
+            cleanedText.startsWith('"') ||
+            cleanedText.startsWith("'"))) {
+      cleanedText = cleanedText.substring(1);
+    }
+    // 末尾の引用符を削除
+    while (cleanedText.isNotEmpty &&
+        (cleanedText.endsWith('」') ||
+            cleanedText.endsWith('"') ||
+            cleanedText.endsWith("'"))) {
+      cleanedText = cleanedText.substring(0, cleanedText.length - 1);
+    }
+    cleanedText = cleanedText.trim();
 
     dev.log('[SecretTextGenerator] Generated: $cleanedText');
 

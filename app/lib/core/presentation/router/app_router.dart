@@ -2,7 +2,6 @@ import 'package:feature/crystal/presentation/pages/crystal_display_page.dart';
 import 'package:feature/haiku/presentation/pages/haiku_page.dart';
 import 'package:feature/home/presentation/pages/home_page.dart';
 import 'package:feature/map/presentation/pages/map_page.dart';
-import 'package:feature/repository_test/presentation/pages/repository_test_page.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
