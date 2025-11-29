@@ -9,7 +9,7 @@ import 'package:go_router/go_router.dart';
 
 final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
-    initialLocation: '/', // Start with map for Chimyaku MVP
+    initialLocation: '/map', // Start with map for Chimyaku MVP
     routes: [
       GoRoute(
         path: '/',
