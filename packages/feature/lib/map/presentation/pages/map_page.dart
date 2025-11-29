@@ -1,7 +1,7 @@
 import 'dart:math' as math;
 
+import 'package:core/presentation/widgets/glass_app_bar_widget.dart';
 import 'package:flutter/material.dart';
-import 'package:go_router/go_router.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
 
@@ -125,13 +125,27 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
           // Mapbox Map
           _buildMap(context, mapState, viewModel),
 
+          // Glass App Bar
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 8,
+            left: 16,
+            right: 16,
+            child: GlassAppBarWidget(
+              title: 'HIMITSU no SECRET',
+              icon: Icons.grid_view,
+              onIconPressed: () {
+                // TODO: Open settings
+              },
+            ),
+          ),
+
           // GPS Warning Banner
           if (mapState.shouldShowGpsWarning)
-            const Positioned(
-              top: 60,
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 70,
               left: 16,
               right: 16,
-              child: GpsWarningBanner(),
+              child: const GpsWarningBanner(),
             ),
 
           // Loading Indicator
@@ -182,42 +196,6 @@ class _MapPageState extends ConsumerState<MapPage> with WidgetsBindingObserver {
               backgroundColor: const Color(0xFF9C27B0),
               child: const Icon(
                 Icons.radar,
-                color: Colors.white,
-              ),
-            ),
-          ),
-
-          // Crystal count debug info
-          Positioned(
-            top: 60,
-            left: 16,
-            child: Container(
-              padding: const EdgeInsets.all(8),
-              decoration: BoxDecoration(
-                color: Colors.black54,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Text(
-                '${mapState.visibleCrystallizationAreas.length}P',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ),
-          ),
-
-          // Debug Menu Button
-          Positioned(
-            top: 60,
-            right: 16,
-            child: FloatingActionButton.small(
-              heroTag: 'debug_menu',
-              onPressed: () => context.pushNamed('repository-test'),
-              backgroundColor: Colors.black54,
-              child: const Icon(
-                Icons.bug_report,
                 color: Colors.white,
               ),
             ),
