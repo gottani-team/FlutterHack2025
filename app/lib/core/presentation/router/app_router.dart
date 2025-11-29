@@ -27,6 +27,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           return MiningPage(
             crystalId: extra?['crystalId'] ?? '',
             crystalImageUrl: extra?['crystalImageUrl'] ?? '',
+            crystalLabel: extra?['crystalLabel'] ?? '',
             memoryText: extra?['memoryText'] ?? '',
             glowColor: extra?['glowColor'] as Color?,
             onComplete: extra?['onComplete']

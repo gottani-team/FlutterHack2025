@@ -51,12 +51,13 @@ class HomePage extends ConsumerWidget {
                   extra: {
                     'crystalId': 'test-crystal-001',
                     'crystalImageUrl': 'assets/images/test-crystal.png',
+                    'crystalLabel': '豊かの欠片',
                     'memoryText':
-                        'This is a test memory from the crystal. '
-                        'The ancient voices whisper through time, '
-                        'carrying stories of those who came before. '
-                        'Feel the warmth of forgotten summers, '
-                        'the gentle touch of memories preserved in stone.',
+                        '先日、カフェ・ド・ミエルで友人のアキと待ち合わせ。'
+                        '新作のローズティーは、一口飲むとバラ園にいるような香りが広がり、'
+                        '心まで華やぎました。隣の席のカップルが話す映画論も、'
+                        '思わず聞き入ってしまうほど魅力的。'
+                        '日常がこんなにも豊かになるなんて、小さな発見に感謝です。',
                     'glowColor': EmotionType.passion.color,
                   },
                 ),

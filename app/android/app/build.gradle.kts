@@ -6,7 +6,7 @@ plugins {
 }
 
 android {
-    namespace = "com.example.app_template"
+    namespace = "io.goodmoon.chimyaku"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
