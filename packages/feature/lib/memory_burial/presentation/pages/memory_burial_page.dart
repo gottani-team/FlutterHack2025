@@ -1,5 +1,6 @@
 import 'package:core/data/providers.dart';
 import 'package:core/domain/common/result.dart';
+import 'package:core/domain/entities/crystal_tier.dart';
 import 'package:core/domain/repositories/sublimation_repository.dart';
 import 'package:core/presentation/widgets/glass_app_bar_widget.dart';
 import 'package:flutter/material.dart';
@@ -10,7 +11,6 @@ import 'package:go_router/go_router.dart';
 import '../providers/memory_burial_providers.dart';
 import '../widgets/animated_burial_button.dart';
 import '../widgets/background_effects.dart';
-import '../widgets/crystal_display.dart';
 import '../widgets/input_badges.dart';
 import '../widgets/text_dissolution_animation.dart';
 
@@ -49,6 +49,8 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
 
   late AnimationController _ringAnimationController;
   late AnimationController _ptAnimationController;
+  late AnimationController _crystalScaleController;
+  late Animation<double> _crystalScaleAnimation;
   int _displayedPtValue = 0;
 
   /// PTカウントアップアニメーションを有効にするか
@@ -68,6 +70,16 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
       duration: const Duration(milliseconds: 800),
     );
 
+    // クリスタル画像の拡大アニメーション
+    _crystalScaleController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 600),
+    );
+    _crystalScaleAnimation = CurvedAnimation(
+      parent: _crystalScaleController,
+      curve: Curves.elasticOut,
+    );
+
     // 画面表示後にニックネーム欄にフォーカス
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _nicknameFocusNode.requestFocus();
@@ -82,6 +94,7 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
     _textFocusNode.dispose();
     _ringAnimationController.dispose();
     _ptAnimationController.dispose();
+    _crystalScaleController.dispose();
     super.dispose();
   }
 
@@ -136,6 +149,8 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
             });
             // PTカウントアップアニメーション開始
             _startPtAnimation(result.karmaToEarn);
+            // クリスタル画像の拡大アニメーション開始
+            _crystalScaleController.forward(from: 0);
           }
           break;
         case Failure(error: final failure):
@@ -234,6 +249,7 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
     _nicknameController.clear();
     _textController.clear();
     _ptAnimationController.reset();
+    _crystalScaleController.reset();
 
     setState(() {
       _phase = _ScreenPhase.input;
@@ -529,6 +545,22 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
     );
   }
 
+  /// カルマ値に応じたクリスタル画像パスを取得
+  /// 将来Tierごとの画像が追加されたらここを更新
+  String _getCrystalImagePath(int karmaValue) {
+    final tier = CrystalTier.fromKarmaValue(karmaValue);
+    // TODO: Tierごとの画像が追加されたら切り替え
+    // 現在は全てtest-crystal.pngを使用
+    return switch (tier) {
+      CrystalTier.stone => 'assets/images/test-crystal.png',
+      CrystalTier.obsidian => 'assets/images/test-crystal.png',
+      CrystalTier.copper => 'assets/images/test-crystal.png',
+      CrystalTier.silver => 'assets/images/test-crystal.png',
+      CrystalTier.gold => 'assets/images/test-crystal.png',
+      CrystalTier.crystal => 'assets/images/test-crystal.png',
+    };
+  }
+
   /// PT値をフォーマット（カンマ区切り）
   String _formatPtValue(int value) {
     if (value == 0) return '000,000';
@@ -556,14 +588,32 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
             children: [
               const Spacer(flex: 4),
 
-              // クリスタル領域（常に同じスペースを確保）
-              AnimatedOpacity(
-                opacity: isLoading ? 0.0 : 1.0,
-                duration: const Duration(milliseconds: 300),
-                child: const Padding(
-                  padding: EdgeInsets.only(bottom: 16),
-                  child: CrystalPlaceholder(),
-                ),
+              // クリスタル画像領域（常に同じスペースを確保）
+              SizedBox(
+                width: 120,
+                height: 120,
+                child: isLoading
+                    ? const SizedBox.shrink()
+                    : AnimatedBuilder(
+                        animation: _crystalScaleAnimation,
+                        builder: (context, child) {
+                          return Transform.scale(
+                            scale: _crystalScaleAnimation.value,
+                            child: child,
+                          );
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.only(bottom: 16),
+                          child: Image.asset(
+                            _getCrystalImagePath(
+                              _evaluationResult?.karmaToEarn ?? 0,
+                            ),
+                            width: 100,
+                            height: 100,
+                            fit: BoxFit.contain,
+                          ),
+                        ),
+                      ),
               ),
 
               // PT表示（常に同じ位置、待機中は薄く）
