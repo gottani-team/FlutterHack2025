@@ -1,31 +1,95 @@
 /// 感情タイプの列挙型
 ///
-/// クリスタルの感情分類を表現する4つの基本タイプ。
-/// AI分析によって記憶テキストから判定される。
+/// クリスタルの感情分類を表現する8つの基本タイプ。
+/// AI分析によって秘密テキストから判定される。
 enum EmotionType {
-  /// 情熱（赤系）- 熱い感情、興奮、エネルギー
-  passion,
+  /// 嬉しさ（ピンク系）- 喜び、幸福感
+  happiness,
 
-  /// 静寂（青系）- 落ち着き、平穏、瞑想
-  silence,
+  /// 楽しさ（オレンジ系）- 楽しみ、ワクワク
+  enjoyment,
 
-  /// 喜び（黄系）- 幸福、楽しさ、ポジティブ
-  joy,
+  /// 安心（緑系）- 安らぎ、ホッとする感覚
+  relief,
 
-  /// 癒やし（緑系）- 安らぎ、回復、優しさ
-  healing;
+  /// 期待（黄系）- 希望、待ち望む気持ち
+  anticipation,
+
+  /// 悲しみ（青系）- 哀しみ、喪失感
+  sadness,
+
+  /// 恥ずかしさ（紫系）- 羞恥、照れ
+  embarrassment,
+
+  /// 怒り（赤系）- 憤り、フラストレーション
+  anger,
+
+  /// 虚しさ（灰系）- 空虚、無力感
+  emptiness;
 
   /// 日本語表示名を取得
   String get displayName {
     switch (this) {
-      case EmotionType.passion:
-        return '情熱';
-      case EmotionType.silence:
-        return '静寂';
-      case EmotionType.joy:
-        return '喜び';
-      case EmotionType.healing:
-        return '癒やし';
+      case EmotionType.happiness:
+        return '嬉しさ';
+      case EmotionType.enjoyment:
+        return '楽しさ';
+      case EmotionType.relief:
+        return '安心';
+      case EmotionType.anticipation:
+        return '期待';
+      case EmotionType.sadness:
+        return '悲しみ';
+      case EmotionType.embarrassment:
+        return '恥ずかしさ';
+      case EmotionType.anger:
+        return '怒り';
+      case EmotionType.emptiness:
+        return '虚しさ';
+    }
+  }
+
+  /// 英語表示名を取得
+  String get displayNameEn {
+    switch (this) {
+      case EmotionType.happiness:
+        return 'Happiness';
+      case EmotionType.enjoyment:
+        return 'Enjoyment';
+      case EmotionType.relief:
+        return 'Relief';
+      case EmotionType.anticipation:
+        return 'Anticipation';
+      case EmotionType.sadness:
+        return 'Sadness';
+      case EmotionType.embarrassment:
+        return 'Embarrassment';
+      case EmotionType.anger:
+        return 'Anger';
+      case EmotionType.emptiness:
+        return 'Emptiness';
+    }
+  }
+
+  /// クリスタルカラーを取得（HEX）
+  String get colorHex {
+    switch (this) {
+      case EmotionType.happiness:
+        return '#FF69B4'; // ピンク
+      case EmotionType.enjoyment:
+        return '#FFA500'; // オレンジ
+      case EmotionType.relief:
+        return '#32CD32'; // 緑
+      case EmotionType.anticipation:
+        return '#FFD700'; // 黄
+      case EmotionType.sadness:
+        return '#4169E1'; // 青
+      case EmotionType.embarrassment:
+        return '#9370DB'; // 紫
+      case EmotionType.anger:
+        return '#DC143C'; // 赤
+      case EmotionType.emptiness:
+        return '#708090'; // 灰
     }
   }
 
@@ -36,7 +100,7 @@ enum EmotionType {
   static EmotionType fromJson(String json) {
     return EmotionType.values.firstWhere(
       (e) => e.name == json,
-      orElse: () => EmotionType.healing, // デフォルトは healing
+      orElse: () => EmotionType.emptiness, // デフォルトは emptiness
     );
   }
 }
