@@ -1,7 +1,9 @@
 import 'package:core/presentation/providers/location_providers.dart';
+import 'package:core/presentation/widgets/glass_app_bar_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 import '../providers/memory_burial_providers.dart';
 import '../providers/memory_burial_state.dart';
@@ -107,10 +109,10 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
     final buryMemoryUseCase = ref.read(buryMemoryUseCaseProvider);
     final locationRepository = ref.read(locationRepositoryProvider);
 
-      ref.read(memoryBurialNotifierProvider.notifier).buryMemory(
-            memoryText,
-            buryMemoryUseCase,
-            locationRepository,
+    ref.read(memoryBurialNotifierProvider.notifier).buryMemory(
+          memoryText,
+          buryMemoryUseCase,
+          locationRepository,
         );
   }
 
@@ -224,6 +226,22 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
             },
           ),
 
+          // Glass App Bar
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 8,
+            left: 16,
+            right: 16,
+            child: GlassAppBarWidget(
+              title: 'HIMITSU no SECRET',
+              icon: Icons.close,
+              onIconPressed: () {
+                if (Navigator.of(context).canPop()) {
+                  context.pop();
+                }
+              },
+            ),
+          ),
+
           // メインコンテンツ
           SafeArea(
             child: _buildContent(
@@ -272,15 +290,15 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
         // 入力エリア
         if (_phase == _ScreenPhase.input)
           Positioned(
-            top: 0,
+            top: MediaQuery.of(context).padding.top + 8 + 44 + 8, // AppBar の下
             left: 0,
             right: 0,
             bottom: MediaQuery.of(context).viewInsets.bottom + 280,
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(32, 16, 32, 0),
-        child: Column(
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
+                children: [
                   // ニックネーム欄
                   _buildNicknameField(
                     nickname: nickname,
@@ -311,8 +329,9 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
           left: 0,
           right: 0,
           bottom: _phase == _ScreenPhase.animating
-              ? -86.0  // エフェクト用にさらに下に
-              : (MediaQuery.of(context).viewInsets.bottom - 100).clamp(14.0, double.infinity),
+              ? -86.0 // エフェクト用にさらに下に
+              : (MediaQuery.of(context).viewInsets.bottom - 100)
+                  .clamp(14.0, double.infinity),
           child: Center(
             child: AnimatedBurialButton(
               phase: buttonPhase,

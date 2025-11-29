@@ -144,7 +144,8 @@ class _MagicalLoadingOverlayState extends State<MagicalLoadingOverlay>
       return AnimatedBuilder(
         animation: _orbitController,
         builder: (context, child) {
-          final currentAngle = angle + (_orbitController.value * 2 * math.pi * speed);
+          final currentAngle =
+              angle + (_orbitController.value * 2 * math.pi * speed);
           final x = math.cos(currentAngle) * radius;
           final y = math.sin(currentAngle) * radius;
           final opacity = 0.5 + (math.sin(currentAngle) * 0.3);
@@ -207,4 +208,3 @@ class _MagicalLoadingOverlayState extends State<MagicalLoadingOverlay>
     );
   }
 }
-
