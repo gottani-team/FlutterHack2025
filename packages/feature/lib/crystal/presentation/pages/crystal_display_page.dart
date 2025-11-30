@@ -434,6 +434,35 @@ class _CrystalDisplayPageState extends ConsumerState<CrystalDisplayPage>
           ),
         ),
 
+        // Tap instruction text (only before first tap)
+        if (displayState.phase == CrystalDisplayPhase.tapping &&
+            displayState.tapCount == 0)
+          Positioned(
+            top: crystalTop + largeCrystalSize * 0.4,
+            left: 0,
+            right: 0,
+            child: const IgnorePointer(
+              child: Center(
+                child: GlassCardWidget(
+                  padding: EdgeInsets.symmetric(
+                    horizontal: 20,
+                    vertical: 10,
+                  ),
+                  borderRadius: 20,
+                  child: Text(
+                    'タップで割る！',
+                    style: TextStyle(
+                      fontFamily: 'Hiragino Sans',
+                      color: Colors.black,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+
         // Emotion type label (only when revealed) - positioned on top of crystal
         if (isRevealed)
           Positioned(
