@@ -6,6 +6,7 @@ import 'package:core/domain/common/result.dart';
 import 'package:core/domain/failures/core_failure.dart';
 import 'package:core/presentation/widgets/glass_app_bar_widget.dart';
 import 'package:core/presentation/widgets/glass_card_widget.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
@@ -692,7 +693,7 @@ void _showCrystalDialog(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'ヒミツを買う',
+                      'ヒミツを掘る',
                       style: GoogleFonts.notoSansJp(
                         fontSize: 20,
                         fontWeight: FontWeight.bold,
@@ -716,7 +717,7 @@ void _showCrystalDialog(
                     ),
                     const SizedBox(height: 16),
                     Text(
-                      '$karmaPointポイントでヒミツを購入します',
+                      '$karmaPointポイントでヒミツを掘ります',
                       style: TextStyle(
                         fontSize: 14,
                         color: Colors.black.withOpacity(0.7),
@@ -747,7 +748,7 @@ void _showCrystalDialog(
                           elevation: 0,
                         ),
                         child: const Text(
-                          '購入する',
+                          '掘る',
                           style: TextStyle(
                             fontSize: 18,
                             fontWeight: FontWeight.bold,
@@ -1463,17 +1464,19 @@ class _BottomLeftActions extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Debug Menu Button
-          FloatingActionButton.small(
-            heroTag: 'debug',
-            onPressed: onDebugPressed,
-            backgroundColor: Colors.grey.shade800,
-            child: const Icon(
-              Icons.bug_report,
-              color: Colors.white70,
+          // Debug Menu Button (only in debug mode)
+          if (kDebugMode) ...[
+            FloatingActionButton.small(
+              heroTag: 'debug',
+              onPressed: onDebugPressed,
+              backgroundColor: Colors.grey.shade800,
+              child: const Icon(
+                Icons.bug_report,
+                color: Colors.white70,
+              ),
             ),
-          ),
-          const SizedBox(height: _buttonSpacing),
+            const SizedBox(height: _buttonSpacing),
+          ],
           // Karma Balance Display
           _KarmaBalanceWidget(karma: karma),
         ],
