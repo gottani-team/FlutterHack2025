@@ -1,5 +1,6 @@
 import 'dart:math' as math;
-import 'dart:ui';
+import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:core/data/providers.dart';
 import 'package:core/domain/common/result.dart';
@@ -43,13 +44,11 @@ const double _defaultPitch = 45.0; // Tilt angle for 3D view
 const double _defaultBearing = 0.0;
 const double _userPolygonRadius = 50.0; // Radius in meters
 
-// 3D Model offset to align model bottom with ground
-// Based on GLB bounding box: Y min = -0.174, Y center = 0.8775
-// Offset to place model bottom at ground level (Y=0)
-const double _modelYOffset = -0.174;
-
 /// Primary color for crystal dialog
 const Color _crystalPrimaryColor = Color(0xFFFF3C00);
+
+/// Orange color for location and action buttons (matches add button)
+const int _orangeColorValue = 0xFFFF6B35;
 
 /// Main map page for crystal discovery and proximity detection.
 ///
@@ -61,7 +60,7 @@ class MapPage extends HookConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final mapState = ref.watch(mapViewModelProvider);
-    final viewModel = ref.read(mapViewModelProvider.notifier);
+    final viewModel = ref.watch(mapViewModelProvider.notifier);
 
     // Local state using hooks
     final mapboxMapRef = useRef<MapboxMap?>(null);
@@ -670,7 +669,7 @@ void _showCrystalDialog(
     barrierColor: Colors.transparent,
     builder: (dialogContext) {
       return BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
+        filter: ui.ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
         child: Dialog(
           backgroundColor: Colors.transparent,
           elevation: 0,
@@ -678,7 +677,7 @@ void _showCrystalDialog(
             borderRadius: BorderRadius.circular(24),
             clipBehavior: Clip.antiAlias,
             child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
+              filter: ui.ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
               child: Container(
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.2),
@@ -800,7 +799,7 @@ void _showInsufficientKarmaDialog(
     barrierColor: Colors.transparent,
     builder: (dialogContext) {
       return BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
+        filter: ui.ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
         child: Dialog(
           backgroundColor: Colors.transparent,
           elevation: 0,
@@ -808,7 +807,7 @@ void _showInsufficientKarmaDialog(
             borderRadius: BorderRadius.circular(24),
             clipBehavior: Clip.antiAlias,
             child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
+              filter: ui.ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
               child: Container(
                 decoration: BoxDecoration(
                   color: Colors.white.withOpacity(0.2),
@@ -1067,8 +1066,8 @@ Future<void> _setupUserPolygonLayer(StyleManager style) async {
       FillLayer(
         id: _userPolygonLayerId,
         sourceId: _userPolygonSourceId,
-        fillColor: 0x334285F4,
-        fillOutlineColor: 0xFF4285F4,
+        fillColor: 0x33FF6B35,
+        fillOutlineColor: _orangeColorValue,
         fillOpacity: 0.3,
       ),
     );
@@ -1139,23 +1138,67 @@ Future<void> _updateUserPolygon(
   }
 }
 
+/// Generate orange location puck image
+Future<Uint8List?> _createOrangePuckImage() async {
+  try {
+    const size = 48.0;
+    const borderWidth = 2.0;
+    const color = Color(0xFFFF6B35);
+    const whiteColor = Color(0xFFFFFFFF);
+
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+    final paint = Paint();
+
+    // Draw outer circle (white with orange border)
+    paint.color = whiteColor;
+    paint.style = PaintingStyle.fill;
+    canvas.drawCircle(
+      const Offset(size / 2, size / 2),
+      size / 2 - 2,
+      paint,
+    );
+
+    // Draw inner circle (Filled with orange color))
+    paint.color = color;
+    canvas.drawCircle(
+      const Offset(size / 2, size / 2),
+      size / 2 - borderWidth,
+      paint,
+    );
+
+    final picture = recorder.endRecording();
+    final image = await picture.toImage(size.toInt(), size.toInt());
+    final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
+    if (byteData == null) return null;
+
+    return byteData.buffer.asUint8List();
+  } catch (e) {
+    debugPrint('Error creating orange puck image: $e');
+    return null;
+  }
+}
+
 Future<void> _setupLocationPuck(MapboxMap mapboxMap) async {
   try {
+    // Create orange puck image
+    final orangePuckImageBytes = await _createOrangePuckImage();
+
     await mapboxMap.location.updateSettings(
       LocationComponentSettings(
         enabled: true,
         showAccuracyRing: true,
         pulsingEnabled: true,
-        pulsingColor: 0xFF4285F4,
+        pulsingColor: _orangeColorValue,
         pulsingMaxRadius: 30.0,
-        accuracyRingColor: 0x334285F4,
-        accuracyRingBorderColor: 0x664285F4,
+        accuracyRingColor: 0x33FF6B35,
+        accuracyRingBorderColor: 0x66FF6B35,
         puckBearingEnabled: true,
         puckBearing: PuckBearing.HEADING,
         locationPuck: LocationPuck(
           locationPuck2D: DefaultLocationPuck2D(
-            topImage: null,
-            bearingImage: null,
+            topImage: orangePuckImageBytes,
+            bearingImage: orangePuckImageBytes,
             shadowImage: null,
           ),
         ),

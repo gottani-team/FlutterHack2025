@@ -39,7 +39,7 @@ class MapViewModel extends _$MapViewModel {
 
   // Location data source (injected via provider)
   LocationDataSource get _locationDataSource =>
-      ref.read(locationDataSourceProvider);
+      ref.watch(locationDataSourceProvider);
 
   @override
   MapViewState build() {
