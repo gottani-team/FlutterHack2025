@@ -509,13 +509,13 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
         AnimatedPositioned(
           key: _buttonKey,
           duration: _phase == _ScreenPhase.animating
-              ? const Duration(milliseconds: 1500)
+              ? const Duration(milliseconds: 2500) // 文字アニメーションと同期
               : const Duration(milliseconds: 50),
-          curve: Curves.easeOutCubic,
+          curve: Curves.easeOut, // ease-outで画面外へ
           left: 0,
           right: 0,
           bottom: _phase == _ScreenPhase.animating
-              ? -86.0 // エフェクト用にさらに下に
+              ? -550.0 // 画面外に完全に抜ける
               : (MediaQuery.of(context).viewInsets.bottom - 200)
                   .clamp(-200.0, double.infinity),
           child: Center(

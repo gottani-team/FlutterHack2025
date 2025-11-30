@@ -41,14 +41,10 @@ class _AnimatedBurialButtonState extends State<AnimatedBurialButton>
     with TickerProviderStateMixin {
   late AnimationController _rotationController;
   late AnimationController _entryEffectController;
-  late AnimationController _arrowFadeController;
-  late AnimationController _crystalFadeController;
   late AnimationController _shapeAnimationController;
 
   // エフェクトのアニメーション
   late Animation<double> _entryAnimation;
-  late Animation<double> _arrowFadeAnimation;
-  late Animation<double> _crystalFadeAnimation;
   late Animation<double> _positionAnimation;
   late Animation<double> _widthAnimation;
   late Animation<double> _heightAnimation;
@@ -72,32 +68,6 @@ class _AnimatedBurialButtonState extends State<AnimatedBurialButton>
       curve: Curves.easeOutCubic,
     );
 
-    // 矢印フェードアウトアニメーション（下降中に徐々に薄くなる）
-    _arrowFadeController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 1500),
-    );
-
-    _arrowFadeAnimation = Tween<double>(begin: 1.0, end: 0.0).animate(
-      CurvedAnimation(
-        parent: _arrowFadeController,
-        curve: const Interval(0.3, 1.0, curve: Curves.easeInQuart),
-      ),
-    );
-
-    // クリスタルフェードインアニメーション（矢印が消えた後に浮かんでくる）
-    _crystalFadeController = AnimationController(
-      vsync: this,
-      duration: const Duration(milliseconds: 2000),
-    );
-
-    _crystalFadeAnimation = Tween<double>(begin: 0.0, end: 1.0).animate(
-      CurvedAnimation(
-        parent: _crystalFadeController,
-        curve: const Interval(0.0, 0.7, curve: Curves.easeOutCubic),
-      ),
-    );
-
     // 形状・位置アニメーション
     _shapeAnimationController = AnimationController(
       vsync: this,
@@ -119,24 +89,23 @@ class _AnimatedBurialButtonState extends State<AnimatedBurialButton>
     );
 
     // 高さアニメーション: 104 → 160（円） → 280（オーバーシュート） → 240（最終形）
-    // 各セグメントは線形にし、全体の動きを滑らかにする
     _heightAnimation = TweenSequence<double>([
       TweenSequenceItem(
-        tween: Tween<double>(begin: 104, end: 160),
+        tween: Tween<double>(begin: 104, end: 160)
+            .chain(CurveTween(curve: Curves.easeOut)),
         weight: 25,
       ),
       TweenSequenceItem(
-        tween: Tween<double>(begin: 160, end: 280),
+        tween: Tween<double>(begin: 160, end: 280)
+            .chain(CurveTween(curve: Curves.easeOut)),
         weight: 35,
       ),
       TweenSequenceItem(
-        tween: Tween<double>(begin: 280, end: 240),
+        tween: Tween<double>(begin: 280, end: 240)
+            .chain(CurveTween(curve: Curves.easeInOut)),
         weight: 40,
       ),
-    ]).animate(CurvedAnimation(
-      parent: _shapeAnimationController,
-      curve: Curves.easeOutCubic,  // 全体に1つのCurveを適用
-    ));
+    ]).animate(_shapeAnimationController);
   }
 
   @override
@@ -147,25 +116,7 @@ class _AnimatedBurialButtonState extends State<AnimatedBurialButton>
     if (widget.phase == ButtonPhase.processing &&
         oldWidget.phase != ButtonPhase.processing) {
       _entryEffectController.forward(from: 0);
-      _arrowFadeController.forward(from: 0);
       _shapeAnimationController.forward(from: 0);
-
-      // 文字が集まりきる頃（2.5秒アニメーションの終盤）にクリスタルが浮かび上がる
-      // 文字がボタンに吸い込まれてクリスタルになる感じ
-      Future.delayed(const Duration(milliseconds: 2000), () {
-        if (mounted && widget.phase == ButtonPhase.processing) {
-          _crystalFadeController.forward(from: 0);
-        }
-      });
-    }
-
-    // completedに移行した時点でクリスタルが表示されていなければ開始
-    if (widget.phase == ButtonPhase.completed &&
-        oldWidget.phase != ButtonPhase.completed) {
-      if (!_crystalFadeController.isAnimating &&
-          _crystalFadeController.value < 1.0) {
-        _crystalFadeController.forward(from: 0);
-      }
     }
   }
 
@@ -173,8 +124,6 @@ class _AnimatedBurialButtonState extends State<AnimatedBurialButton>
   void dispose() {
     _rotationController.dispose();
     _entryEffectController.dispose();
-    _arrowFadeController.dispose();
-    _crystalFadeController.dispose();
     _shapeAnimationController.dispose();
     super.dispose();
   }
@@ -184,11 +133,6 @@ class _AnimatedBurialButtonState extends State<AnimatedBurialButton>
     final isProcessingOrCompleted = widget.phase == ButtonPhase.processing ||
         widget.phase == ButtonPhase.completed;
     final isReady = widget.phase == ButtonPhase.ready;
-
-    // アイコン
-    final icon = widget.phase == ButtonPhase.completed
-        ? _ButtonIcon.diamond
-        : _ButtonIcon.arrowDown;
 
     return AnimatedBuilder(
       animation: _shapeAnimationController,
@@ -277,7 +221,7 @@ class _AnimatedBurialButtonState extends State<AnimatedBurialButton>
                         ),
                       ),
                       child: Center(
-                        child: _buildAnimatedIcon(icon),
+                        child: _buildArrowIcon(),
                       ),
                     ),
                   ),
@@ -290,72 +234,8 @@ class _AnimatedBurialButtonState extends State<AnimatedBurialButton>
     );
   }
 
-  /// アニメーション付きアイコンを構築
-  Widget _buildAnimatedIcon(_ButtonIcon icon) {
-    // processing中は矢印がフェードアウトし、その後クリスタルがフェードイン
-    if (widget.phase == ButtonPhase.processing) {
-      return AnimatedBuilder(
-        animation:
-            Listenable.merge([_arrowFadeAnimation, _crystalFadeAnimation]),
-        builder: (context, child) {
-          // 矢印とクリスタルを重ねて表示
-          return Stack(
-            alignment: Alignment.center,
-            children: [
-              // 矢印（フェードアウト）
-              if (_arrowFadeAnimation.value > 0)
-                Opacity(
-                  opacity: _arrowFadeAnimation.value,
-                  child: const Icon(
-                    Icons.arrow_downward,
-                    key: ValueKey('arrow'),
-                    color: Colors.white,
-                    size: 28,
-                  ),
-                ),
-              // クリスタル（フェードイン + 下から浮かんでくる）
-              if (_crystalFadeAnimation.value > 0)
-                Transform.translate(
-                  offset: Offset(0, 30.0 * (1.0 - _crystalFadeAnimation.value)),
-                  child: Opacity(
-                    opacity: _crystalFadeAnimation.value,
-                    child: CustomPaint(
-                      key: const ValueKey('diamond'),
-                      size: const Size(48, 48),
-                      painter:
-                          _CrystalPainter(opacity: _crystalFadeAnimation.value),
-                    ),
-                  ),
-                ),
-            ],
-          );
-        },
-      );
-    }
-
-    // completed時はクリスタルを表示
-    if (widget.phase == ButtonPhase.completed) {
-      return AnimatedBuilder(
-        animation: _crystalFadeAnimation,
-        builder: (context, child) {
-          // 下から上へ浮かんでくる動き
-          final offsetY = 30.0 * (1.0 - _crystalFadeAnimation.value);
-          return Transform.translate(
-            offset: Offset(0, offsetY),
-            child: Opacity(
-              opacity: _crystalFadeAnimation.value,
-              child: CustomPaint(
-                key: const ValueKey('diamond'),
-                size: const Size(48, 48),
-                painter: _CrystalPainter(opacity: _crystalFadeAnimation.value),
-              ),
-            ),
-          );
-        },
-      );
-    }
-
-    // 通常時は矢印
+  /// 矢印アイコンを構築（常に矢印固定）
+  Widget _buildArrowIcon() {
     return const Icon(
       Icons.arrow_downward,
       key: ValueKey('arrow'),
@@ -364,8 +244,6 @@ class _AnimatedBurialButtonState extends State<AnimatedBurialButton>
     );
   }
 }
-
-enum _ButtonIcon { arrowDown, diamond }
 
 /// 大気圏突入エフェクト
 class _AtmosphericEntryPainter extends CustomPainter {
@@ -682,67 +560,3 @@ class _ConcentricArcsPainter extends CustomPainter {
   }
 }
 
-/// クリスタルアイコン（添付画像のような宝石デザイン）
-class _CrystalPainter extends CustomPainter {
-  _CrystalPainter({this.opacity = 1.0});
-
-  final double opacity;
-
-  @override
-  void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white.withOpacity(opacity)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2.0
-      ..strokeCap = StrokeCap.round
-      ..strokeJoin = StrokeJoin.round;
-
-    final w = size.width;
-    final h = size.height;
-
-    // クリスタルの各頂点を定義（添付画像に合わせた形状）
-    // 上部の頂点
-    final top = Offset(w * 0.5, 0);
-    // 上部左右の角
-    final topLeft = Offset(w * 0.15, h * 0.25);
-    final topRight = Offset(w * 0.85, h * 0.25);
-    // 中間左右の角（最も広い部分）
-    final midLeft = Offset(0, h * 0.4);
-    final midRight = Offset(w, h * 0.4);
-    // 下部の頂点
-    final bottom = Offset(w * 0.5, h);
-
-    // 外側の輪郭を描画
-    final outlinePath = Path()
-      ..moveTo(top.dx, top.dy)
-      ..lineTo(topRight.dx, topRight.dy)
-      ..lineTo(midRight.dx, midRight.dy)
-      ..lineTo(bottom.dx, bottom.dy)
-      ..lineTo(midLeft.dx, midLeft.dy)
-      ..lineTo(topLeft.dx, topLeft.dy)
-      ..close();
-
-    canvas.drawPath(outlinePath, paint);
-
-    // 内部の線（クリスタルのカット面）
-    // 上部から中央への線
-    canvas.drawLine(top, Offset(w * 0.35, h * 0.25), paint);
-    canvas.drawLine(top, Offset(w * 0.65, h * 0.25), paint);
-
-    // 横の区切り線
-    canvas.drawLine(topLeft, topRight, paint);
-
-    // 下部への斜め線
-    canvas.drawLine(topLeft, bottom, paint);
-    canvas.drawLine(topRight, bottom, paint);
-
-    // 中央から下への線
-    canvas.drawLine(Offset(w * 0.35, h * 0.25), bottom, paint);
-    canvas.drawLine(Offset(w * 0.65, h * 0.25), bottom, paint);
-  }
-
-  @override
-  bool shouldRepaint(covariant _CrystalPainter oldDelegate) {
-    return oldDelegate.opacity != opacity;
-  }
-}
