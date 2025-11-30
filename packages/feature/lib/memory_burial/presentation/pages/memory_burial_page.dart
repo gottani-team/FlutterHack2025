@@ -60,6 +60,11 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
   late Animation<double> _exitCrystalPositionAnimation;
   bool _isPlayingExitAnimation = false;
 
+  // 入場アニメーション用（クリスタル表示画面）
+  late AnimationController _entryCrystalController;
+  late Animation<double> _entryCrystalPositionAnimation;
+  late AnimationController _entryUiFadeController;
+
   /// PTカウントアップアニメーションを有効にするか
   static const bool _enablePtAnimation = true;
 
@@ -77,15 +82,29 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
       duration: const Duration(milliseconds: 800),
     );
 
-    // クリスタル画像の拡大アニメーション
+    // クリスタル画像のグレードアップアニメーション（パルス効果）
     _crystalScaleController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 600),
     );
-    _crystalScaleAnimation = CurvedAnimation(
-      parent: _crystalScaleController,
-      curve: Curves.elasticOut,
-    );
+    // 1.0→0.85→1.15→1.0のパルス効果（一瞬縮んでから大きくなって戻る）
+    _crystalScaleAnimation = TweenSequence<double>([
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 1.0, end: 0.85)
+            .chain(CurveTween(curve: Curves.easeIn)),
+        weight: 15,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 0.85, end: 1.15)
+            .chain(CurveTween(curve: Curves.easeOut)),
+        weight: 50,
+      ),
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 1.15, end: 1.0)
+            .chain(CurveTween(curve: Curves.easeInOut)),
+        weight: 35,
+      ),
+    ]).animate(_crystalScaleController);
 
     // 終了アニメーション: UIフェードアウト
     _exitUiFadeController = AnimationController(
@@ -127,6 +146,27 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
       ),
     ]).animate(_exitCrystalController);
 
+    // 入場アニメーション: クリスタルが下からスライドイン
+    _entryCrystalController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+    _entryCrystalPositionAnimation = Tween<double>(
+      begin: 1.0, // 画面下から
+      end: 0.0, // 表示位置へ
+    ).animate(
+      CurvedAnimation(
+        parent: _entryCrystalController,
+        curve: Curves.easeOutCubic,
+      ),
+    );
+
+    // 入場アニメーション: 他の要素がフェードイン
+    _entryUiFadeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    );
+
     // 画面表示後にニックネーム欄にフォーカス
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _nicknameFocusNode.requestFocus();
@@ -142,6 +182,8 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
     _ringAnimationController.dispose();
     _ptAnimationController.dispose();
     _crystalScaleController.dispose();
+    _entryCrystalController.dispose();
+    _entryUiFadeController.dispose();
     _exitUiFadeController.dispose();
     _exitCrystalController.dispose();
     super.dispose();
@@ -218,11 +260,26 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
   /// アニメーション完了時の処理
   void _onAnimationComplete() {
     // レスポンスの有無に関わらず、アニメーション完了で少し待ってからクリスタル表示画面へ遷移
-    Future.delayed(const Duration(milliseconds: 1500), () {
+    Future.delayed(const Duration(milliseconds: 500), () {
       if (mounted) {
         setState(() {
           _phase = _ScreenPhase.crystalDisplay;
         });
+        // 入場アニメーションを開始
+        _startEntryAnimation();
+      }
+    });
+  }
+
+  /// クリスタル表示画面の入場アニメーションを開始
+  void _startEntryAnimation() {
+    // クリスタルが下からスライドイン
+    _entryCrystalController.forward(from: 0);
+
+    // クリスタル到着後、他の要素がフェードイン
+    Future.delayed(const Duration(milliseconds: 600), () {
+      if (mounted) {
+        _entryUiFadeController.forward(from: 0);
       }
     });
   }
@@ -326,6 +383,8 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
     _crystalScaleController.reset();
     _exitUiFadeController.reset();
     _exitCrystalController.reset();
+    _entryCrystalController.reset();
+    _entryUiFadeController.reset();
 
     setState(() {
       _phase = _ScreenPhase.input;
@@ -663,26 +722,38 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
             children: [
               const Spacer(flex: 4),
 
-              // クリスタル画像領域（常に同じスペースを確保）
+              // クリスタル画像領域（入場・グレードアップ・終了アニメーション対応）
               AnimatedBuilder(
                 animation: Listenable.merge([
+                  _entryCrystalController,
                   _crystalScaleAnimation,
                   _exitCrystalController,
                 ]),
                 builder: (context, child) {
+                  final screenHeight = MediaQuery.of(context).size.height;
+
+                  // 入場アニメーション（下からスライドイン）
+                  final entryOffset =
+                      _entryCrystalPositionAnimation.value * screenHeight * 0.5;
+
+                  // グレードアップアニメーション（APIレスポンス後の「ブァっ」）
+                  // 評価結果がない時は1.0、ある時はアニメーション値を使用
+                  final gradeUpScale = _evaluationResult != null
+                      ? _crystalScaleAnimation.value
+                      : 1.0;
+
                   // 終了アニメーション中の場合
                   final exitScale = _isPlayingExitAnimation
                       ? _exitCrystalScaleAnimation.value
                       : 1.0;
                   final exitOffset = _isPlayingExitAnimation
-                      ? _exitCrystalPositionAnimation.value *
-                          MediaQuery.of(context).size.height
+                      ? _exitCrystalPositionAnimation.value * screenHeight
                       : 0.0;
 
                   return Transform.translate(
-                    offset: Offset(0, exitOffset),
+                    offset: Offset(0, entryOffset + exitOffset),
                     child: Transform.scale(
-                      scale: _crystalScaleAnimation.value * exitScale,
+                      scale: gradeUpScale * exitScale,
                       child: child,
                     ),
                   );
@@ -690,28 +761,33 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
                 child: SizedBox(
                   width: 120,
                   height: 120,
-                  child: isLoading
-                      ? const SizedBox.shrink()
-                      : Padding(
-                          padding: const EdgeInsets.only(bottom: 16),
-                          child: Image.asset(
-                            _getCrystalImagePath(
-                              _evaluationResult?.karmaToEarn ?? 0,
-                            ),
-                            width: 100,
-                            height: 100,
-                            fit: BoxFit.contain,
-                          ),
-                        ),
+                  child: Padding(
+                    padding: const EdgeInsets.only(bottom: 16),
+                    child: Image.asset(
+                      // 入場時は最小tier（karmaValue=0）、評価結果が来たら本来のtier
+                      _getCrystalImagePath(
+                        _evaluationResult?.karmaToEarn ?? 0,
+                      ),
+                      width: 100,
+                      height: 100,
+                      fit: BoxFit.contain,
+                    ),
+                  ),
                 ),
               ),
 
-              // PT表示（終了アニメーション中はフェードアウト）
+              // PT表示（入場アニメーション後にフェードイン、終了時はフェードアウト）
               AnimatedBuilder(
-                animation: _exitUiFadeController,
+                animation: Listenable.merge([
+                  _entryUiFadeController,
+                  _exitUiFadeController,
+                ]),
                 builder: (context, child) {
+                  // 入場時のフェードイン × 終了時のフェードアウト
+                  final entryOpacity = _entryUiFadeController.value;
+                  final exitOpacity = 1.0 - _exitUiFadeController.value;
                   return Opacity(
-                    opacity: 1.0 - _exitUiFadeController.value,
+                    opacity: entryOpacity * exitOpacity,
                     child: child,
                   );
                 },
@@ -742,10 +818,16 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
                 ),
               ),
 
-              // 解析中テキスト領域（常に同じスペースを確保）
-              AnimatedOpacity(
-                opacity: isLoading ? 1.0 : 0.0,
-                duration: const Duration(milliseconds: 300),
+              // 解析中テキスト領域（入場アニメーション後にフェードイン）
+              AnimatedBuilder(
+                animation: _entryUiFadeController,
+                builder: (context, child) {
+                  return Opacity(
+                    opacity:
+                        _entryUiFadeController.value * (isLoading ? 1.0 : 0.0),
+                    child: child,
+                  );
+                },
                 child: Padding(
                   padding: const EdgeInsets.only(top: 8),
                   child: Text(
@@ -764,16 +846,22 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
           ),
         ),
 
-        // ボタン（下部固定、終了アニメーション中はフェードアウト）
+        // ボタン（入場アニメーション後にフェードイン、終了時はフェードアウト）
         Positioned(
           left: 24,
           right: 24,
           bottom: 32,
           child: AnimatedBuilder(
-            animation: _exitUiFadeController,
+            animation: Listenable.merge([
+              _entryUiFadeController,
+              _exitUiFadeController,
+            ]),
             builder: (context, child) {
+              // 入場時のフェードイン × 終了時のフェードアウト
+              final entryOpacity = _entryUiFadeController.value;
+              final exitOpacity = 1.0 - _exitUiFadeController.value;
               return Opacity(
-                opacity: 1.0 - _exitUiFadeController.value,
+                opacity: entryOpacity * exitOpacity,
                 child: child,
               );
             },
