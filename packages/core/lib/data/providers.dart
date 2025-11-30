@@ -11,12 +11,10 @@ import '../domain/repositories/decipherment_repository.dart';
 import '../domain/repositories/journal_repository.dart';
 import '../domain/repositories/sublimation_repository.dart';
 import '../domain/repositories/user_repository.dart';
-
 // Data Sources
 import 'datasources/firebase_auth_service.dart';
 import 'datasources/karma_evaluation_service.dart';
 import 'datasources/secret_text_generator_service.dart';
-
 // Repository Implementations
 import 'repositories/auth_repository_impl.dart';
 import 'repositories/crystal_repository_impl.dart';
@@ -32,7 +30,7 @@ import 'repositories/user_repository_impl.dart';
 final firestoreProvider = Provider<FirebaseFirestore>((ref) {
   return FirebaseFirestore.instanceFor(
     app: Firebase.app(),
-    databaseId: 'gottani-2025',
+    databaseId: 'chimyaku',
   );
 });
 

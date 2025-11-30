@@ -17,7 +17,7 @@ final firebaseFunctionsProvider = Provider<FirebaseFunctions>((ref) {
 final firestoreProvider = Provider<FirebaseFirestore>((ref) {
   return FirebaseFirestore.instanceFor(
     app: Firebase.app(),
-    databaseId: 'gottani-2025',
+    databaseId: 'chimyaku',
   );
 });
 
