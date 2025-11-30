@@ -3,6 +3,7 @@ import 'dart:ui';
 
 import 'package:core/data/providers.dart';
 import 'package:core/domain/common/result.dart';
+import 'package:core/domain/failures/core_failure.dart';
 import 'package:core/presentation/widgets/glass_app_bar_widget.dart';
 import 'package:core/presentation/widgets/glass_card_widget.dart';
 import 'package:flutter/material.dart';
@@ -773,6 +774,139 @@ void _showCrystalDialog(
   );
 }
 
+void _showInsufficientKarmaDialog(
+  BuildContext context,
+  WidgetRef ref,
+  String crystalId, {
+  required int requiredKarma,
+  required int availableKarma,
+}) {
+  final viewModel = ref.read(mapViewModelProvider.notifier);
+  final crystal = viewModel.getRemoteCrystal(crystalId);
+  final nickname = crystal?.creatorNickname ?? '不明';
+
+  showDialog<void>(
+    context: context,
+    barrierColor: Colors.transparent,
+    builder: (dialogContext) {
+      return BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 15.0, sigmaY: 15.0),
+        child: Dialog(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(24),
+            clipBehavior: Clip.antiAlias,
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 20.0, sigmaY: 20.0),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Colors.white.withOpacity(0.2),
+                  border: Border.all(
+                    color: Colors.white.withOpacity(0.3),
+                    width: 1.5,
+                  ),
+                ),
+                padding: const EdgeInsets.all(20.0),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'ポイントが足りません',
+                      style: GoogleFonts.notoSansJp(
+                        fontSize: 20,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.black,
+                      ),
+                    ),
+                    const SizedBox(height: 24),
+                    Image.asset(
+                      crystal?.tier.imageUrl ?? 'assets/images/stone.png',
+                      width: 80,
+                      height: 80,
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      '$nicknameのヒミツ',
+                      style: GoogleFonts.notoSansJp(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w600,
+                        color: Colors.black.withOpacity(0.85),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text(
+                      'このヒミツを買うには\n$requiredKarmaポイント必要です',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 14,
+                        color: Colors.black.withOpacity(0.7),
+                      ),
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      '現在の所持ポイント: $availableKarma',
+                      style: TextStyle(
+                        fontSize: 13,
+                        color: Colors.black.withOpacity(0.5),
+                      ),
+                    ),
+                    const SizedBox(height: 32),
+                    SizedBox(
+                      width: double.infinity,
+                      child: ElevatedButton(
+                        onPressed: () {
+                          Navigator.of(dialogContext).pop();
+                          context.push('/memory-burial');
+                        },
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor:
+                              _crystalPrimaryColor.withOpacity(0.64),
+                          foregroundColor: Colors.white,
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          elevation: 0,
+                        ),
+                        child: const Text(
+                          'あなたのヒミツをポイントに変える',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    SizedBox(
+                      width: double.infinity,
+                      child: TextButton(
+                        onPressed: () => Navigator.of(dialogContext).pop(),
+                        style: TextButton.styleFrom(
+                          foregroundColor: Colors.black.withOpacity(0.8),
+                          padding: const EdgeInsets.symmetric(vertical: 16),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                        ),
+                        child: const Text(
+                          '閉じる',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+    },
+  );
+}
+
 Future<void> _purchaseCrystal(
   BuildContext context,
   WidgetRef ref,
@@ -811,16 +945,43 @@ Future<void> _purchaseCrystal(
             }
           case Failure(error: final failure):
             if (context.mounted) {
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    '購入に失敗しました: ${failure.message}',
-                    style: const TextStyle(color: Colors.black),
+              // カルマ不足の場合は専用ダイアログを表示
+              if (failure is CoreFailure) {
+                final insufficientKarma = failure.mapOrNull(
+                  insufficientKarma: (e) => e,
+                );
+                if (insufficientKarma != null) {
+                  _showInsufficientKarmaDialog(
+                    context,
+                    ref,
+                    crystalId,
+                    requiredKarma: insufficientKarma.required,
+                    availableKarma: insufficientKarma.available,
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      content: Text(
+                        '購入に失敗しました: ${failure.message}',
+                        style: const TextStyle(color: Colors.black),
+                      ),
+                      backgroundColor: Colors.white,
+                      behavior: SnackBarBehavior.floating,
+                    ),
+                  );
+                }
+              } else {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(
+                      '購入に失敗しました: $failure',
+                      style: const TextStyle(color: Colors.black),
+                    ),
+                    backgroundColor: Colors.white,
+                    behavior: SnackBarBehavior.floating,
                   ),
-                  backgroundColor: Colors.white,
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
+                );
+              }
             }
         }
       case Failure(error: final failure):
