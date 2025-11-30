@@ -3,6 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 
 /// A background widget with a grid of dots that shimmer (show/hide)
+/// Uses CustomPainter for optimal performance
 class ShimmerBackgroundWidget extends StatefulWidget {
   const ShimmerBackgroundWidget({
     super.key,
@@ -34,32 +35,31 @@ class ShimmerBackgroundWidget extends StatefulWidget {
 }
 
 class _ShimmerBackgroundWidgetState extends State<ShimmerBackgroundWidget>
-    with TickerProviderStateMixin {
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
   List<_ShimmerDot>? _dots;
-  final Random _random = Random();
   Size? _lastSize;
-  AnimationController? _controller;
+  final Random _random = Random();
 
   @override
-  void dispose() {
-    _controller?.dispose();
-    super.dispose();
-  }
-
-  void _initDots(Size screenSize) {
-    // Dispose old controller if reinitializing
-    _controller?.dispose();
-
-    final cols = (screenSize.width / widget.dotSpacing).floor();
-    final rows = (screenSize.height / widget.dotSpacing).floor();
-
-    // Create a single animation controller
+  void initState() {
+    super.initState();
     _controller = AnimationController(
       duration: const Duration(milliseconds: 2000),
       vsync: this,
     )..repeat(reverse: true);
+  }
 
-    // Create all dots with phase offsets (no controllers needed!)
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  void _initDots(Size size) {
+    final cols = (size.width / widget.dotSpacing).floor();
+    final rows = (size.height / widget.dotSpacing).floor();
+
     _dots = [];
     for (int row = 0; row < rows; row++) {
       for (int col = 0; col < cols; col++) {
@@ -68,67 +68,88 @@ class _ShimmerBackgroundWidgetState extends State<ShimmerBackgroundWidget>
             x: col * widget.dotSpacing,
             y: row * widget.dotSpacing,
             maxOpacity: 0.1 + _random.nextDouble() * 0.2,
-            phaseOffset: _random.nextDouble(), // Offset between 0 and 1
+            phaseOffset: _random.nextDouble(),
           ),
         );
       }
     }
-
-    _lastSize = screenSize;
+    _lastSize = size;
   }
 
   @override
   Widget build(BuildContext context) {
-    final screenSize = MediaQuery.of(context).size;
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final size = Size(constraints.maxWidth, constraints.maxHeight);
 
-    // Initialize or reinitialize dots if screen size changed
-    if (_dots == null || _lastSize != screenSize) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) {
-          setState(() {
-            _initDots(screenSize);
-          });
+        // Initialize dots if needed
+        if (_dots == null || _lastSize != size) {
+          _initDots(size);
         }
-      });
-    }
 
-    return Container(
-      color: widget.backgroundColor,
-      child: Stack(
-        children: [
-          // Grid of shimmer dots
-          if (_dots != null && _controller != null)
-            ..._dots!.map((dot) {
-              return Positioned(
-                left: dot.x,
-                top: dot.y,
+        return Container(
+          color: widget.backgroundColor,
+          child: Stack(
+            children: [
+              // Use RepaintBoundary to isolate the shimmer animation
+              RepaintBoundary(
                 child: AnimatedBuilder(
-                  animation: _controller!,
+                  animation: _controller,
                   builder: (context, child) {
-                    // Calculate opacity using sin wave with phase offset
-                    // This creates a smooth fade in/out effect
-                    final phase = (_controller!.value + dot.phaseOffset) % 1.0;
-                    final opacity = (sin(phase * pi * 2) + 1) / 2; // 0 to 1
-                    return Opacity(
-                      opacity: opacity * dot.maxOpacity,
-                      child: Container(
-                        width: widget.dotSize,
-                        height: widget.dotSize,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: widget.dotColor,
-                        ),
+                    return CustomPaint(
+                      size: size,
+                      painter: _ShimmerPainter(
+                        dots: _dots!,
+                        animationValue: _controller.value,
+                        dotColor: widget.dotColor,
+                        dotSize: widget.dotSize,
                       ),
                     );
                   },
                 ),
-              );
-            }),
-          // Child widget on top
-          if (widget.child != null) widget.child!,
-        ],
-      ),
+              ),
+              // Child widget on top
+              if (widget.child != null) widget.child!,
+            ],
+          ),
+        );
+      },
     );
+  }
+}
+
+class _ShimmerPainter extends CustomPainter {
+  _ShimmerPainter({
+    required this.dots,
+    required this.animationValue,
+    required this.dotColor,
+    required this.dotSize,
+  });
+
+  final List<_ShimmerDot> dots;
+  final double animationValue;
+  final Color dotColor;
+  final double dotSize;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()..style = PaintingStyle.fill;
+
+    for (final dot in dots) {
+      final phase = (animationValue + dot.phaseOffset) % 1.0;
+      final opacity = (sin(phase * pi * 2) + 1) / 2;
+      paint.color = dotColor.withValues(alpha: opacity * dot.maxOpacity);
+      canvas.drawCircle(
+        Offset(dot.x, dot.y),
+        dotSize / 2,
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(_ShimmerPainter oldDelegate) {
+    return oldDelegate.animationValue != animationValue;
   }
 }
 
@@ -143,5 +164,5 @@ class _ShimmerDot {
   final double x;
   final double y;
   final double maxOpacity;
-  final double phaseOffset; // Phase offset between 0 and 1 for animation timing
+  final double phaseOffset;
 }

@@ -120,32 +120,32 @@ class _CrystalDisplayPageState extends ConsumerState<CrystalDisplayPage>
     final topPadding = MediaQuery.of(context).padding.top;
 
     // Listen for phase changes in tap mode
-    if (widget.tap) {
-      ref.listen<CrystalDisplayUIState>(crystalDisplayProvider,
-          (previous, next) {
-        if (previous?.phase != CrystalDisplayPhase.revealing &&
-            next.phase == CrystalDisplayPhase.revealing) {
-          _onTextRevealComplete();
-          // Trigger color animation when revealing starts
-          if (crystalAsync.value != null) {
-            final emotionColor = Color(
-              crystalAsync.value!.aiMetadata.emotionType.colorHex,
-            );
-            _updateTargetColor(emotionColor);
-          }
+    ref.listen<CrystalDisplayUIState>(crystalDisplayProvider,
+        (previous, next) {
+      if (!widget.tap) return;
+      if (previous?.phase != CrystalDisplayPhase.revealing &&
+          next.phase == CrystalDisplayPhase.revealing) {
+        _onTextRevealComplete();
+        // Trigger color animation when revealing starts
+        if (crystalAsync.value != null) {
+          final emotionColor = Color(
+            crystalAsync.value!.aiMetadata.emotionType.colorHex,
+          );
+          _updateTargetColor(emotionColor);
         }
-      });
-    }
+      }
+    });
 
     // Trigger color animation when crystal data loads (only in non-tap mode)
-    if (!widget.tap && crystalAsync.value != null) {
-      final emotionColor = Color(
-        crystalAsync.value!.aiMetadata.emotionType.colorHex,
-      );
-      WidgetsBinding.instance.addPostFrameCallback((_) {
+    ref.listen(crystalProvider(widget.crystalId), (previous, next) {
+      if (widget.tap) return;
+      if (previous?.value == null && next.value != null) {
+        final emotionColor = Color(
+          next.value!.aiMetadata.emotionType.colorHex,
+        );
         _updateTargetColor(emotionColor);
-      });
-    }
+      }
+    });
 
     return Scaffold(
       backgroundColor: _defaultColor,
