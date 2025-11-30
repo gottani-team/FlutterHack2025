@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_remote_config/firebase_remote_config.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -29,7 +30,10 @@ import 'repositories/user_repository_impl.dart';
 /// アプリ全体で共有されるFirestoreインスタンス。
 /// テスト時はこのプロバイダーをオーバーライドしてモックに差し替える。
 final firestoreProvider = Provider<FirebaseFirestore>((ref) {
-  return FirebaseFirestore.instance;
+  return FirebaseFirestore.instanceFor(
+    app: Firebase.app(),
+    databaseId: 'gottani-2025',
+  );
 });
 
 /// Firebase Authentication インスタンス Provider
