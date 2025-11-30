@@ -1,5 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:cloud_functions/cloud_functions.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import '../../data/data_sources/memory_burial_remote_data_source.dart';
@@ -14,7 +15,10 @@ final firebaseFunctionsProvider = Provider<FirebaseFunctions>((ref) {
 });
 
 final firestoreProvider = Provider<FirebaseFirestore>((ref) {
-  return FirebaseFirestore.instance;
+  return FirebaseFirestore.instanceFor(
+    app: Firebase.app(),
+    databaseId: 'gottani-2025',
+  );
 });
 
 // Data Sources
