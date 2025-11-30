@@ -632,19 +632,8 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
   }
 
   /// カルマ値に応じたクリスタル画像パスを取得
-  /// 将来Tierごとの画像が追加されたらここを更新
   String _getCrystalImagePath(int karmaValue) {
-    final tier = CrystalTier.fromKarmaValue(karmaValue);
-    // TODO: Tierごとの画像が追加されたら切り替え
-    // 現在は全てtest-crystal.pngを使用
-    return switch (tier) {
-      CrystalTier.stone => 'assets/images/test-crystal.png',
-      CrystalTier.obsidian => 'assets/images/test-crystal.png',
-      CrystalTier.copper => 'assets/images/test-crystal.png',
-      CrystalTier.silver => 'assets/images/test-crystal.png',
-      CrystalTier.gold => 'assets/images/test-crystal.png',
-      CrystalTier.crystal => 'assets/images/test-crystal.png',
-    };
+    return CrystalTier.fromKarmaValue(karmaValue).imageUrl;
   }
 
   /// PT値をフォーマット（カンマ区切り）
