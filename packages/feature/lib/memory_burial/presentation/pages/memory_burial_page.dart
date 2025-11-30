@@ -549,15 +549,13 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
                 ),
 
                 const SizedBox(height: 24),
-                SingleChildScrollView(
-                  child: Column(
-                    children: [
-                      _buildTextField(
-                        memoryText: memoryText,
-                        textColor: textColor,
-                        placeholderColor: placeholderColor,
-                      ),
-                    ],
+                Expanded(
+                  child: SingleChildScrollView(
+                    child: _buildTextField(
+                      memoryText: memoryText,
+                      textColor: textColor,
+                      placeholderColor: placeholderColor,
+                    ),
                   ),
                 ),
               ],
