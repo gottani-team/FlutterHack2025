@@ -700,7 +700,7 @@ void _showCrystalDialog(
                     ),
                     const SizedBox(height: 24),
                     Image.asset(
-                      crystal?.tier.imageUrl ?? 'assets/images/stone.png',
+                      'assets/images/hide.png',
                       width: 80,
                       height: 80,
                     ),
@@ -814,8 +814,10 @@ Future<void> _purchaseCrystal(
             if (context.mounted) {
               Navigator.of(context).push(
                 MaterialPageRoute<void>(
-                  builder: (context) =>
-                      CrystalDisplayPage(crystalId: crystalId),
+                  builder: (context) => CrystalDisplayPage(
+                    crystalId: crystalId,
+                    tap: true,
+                  ),
                 ),
               );
             }
