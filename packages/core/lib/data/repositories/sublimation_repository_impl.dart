@@ -83,7 +83,6 @@ class SublimationRepositoryImpl implements SublimationRepository {
       return Result.success(
         EvaluationResult(
           aiMetadata: aiMetadata,
-          imageUrl: aiMetadata.imageUrl,
         ),
       );
     } catch (e) {

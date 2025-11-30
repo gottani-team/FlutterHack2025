@@ -28,6 +28,17 @@ enum CrystalTier {
     return CrystalTier.stone;
   }
 
+  String get rarityTier {
+    return switch (this) {
+      CrystalTier.stone => 'stone',
+      CrystalTier.obsidian => 'obsidian',
+      CrystalTier.copper => 'copper',
+      CrystalTier.silver => 'silver',
+      CrystalTier.gold => 'gold',
+      CrystalTier.crystal => 'crystal',
+    };
+  }
+
   /// 表示名
   String get displayName {
     return switch (this) {
@@ -39,4 +50,7 @@ enum CrystalTier {
       CrystalTier.crystal => 'クリスタル',
     };
   }
+
+  /// クリスタル画像
+  String get imageUrl => 'assets/images/$rarityTier.png';
 }

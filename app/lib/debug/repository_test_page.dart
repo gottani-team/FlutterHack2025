@@ -136,8 +136,8 @@ class _RepositoryTestPageState extends ConsumerState<RepositoryTestPage> {
         case Success(value: final eval):
           _log(
               '   ✅ 評価完了: ${eval.aiMetadata.emotionType.displayName}, score=${eval.aiMetadata.score}');
-          _log('   ✅ レアリティ: ${eval.aiMetadata.rarityDisplayName}');
-          _log('   ✅ 画像URL: ${eval.imageUrl}');
+          _log('   ✅ レアリティ: ${eval.aiMetadata.tier.displayName}');
+          _log('   ✅ 画像URL: ${eval.aiMetadata.tier.imageUrl}');
 
           _log('   3b. クリスタルを確定...');
           final confirmResult = await sublimationRepo.confirm(
@@ -161,7 +161,8 @@ class _RepositoryTestPageState extends ConsumerState<RepositoryTestPage> {
 
       // 4. 利用可能なクリスタルを取得
       _log('4. 利用可能なクリスタルを取得...');
-      final availableResult = await crystalRepo.getRandomAvailableCrystals(limit: 10);
+      final availableResult =
+          await crystalRepo.getRandomAvailableCrystals(limit: 10);
       switch (availableResult) {
         case Success(value: final crystals):
           _log('   ✅ 取得件数: ${crystals.length}');

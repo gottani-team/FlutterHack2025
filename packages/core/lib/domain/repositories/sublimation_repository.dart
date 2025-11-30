@@ -58,14 +58,10 @@ abstract class SublimationRepository {
 class EvaluationResult {
   EvaluationResult({
     required this.aiMetadata,
-    required this.imageUrl,
   });
 
   /// AI解析メタデータ（感情タイプ、スコア）
   final AIMetadata aiMetadata;
-
-  /// クリスタル画像URL（プレビュー用）
-  final String imageUrl;
 
   /// 獲得予定カルマ（= スコア）
   int get karmaToEarn => aiMetadata.score;

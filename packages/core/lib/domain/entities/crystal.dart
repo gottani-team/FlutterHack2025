@@ -68,5 +68,5 @@ abstract class Crystal with _$Crystal {
   String get emotionDisplayName => aiMetadata.emotionType.displayName;
 
   /// カルマ値に基づくTierを取得
-  CrystalTier get tier => CrystalTier.fromKarmaValue(karmaValue);
+  CrystalTier get tier => aiMetadata.tier;
 }
