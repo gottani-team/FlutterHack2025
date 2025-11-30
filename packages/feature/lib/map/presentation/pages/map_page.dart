@@ -40,6 +40,11 @@ const double _defaultPitch = 45.0; // Tilt angle for 3D view
 const double _defaultBearing = 0.0;
 const double _userPolygonRadius = 50.0; // Radius in meters
 
+// 3D Model offset to align model bottom with ground
+// Based on GLB bounding box: Y min = -0.174, Y center = 0.8775
+// Offset to place model bottom at ground level (Y=0)
+const double _modelYOffset = -0.174;
+
 /// Primary color for crystal dialog
 const Color _crystalPrimaryColor = Color(0xFFFF3C00);
 
@@ -146,34 +151,6 @@ class MapPage extends HookConsumerWidget {
             ),
           ),
 
-          // Karma Balance Display
-          Positioned(
-            bottom: 32,
-            left: 16,
-            child: _KarmaBalanceWidget(karma: mapState.currentKarma),
-          ),
-
-          // Debug Menu Button
-          Positioned(
-            bottom: 100,
-            left: 16,
-            child: FloatingActionButton.small(
-              heroTag: 'debug',
-              onPressed: () {
-                Navigator.of(context).push(
-                  MaterialPageRoute<void>(
-                    builder: (context) => const _DebugRepositoryTestPage(),
-                  ),
-                );
-              },
-              backgroundColor: Colors.grey.shade800,
-              child: const Icon(
-                Icons.bug_report,
-                color: Colors.white70,
-              ),
-            ),
-          ),
-
           // GPS Warning Banner
           if (mapState.shouldShowGpsWarning)
             Positioned(
@@ -204,62 +181,35 @@ class MapPage extends HookConsumerWidget {
                   LocationPermissionStatus.notDetermined)
             _buildPermissionOverlay(context, viewModel),
 
-          // Recenter Button
-          Positioned(
-            bottom: 100,
-            right: 16,
-            child: FloatingActionButton(
-              heroTag: 'recenter',
-              onPressed: () => _recenterOnUser(
-                mapboxMapRef.value,
-                viewModel,
-                mapState,
-                isProgrammaticCameraUpdate,
-              ),
-              backgroundColor: Colors.white,
-              child: Icon(
-                mapState.isFollowingUser
-                    ? Icons.gps_fixed
-                    : Icons.gps_not_fixed,
-                color: const Color(0xFF4285F4),
-              ),
-            ),
+          // Bottom Left Actions
+          _BottomLeftActions(
+            karma: mapState.currentKarma,
+            onDebugPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (context) => const _DebugRepositoryTestPage(),
+                ),
+              );
+            },
           ),
 
-          // Scan Button
-          Positioned(
-            bottom: 170,
-            right: 16,
-            child: FloatingActionButton(
-              heroTag: 'scan',
-              onPressed: () => _scanForCrystals(
-                mapboxMapRef.value,
-                viewModel,
-                ref,
-                existing3DModelLayers.value,
-                context,
-              ),
-              backgroundColor: const Color(0xFF9C27B0),
-              child: const Icon(
-                Icons.radar,
-                color: Colors.white,
-              ),
+          // Bottom Right Actions
+          _BottomRightActions(
+            isFollowingUser: mapState.isFollowingUser,
+            onRecenterPressed: () => _recenterOnUser(
+              mapboxMapRef.value,
+              viewModel,
+              mapState,
+              isProgrammaticCameraUpdate,
             ),
-          ),
-
-          // Crystal Sublimation Button
-          Positioned(
-            bottom: 240,
-            right: 16,
-            child: FloatingActionButton(
-              heroTag: 'crystal-sublimation',
-              onPressed: () => context.push('/memory-burial'),
-              backgroundColor: const Color(0xFF00BCD4),
-              child: const Icon(
-                Icons.auto_awesome,
-                color: Colors.white,
-              ),
+            onScanPressed: () => _scanForCrystals(
+              mapboxMapRef.value,
+              viewModel,
+              ref,
+              existing3DModelLayers.value,
+              context,
             ),
+            onCrystalSublimationPressed: () => context.push('/memory-burial'),
           ),
         ],
       ),
@@ -624,6 +574,9 @@ Future<void> _update3DModels(
         final scale = baseScale * math.pow(17.5 / zoomLevel, 3);
         modelLayer.modelScale = [scale, scale, scale];
         modelLayer.modelRotation = [0.0, 0.0, 0.0];
+        // Offset Y axis to align model bottom with ground level
+        // GLB bounding box: Y min = -0.174, so offset by -0.174 to place bottom at Y=0
+        modelLayer.modelTranslation = [0.0, _modelYOffset * scale, 0.0];
         modelLayer.modelType = ModelType.COMMON_3D;
 
         await style.addLayer(modelLayer);
@@ -1222,6 +1175,153 @@ class _KarmaBalanceWidget extends StatelessWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Widget to display bottom left action buttons
+class _BottomLeftActions extends StatelessWidget {
+  const _BottomLeftActions({
+    required this.karma,
+    required this.onDebugPressed,
+  });
+
+  final int? karma;
+  final VoidCallback onDebugPressed;
+
+  // Spacing between buttons
+  static const double _buttonSpacing = 12.0;
+  static const double _bottomPadding = 48.0;
+  static const double _horizontalPadding = 16.0;
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      bottom: _bottomPadding,
+      left: _horizontalPadding,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Debug Menu Button
+          FloatingActionButton.small(
+            heroTag: 'debug',
+            onPressed: onDebugPressed,
+            backgroundColor: Colors.grey.shade800,
+            child: const Icon(
+              Icons.bug_report,
+              color: Colors.white70,
+            ),
+          ),
+          const SizedBox(height: _buttonSpacing),
+          // Karma Balance Display
+          _KarmaBalanceWidget(karma: karma),
+        ],
+      ),
+    );
+  }
+}
+
+/// Widget to display bottom right action buttons
+class _BottomRightActions extends StatelessWidget {
+  const _BottomRightActions({
+    required this.isFollowingUser,
+    required this.onRecenterPressed,
+    required this.onScanPressed,
+    required this.onCrystalSublimationPressed,
+  });
+
+  final bool isFollowingUser;
+  final VoidCallback onRecenterPressed;
+  final VoidCallback onScanPressed;
+  final VoidCallback onCrystalSublimationPressed;
+
+  // Spacing between buttons
+  static const double _buttonSpacing = 12.0;
+  static const double _bottomPadding = 48.0;
+  static const double _horizontalPadding = 16.0;
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      bottom: _bottomPadding,
+      right: _horizontalPadding,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          // Crystal Sublimation Button
+          _StyledActionButton(
+            heroTag: 'crystal-sublimation',
+            onPressed: onCrystalSublimationPressed,
+            icon: Icons.auto_awesome,
+          ),
+          const SizedBox(height: _buttonSpacing),
+          // Scan Button
+          _StyledActionButton(
+            heroTag: 'scan',
+            onPressed: onScanPressed,
+            icon: Icons.radar,
+          ),
+          const SizedBox(height: _buttonSpacing),
+          // Recenter Button
+          _StyledActionButton(
+            heroTag: 'recenter',
+            onPressed: onRecenterPressed,
+            icon: isFollowingUser ? Icons.gps_fixed : Icons.gps_not_fixed,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Styled action button matching _KarmaBalanceWidget color scheme
+class _StyledActionButton extends StatelessWidget {
+  const _StyledActionButton({
+    required this.heroTag,
+    required this.onPressed,
+    required this.icon,
+  });
+
+  final String heroTag;
+  final VoidCallback onPressed;
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 56.0,
+      height: 56.0,
+      decoration: BoxDecoration(
+        color: Colors.black.withOpacity(0.7),
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: const Color(0xFFFFD700).withOpacity(0.5),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFFFD700).withOpacity(0.2),
+            blurRadius: 8,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onPressed,
+          borderRadius: BorderRadius.circular(28),
+          child: Center(
+            child: Icon(
+              icon,
+              color: const Color(0xFFFFD700),
+              size: 24,
+            ),
+          ),
+        ),
       ),
     );
   }
