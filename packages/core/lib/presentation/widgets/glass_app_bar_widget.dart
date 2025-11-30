@@ -16,6 +16,7 @@ class GlassAppBarWidget extends StatelessWidget {
     this.onIconPressed,
     this.icon = Icons.menu,
     this.titleStyle,
+    this.enableBlur = true,
   });
 
   /// The title text displayed on the left
@@ -30,6 +31,10 @@ class GlassAppBarWidget extends StatelessWidget {
   /// Custom style for the title (defaults to Imbue font)
   final TextStyle? titleStyle;
 
+  /// Whether to enable backdrop blur effect.
+  /// Set to false for better performance on screens with complex backgrounds.
+  final bool enableBlur;
+
   @override
   Widget build(BuildContext context) {
     return SizedBox(
@@ -37,6 +42,7 @@ class GlassAppBarWidget extends StatelessWidget {
       child: GlassCardWidget(
         padding: const EdgeInsets.symmetric(horizontal: 16),
         borderRadius: 22, // Fully round (half of height 44)
+        enableBlur: enableBlur,
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [

@@ -147,9 +147,14 @@ class MapPage extends HookConsumerWidget {
     return VisibilityDetector(
       key: const Key('map_page_visibility_detector'),
       onVisibilityChanged: (info) {
-        // Reload karma when page becomes visible (visibility > 50%)
+        // Pause/resume location tracking based on visibility for better transition performance
         if (info.visibleFraction > 0.5) {
+          // Page is visible - resume tracking and reload karma
+          viewModel.onAppLifecycleChanged(isBackground: false);
           viewModel.loadKarma();
+        } else if (info.visibleFraction < 0.1) {
+          // Page is mostly hidden - pause location updates to reduce load during transitions
+          viewModel.onAppLifecycleChanged(isBackground: true);
         }
       },
       child: Scaffold(
@@ -174,6 +179,7 @@ class MapPage extends HookConsumerWidget {
               child: GlassAppBarWidget(
                 title: 'HIMITSU no SECRET',
                 icon: Icons.grid_view,
+                enableBlur: false, // Disable blur for better map performance
                 onIconPressed: () {
                   context.push('/crystals');
                 },
@@ -308,11 +314,15 @@ Widget _buildMap(
         zoomLevel: zoom,
       );
 
-      _update3DModelScales(
-        mapboxMapRef.value,
-        zoom,
-        existing3DModelLayers.value,
-      );
+      // Only update 3D model scales when zoom changes significantly (throttle)
+      final previousZoom = mapState.mapZoomLevel;
+      if ((zoom - previousZoom).abs() > 0.5) {
+        _update3DModelScales(
+          mapboxMapRef.value,
+          zoom,
+          existing3DModelLayers.value,
+        );
+      }
     },
   );
 }
@@ -1456,6 +1466,7 @@ class _KarmaBalanceWidgetState extends State<_KarmaBalanceWidget>
     return GlassCardWidget(
       padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
       borderRadius: 24,
+      enableBlur: false, // Disable blur for better map performance
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -1473,7 +1484,7 @@ class _KarmaBalanceWidgetState extends State<_KarmaBalanceWidget>
             style: GoogleFonts.notoSansJp(
               fontSize: 18,
               fontWeight: FontWeight.w500,
-              color: Colors.black.withOpacity(0.7),
+              color: Colors.black.withValues(alpha: 0.7),
             ),
           ),
         ],
@@ -1613,6 +1624,7 @@ class _GlassActionButton extends StatelessWidget {
         height: 44.0,
         child: GlassCardWidget(
           borderRadius: 22,
+          enableBlur: false, // Disable blur for better map performance
           child: Center(
             child: Icon(
               icon,
@@ -1647,8 +1659,9 @@ class _OrangeGlassActionButton extends StatelessWidget {
         height: 56.0,
         child: GlassCardWidget(
           borderRadius: 28,
-          backgroundColor: _orangeColor.withOpacity(0.85),
+          backgroundColor: _orangeColor.withValues(alpha: 0.85),
           borderColor: _orangeColor,
+          enableBlur: false, // Disable blur for better map performance
           child: Center(
             child: Icon(
               icon,

@@ -526,11 +526,14 @@ class MapViewModel extends _$MapViewModel {
     state = state.copyWith(isBackgroundMode: isBackground);
 
     if (isBackground) {
-      // Reduce update frequency in background
-      // TODO: Implement background location updates with reduced frequency
+      // Stop location tracking and haptic feedback to improve transition performance
+      _locationSubscription?.pause();
+      _pulseAnimationTimer?.cancel();
+      _pulseAnimationTimer = null;
+      _stopHeartbeatFeedback();
     } else {
-      // Resume normal tracking
-      startLocationTracking();
+      // Resume location tracking
+      _locationSubscription?.resume();
     }
   }
 

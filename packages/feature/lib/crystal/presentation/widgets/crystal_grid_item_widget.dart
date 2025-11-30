@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:core/core.dart';
 import 'package:core/presentation/widgets/glass_card_widget.dart';
 import 'package:flutter/material.dart';
@@ -30,6 +28,7 @@ class CrystalGridItemWidget extends StatelessWidget {
         borderColor: Color(crystal.aiMetadata.emotionType.colorHex),
         borderWidth: 2,
         useGradientBorder: false,
+        enableBlur: false, // Disable blur for better grid performance
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.center,
           children: [
@@ -44,22 +43,21 @@ class CrystalGridItemWidget extends StatelessWidget {
                     clipBehavior: Clip.none,
                     alignment: Alignment.center,
                     children: [
-                      // Elliptical shadow at bottom
+                      // Elliptical shadow at bottom using gradient (faster than ImageFiltered)
                       Positioned(
-                        bottom: -120,
-                        child: ImageFiltered(
-                          imageFilter: ImageFilter.blur(
-                            sigmaX: 24,
-                            sigmaY: 24,
-                          ),
-                          child: Container(
-                            width: size * 1.5,
-                            height: size,
-                            decoration: BoxDecoration(
-                              color: emotionColor.withValues(alpha: 0.3),
-                              borderRadius: BorderRadius.all(
-                                Radius.elliptical(size * 0.6, size * 0.25),
-                              ),
+                        bottom: -size * 0.3,
+                        child: Container(
+                          width: size * 1.2,
+                          height: size * 0.4,
+                          decoration: BoxDecoration(
+                            gradient: RadialGradient(
+                              colors: [
+                                emotionColor.withValues(alpha: 0.25),
+                                emotionColor.withValues(alpha: 0.0),
+                              ],
+                            ),
+                            borderRadius: BorderRadius.all(
+                              Radius.elliptical(size * 0.6, size * 0.2),
                             ),
                           ),
                         ),

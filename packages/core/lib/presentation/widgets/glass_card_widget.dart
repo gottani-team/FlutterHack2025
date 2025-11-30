@@ -21,6 +21,7 @@ class GlassCardWidget extends StatelessWidget {
     this.gradientAngle = 55,
     this.useGradientBorder = true,
     this.borderColor = Colors.white,
+    this.enableBlur = true,
   });
 
   /// The widget to display inside the card
@@ -49,41 +50,56 @@ class GlassCardWidget extends StatelessWidget {
   /// instead of the default gradient border.
   final Color borderColor;
 
+  /// Whether to enable backdrop blur effect.
+  /// Set to false for better performance on screens with complex backgrounds (e.g., maps).
+  final bool enableBlur;
+
   @override
   Widget build(BuildContext context) {
-    return ClipRRect(
+    final containerDecoration = BoxDecoration(
+      color: backgroundColor,
       borderRadius: BorderRadius.circular(borderRadius),
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
-        child: Container(
-          padding: padding,
-          decoration: BoxDecoration(
-            color: backgroundColor,
-            borderRadius: BorderRadius.circular(borderRadius),
-            border: useGradientBorder
-                ? GradientBoxBorder(
-                    gradient: LinearGradient(
-                      transform:
-                          GradientRotation(gradientAngle * 3.14159 / 180),
-                      colors: [
-                        Color.lerp(Colors.white, borderColor, 0.6) ??
-                            Colors.white,
-                        borderColor == Colors.white
-                            ? Colors.white.withValues(alpha: 0.0)
-                            : borderColor,
-                        borderColor == Colors.white
-                            ? Colors.white.withValues(alpha: 0.0)
-                            : borderColor,
-                        Color.lerp(Colors.white, borderColor, 0.6) ??
-                            Colors.white,
-                      ],
-                      stops: const [0.0, 0.3, 0.7, 1.0],
-                    ),
-                    width: borderWidth,
-                  )
-                : Border.all(color: borderColor, width: borderWidth),
-          ),
-          child: child,
+      border: useGradientBorder
+          ? GradientBoxBorder(
+              gradient: LinearGradient(
+                transform: GradientRotation(gradientAngle * 3.14159 / 180),
+                colors: [
+                  Color.lerp(Colors.white, borderColor, 0.6) ?? Colors.white,
+                  borderColor == Colors.white
+                      ? Colors.white.withValues(alpha: 0.0)
+                      : borderColor,
+                  borderColor == Colors.white
+                      ? Colors.white.withValues(alpha: 0.0)
+                      : borderColor,
+                  Color.lerp(Colors.white, borderColor, 0.6) ?? Colors.white,
+                ],
+                stops: const [0.0, 0.3, 0.7, 1.0],
+              ),
+              width: borderWidth,
+            )
+          : Border.all(color: borderColor, width: borderWidth),
+    );
+
+    final container = Container(
+      padding: padding,
+      decoration: containerDecoration,
+      child: child,
+    );
+
+    // Skip blur for better performance when enableBlur is false
+    if (!enableBlur) {
+      return ClipRRect(
+        borderRadius: BorderRadius.circular(borderRadius),
+        child: container,
+      );
+    }
+
+    return RepaintBoundary(
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(borderRadius),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
+          child: container,
         ),
       ),
     );
