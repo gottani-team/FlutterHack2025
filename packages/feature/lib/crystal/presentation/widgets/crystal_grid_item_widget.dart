@@ -6,9 +6,6 @@ import 'package:flutter/material.dart';
 
 import 'crystal_image_widget.dart';
 
-/// Mock image URL for crystal (will be replaced with real data later)
-const _mockCrystalImageUrl = 'assets/images/test-crystal.png';
-
 /// Widget that displays a collected crystal in a grid cell
 class CrystalGridItemWidget extends StatelessWidget {
   const CrystalGridItemWidget({
@@ -69,7 +66,7 @@ class CrystalGridItemWidget extends StatelessWidget {
                       ),
                       // Crystal image
                       CrystalImageWidget(
-                        imageUrl: _mockCrystalImageUrl,
+                        imageUrl: crystal.aiMetadata.imageUrl,
                         size: size,
                       ),
                     ],
