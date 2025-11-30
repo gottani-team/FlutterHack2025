@@ -1,5 +1,4 @@
 import 'dart:math' as math;
-import 'dart:typed_data';
 import 'dart:ui' as ui;
 
 import 'package:core/data/providers.dart';
@@ -831,7 +830,7 @@ void _showInsufficientKarmaDialog(
                     ),
                     const SizedBox(height: 24),
                     Image.asset(
-                      crystal?.tier.imageUrl ?? 'assets/images/stone.png',
+                      'assets/images/hide.png',
                       width: 80,
                       height: 80,
                     ),
