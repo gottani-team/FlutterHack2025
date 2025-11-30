@@ -713,7 +713,7 @@ void _showCrystalDialog(
                     ),
                     const SizedBox(height: 24),
                     Image.asset(
-                      'assets/images/test-crystal.png',
+                      crystal?.aiMetadata.imageUrl ?? 'assets/images/stone.png',
                       width: 80,
                       height: 80,
                     ),
