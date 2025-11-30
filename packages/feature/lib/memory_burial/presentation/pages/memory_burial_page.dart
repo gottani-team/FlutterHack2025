@@ -53,6 +53,13 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
   late Animation<double> _crystalScaleAnimation;
   int _displayedPtValue = 0;
 
+  // 終了アニメーション用
+  late AnimationController _exitUiFadeController;
+  late AnimationController _exitCrystalController;
+  late Animation<double> _exitCrystalScaleAnimation;
+  late Animation<double> _exitCrystalPositionAnimation;
+  bool _isPlayingExitAnimation = false;
+
   /// PTカウントアップアニメーションを有効にするか
   static const bool _enablePtAnimation = true;
 
@@ -80,6 +87,46 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
       curve: Curves.elasticOut,
     );
 
+    // 終了アニメーション: UIフェードアウト
+    _exitUiFadeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    );
+
+    // 終了アニメーション: クリスタルの拡大と飛行
+    _exitCrystalController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+    _exitCrystalScaleAnimation = TweenSequence<double>([
+      // 最初の30%で1.0→1.3に拡大（グワァっと）
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 1.0, end: 1.3)
+            .chain(CurveTween(curve: Curves.easeOutBack)),
+        weight: 30,
+      ),
+      // 残りの70%で1.3→0.8に縮小しながら飛んでいく
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 1.3, end: 0.8)
+            .chain(CurveTween(curve: Curves.easeIn)),
+        weight: 70,
+      ),
+    ]).animate(_exitCrystalController);
+
+    _exitCrystalPositionAnimation = TweenSequence<double>([
+      // 最初の30%は待機（拡大中）
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 0.0, end: 0.0),
+        weight: 30,
+      ),
+      // 残りの70%で上に飛んでいく
+      TweenSequenceItem(
+        tween: Tween<double>(begin: 0.0, end: -1.5)
+            .chain(CurveTween(curve: Curves.easeInCubic)),
+        weight: 70,
+      ),
+    ]).animate(_exitCrystalController);
+
     // 画面表示後にニックネーム欄にフォーカス
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _nicknameFocusNode.requestFocus();
@@ -95,6 +142,8 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
     _ringAnimationController.dispose();
     _ptAnimationController.dispose();
     _crystalScaleController.dispose();
+    _exitUiFadeController.dispose();
+    _exitCrystalController.dispose();
     super.dispose();
   }
 
@@ -221,8 +270,8 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
     switch (confirmResult) {
       case Success():
         if (mounted) {
-          // 成功したらMapに戻る
-          context.pop();
+          // 成功したら終了アニメーションを開始
+          _startExitAnimation();
         }
         break;
       case Failure(error: final failure):
@@ -238,6 +287,30 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
     }
   }
 
+  /// 終了アニメーションを開始
+  void _startExitAnimation() {
+    setState(() {
+      _isPlayingExitAnimation = true;
+    });
+
+    // 1. UI要素（ポイント、ボタン、AppBar）をフェードアウト
+    _exitUiFadeController.forward();
+
+    // 2. UIフェードアウト完了後、クリスタルのアニメーション開始
+    Future.delayed(const Duration(milliseconds: 300), () {
+      if (mounted) {
+        _exitCrystalController.forward();
+      }
+    });
+
+    // 3. 全アニメーション完了後に画面遷移
+    Future.delayed(const Duration(milliseconds: 1200), () {
+      if (mounted) {
+        context.pop();
+      }
+    });
+  }
+
   /// キャンセルボタンを押した時の処理
   void _handleCancel() {
     _resetToInput();
@@ -251,6 +324,8 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
     _textController.clear();
     _ptAnimationController.reset();
     _crystalScaleController.reset();
+    _exitUiFadeController.reset();
+    _exitCrystalController.reset();
 
     setState(() {
       _phase = _ScreenPhase.input;
@@ -258,6 +333,7 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
       _evaluationResult = null;
       _isConfirming = false;
       _displayedPtValue = 0;
+      _isPlayingExitAnimation = false;
     });
 
     // キーボードを再表示
@@ -328,19 +404,28 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
             },
           ),
 
-          // Glass App Bar
+          // Glass App Bar（終了アニメーション中はフェードアウト）
           Positioned(
             top: MediaQuery.of(context).padding.top + 8,
             left: 16,
             right: 16,
-            child: GlassAppBarWidget(
-              title: 'HIMITSU no SECRET',
-              icon: Icons.close,
-              onIconPressed: () {
-                if (Navigator.of(context).canPop()) {
-                  context.pop();
-                }
+            child: AnimatedBuilder(
+              animation: _exitUiFadeController,
+              builder: (context, child) {
+                return Opacity(
+                  opacity: 1.0 - _exitUiFadeController.value,
+                  child: child,
+                );
               },
+              child: GlassAppBarWidget(
+                title: 'HIMITSU no SECRET',
+                icon: Icons.close,
+                onIconPressed: () {
+                  if (Navigator.of(context).canPop()) {
+                    context.pop();
+                  }
+                },
+              ),
             ),
           ),
 
@@ -590,20 +675,35 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
               const Spacer(flex: 4),
 
               // クリスタル画像領域（常に同じスペースを確保）
-              SizedBox(
-                width: 120,
-                height: 120,
-                child: isLoading
-                    ? const SizedBox.shrink()
-                    : AnimatedBuilder(
-                        animation: _crystalScaleAnimation,
-                        builder: (context, child) {
-                          return Transform.scale(
-                            scale: _crystalScaleAnimation.value,
-                            child: child,
-                          );
-                        },
-                        child: Padding(
+              AnimatedBuilder(
+                animation: Listenable.merge([
+                  _crystalScaleAnimation,
+                  _exitCrystalController,
+                ]),
+                builder: (context, child) {
+                  // 終了アニメーション中の場合
+                  final exitScale = _isPlayingExitAnimation
+                      ? _exitCrystalScaleAnimation.value
+                      : 1.0;
+                  final exitOffset = _isPlayingExitAnimation
+                      ? _exitCrystalPositionAnimation.value *
+                          MediaQuery.of(context).size.height
+                      : 0.0;
+
+                  return Transform.translate(
+                    offset: Offset(0, exitOffset),
+                    child: Transform.scale(
+                      scale: _crystalScaleAnimation.value * exitScale,
+                      child: child,
+                    ),
+                  );
+                },
+                child: SizedBox(
+                  width: 120,
+                  height: 120,
+                  child: isLoading
+                      ? const SizedBox.shrink()
+                      : Padding(
                           padding: const EdgeInsets.only(bottom: 16),
                           child: Image.asset(
                             _getCrystalImagePath(
@@ -614,33 +714,42 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
                             fit: BoxFit.contain,
                           ),
                         ),
-                      ),
+                ),
               ),
 
-              // PT表示（常に同じ位置、待機中は薄く）
-              RichText(
-                text: TextSpan(
-                  children: [
-                    TextSpan(
-                      text: ptValue,
-                      style: TextStyle(
-                        fontSize: 40,
-                        fontWeight: FontWeight.w600,
-                        color: const Color(0xFF1A1A2E)
-                            .withOpacity(isLoading ? 0.4 : 0.8),
-                        letterSpacing: 1.5,
+              // PT表示（終了アニメーション中はフェードアウト）
+              AnimatedBuilder(
+                animation: _exitUiFadeController,
+                builder: (context, child) {
+                  return Opacity(
+                    opacity: 1.0 - _exitUiFadeController.value,
+                    child: child,
+                  );
+                },
+                child: RichText(
+                  text: TextSpan(
+                    children: [
+                      TextSpan(
+                        text: ptValue,
+                        style: TextStyle(
+                          fontSize: 40,
+                          fontWeight: FontWeight.w600,
+                          color: const Color(0xFF1A1A2E)
+                              .withOpacity(isLoading ? 0.4 : 0.8),
+                          letterSpacing: 1.5,
+                        ),
                       ),
-                    ),
-                    TextSpan(
-                      text: 'P',
-                      style: TextStyle(
-                        fontSize: 20,
-                        fontWeight: FontWeight.w500,
-                        color: const Color(0xFF1A1A2E)
-                            .withOpacity(isLoading ? 0.3 : 0.6),
+                      TextSpan(
+                        text: 'P',
+                        style: TextStyle(
+                          fontSize: 20,
+                          fontWeight: FontWeight.w500,
+                          color: const Color(0xFF1A1A2E)
+                              .withOpacity(isLoading ? 0.3 : 0.6),
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
 
@@ -666,91 +775,100 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
           ),
         ),
 
-        // ボタン（下部固定）
+        // ボタン（下部固定、終了アニメーション中はフェードアウト）
         Positioned(
           left: 24,
           right: 24,
           bottom: 32,
-          child: SafeArea(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                // 埋めるボタン（常に同じスペースを確保、表示/非表示を切り替え）
-                AnimatedOpacity(
-                  opacity: isLoading ? 0.0 : 1.0,
-                  duration: const Duration(milliseconds: 300),
-                  child: AnimatedContainer(
+          child: AnimatedBuilder(
+            animation: _exitUiFadeController,
+            builder: (context, child) {
+              return Opacity(
+                opacity: 1.0 - _exitUiFadeController.value,
+                child: child,
+              );
+            },
+            child: SafeArea(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  // 埋めるボタン（常に同じスペースを確保、表示/非表示を切り替え）
+                  AnimatedOpacity(
+                    opacity: isLoading ? 0.0 : 1.0,
                     duration: const Duration(milliseconds: 300),
-                    height: isLoading ? 0 : 64,
-                    child: Padding(
-                      padding: const EdgeInsets.only(bottom: 12),
-                      child: SizedBox(
-                        width: double.infinity,
-                        child: ElevatedButton(
-                          onPressed: isLoading || _isConfirming
-                              ? null
-                              : _handleConfirm,
-                          style: ElevatedButton.styleFrom(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            backgroundColor: const Color(0xFFFF3C00),
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 300),
+                      height: isLoading ? 0 : 64,
+                      child: Padding(
+                        padding: const EdgeInsets.only(bottom: 12),
+                        child: SizedBox(
+                          width: double.infinity,
+                          child: ElevatedButton(
+                            onPressed: isLoading || _isConfirming
+                                ? null
+                                : _handleConfirm,
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              backgroundColor: const Color(0xFFFF3C00),
+                              foregroundColor: Colors.white,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(16),
+                              ),
+                              elevation: 0,
                             ),
-                            elevation: 0,
-                          ),
-                          child: _isConfirming
-                              ? const SizedBox(
-                                  width: 20,
-                                  height: 20,
-                                  child: CircularProgressIndicator(
-                                    strokeWidth: 2,
-                                    valueColor: AlwaysStoppedAnimation<Color>(
-                                      Colors.white,
+                            child: _isConfirming
+                                ? const SizedBox(
+                                    width: 20,
+                                    height: 20,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.white,
+                                      ),
+                                    ),
+                                  )
+                                : const Text(
+                                    '埋める',
+                                    style: TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.w600,
                                     ),
                                   ),
-                                )
-                              : const Text(
-                                  '埋める',
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.w600,
-                                  ),
-                                ),
+                          ),
                         ),
                       ),
                     ),
                   ),
-                ),
-                // キャンセルボタン（グラスモーフィズム風、常に表示）
-                SizedBox(
-                  width: double.infinity,
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: Container(
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.4),
-                        borderRadius: BorderRadius.circular(16),
-                        border: Border.all(
-                          color: Colors.white.withOpacity(0.5),
-                          width: 1,
-                        ),
-                      ),
-                      child: Material(
-                        color: Colors.transparent,
-                        child: InkWell(
-                          onTap: _isConfirming ? null : _handleCancel,
+                  // キャンセルボタン（グラスモーフィズム風、常に表示）
+                  SizedBox(
+                    width: double.infinity,
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Colors.white.withOpacity(0.4),
                           borderRadius: BorderRadius.circular(16),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 16),
-                            child: Center(
-                              child: Text(
-                                'キャンセル',
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.w600,
-                                  color:
-                                      const Color(0xFF1A1A2E).withOpacity(0.8),
+                          border: Border.all(
+                            color: Colors.white.withOpacity(0.5),
+                            width: 1,
+                          ),
+                        ),
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            onTap: _isConfirming ? null : _handleCancel,
+                            borderRadius: BorderRadius.circular(16),
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(vertical: 16),
+                              child: Center(
+                                child: Text(
+                                  'キャンセル',
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    fontWeight: FontWeight.w600,
+                                    color: const Color(0xFF1A1A2E)
+                                        .withOpacity(0.8),
+                                  ),
                                 ),
                               ),
                             ),
@@ -759,8 +877,8 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
                       ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
