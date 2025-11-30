@@ -565,7 +565,8 @@ class MapViewModel extends _$MapViewModel {
     debugPrint('[MapViewModel] Loading remote crystals with limit=$limit');
 
     final crystalRepository = ref.read(crystalRepositoryProvider);
-    final result = await crystalRepository.getAvailableCrystals(limit: limit);
+    final result =
+        await crystalRepository.getRandomAvailableCrystals(limit: limit);
 
     switch (result) {
       case core.Success(value: final crystals):

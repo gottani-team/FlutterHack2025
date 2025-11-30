@@ -49,4 +49,4 @@ final class CollectedCrystalsProvider extends $FunctionalProvider<
   }
 }
 
-String _$collectedCrystalsHash() => r'53967d73ff24e309ffcc7dfa9dfbde60a5c9ac71';
+String _$collectedCrystalsHash() => r'5f9f0c66ccaff680cdb59265c507af7188c4ae75';
