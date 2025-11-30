@@ -256,6 +256,31 @@ class _CrystalDisplayPageState extends ConsumerState<CrystalDisplayPage>
           ),
         ),
 
+        // Emotion type label - positioned on top of crystal
+        Positioned(
+          top: topPadding + crystalTopOffset + crystalSize * 0.32,
+          left: 0,
+          right: 0,
+          child: Center(
+            child: GlassCardWidget(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 8,
+              ),
+              borderRadius: 20,
+              child: Text(
+                crystal.aiMetadata.emotionType.displayName,
+                style: const TextStyle(
+                  fontFamily: 'Hiragino Sans',
+                  color: Colors.black,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                ),
+              ),
+            ),
+          ),
+        ),
+
         // Memory text card - overlapping the ripple
         Positioned(
           top: textCardTopOffset,
