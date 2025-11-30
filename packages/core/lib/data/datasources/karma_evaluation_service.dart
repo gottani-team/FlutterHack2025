@@ -77,9 +77,13 @@ class KarmaEvaluationService {
     // Firebase AI で評価を実行
     final model = FirebaseAI.googleAI().generativeModel(model: modelName);
 
-    final response = await model.generateContent([
-      Content.text(renderedPrompt),
-    ]);
+    final response = await model.generateContent(
+      [
+        Content.text(renderedPrompt),
+      ],
+      generationConfig: GenerationConfig(
+          thinkingConfig: ThinkingConfig(thinkingBudget: 1000)),
+    );
 
     final responseText = response.text;
     if (responseText == null || responseText.isEmpty) {

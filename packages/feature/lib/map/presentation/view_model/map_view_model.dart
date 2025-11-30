@@ -708,4 +708,12 @@ class MapViewModel extends _$MapViewModel {
     debugPrint('[MapViewModel] Initial location set: $set');
     state = state.copyWith(hasSetInitialLocation: set);
   }
+
+  /// Set loading state with optional custom message
+  void setLoading(bool loading, {String? message}) {
+    state = state.copyWith(
+      isLoading: loading,
+      loadingMessage: message ?? '地脈を探索中...',
+    );
+  }
 }

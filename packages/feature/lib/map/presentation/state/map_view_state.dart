@@ -74,6 +74,9 @@ sealed class MapViewState with _$MapViewState {
     /// Whether map is currently loading
     @Default(true) bool isLoading,
 
+    /// Loading message to display, defaults to '地脈を探索中...'
+    @Default('地脈を探索中...') String loadingMessage,
+
     /// Error message if any operation failed
     String? errorMessage,
 
