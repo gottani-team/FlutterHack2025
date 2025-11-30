@@ -600,9 +600,7 @@ Future<void> _update3DModels(
         final scale = baseScale * math.pow(17.5 / zoomLevel, 3);
         modelLayer.modelScale = [scale, scale, scale];
         modelLayer.modelRotation = [0.0, 0.0, 0.0];
-        // Offset Y axis to align model bottom with ground level
-        // GLB bounding box: Y min = -0.174, so offset by -0.174 to place bottom at Y=0
-        modelLayer.modelTranslation = [0.0, _modelYOffset * scale, 0.0];
+        modelLayer.modelTranslation = [0.0, 0.0, 0.0];
         modelLayer.modelType = ModelType.COMMON_3D;
 
         await style.addLayer(modelLayer);
