@@ -397,7 +397,7 @@ class MapViewModel extends _$MapViewModel {
                     CrystallizationAreaEntity.innerDetectionRadius) /
                 (CrystallizationAreaEntity.outerDetectionRadius -
                     CrystallizationAreaEntity.innerDetectionRadius));
-        _startHeartbeatFeedback(pulseIntensity);
+        // _startHeartbeatFeedback(pulseIntensity);
       } else {
         _stopHeartbeatFeedback();
       }
