@@ -119,23 +119,24 @@ class _AnimatedBurialButtonState extends State<AnimatedBurialButton>
     );
 
     // 高さアニメーション: 104 → 160（円） → 280（オーバーシュート） → 240（最終形）
+    // 各セグメントは線形にし、全体の動きを滑らかにする
     _heightAnimation = TweenSequence<double>([
       TweenSequenceItem(
-        tween: Tween<double>(begin: 104, end: 160)
-            .chain(CurveTween(curve: Curves.easeOut)),
+        tween: Tween<double>(begin: 104, end: 160),
         weight: 25,
       ),
       TweenSequenceItem(
-        tween: Tween<double>(begin: 160, end: 280)
-            .chain(CurveTween(curve: Curves.easeOut)),
+        tween: Tween<double>(begin: 160, end: 280),
         weight: 35,
       ),
       TweenSequenceItem(
-        tween: Tween<double>(begin: 280, end: 240)
-            .chain(CurveTween(curve: Curves.easeInOut)),
+        tween: Tween<double>(begin: 280, end: 240),
         weight: 40,
       ),
-    ]).animate(_shapeAnimationController);
+    ]).animate(CurvedAnimation(
+      parent: _shapeAnimationController,
+      curve: Curves.easeOutCubic,  // 全体に1つのCurveを適用
+    ));
   }
 
   @override

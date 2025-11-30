@@ -123,15 +123,16 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
     if (nickname.isEmpty || memoryText.length < 10 || memoryText.length > 250)
       return;
 
-    // キーボードを閉じる
-    _nicknameFocusNode.unfocus();
-    _textFocusNode.unfocus();
-
+    // 先にフェーズを変更（animating中のdurationを適用させるため）
     setState(() {
       _animatingText = memoryText;
       _phase = _ScreenPhase.animating;
       _evaluationResult = null;
     });
+
+    // フェーズ変更後にキーボードを閉じる
+    _nicknameFocusNode.unfocus();
+    _textFocusNode.unfocus();
 
     // 評価を開始（バックグラウンドで実行）
     final sublimationRepository = ref.read(sublimationRepositoryProvider);
@@ -167,8 +168,8 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
 
   /// アニメーション完了時の処理
   void _onAnimationComplete() {
-    // レスポンスの有無に関わらず、アニメーション完了で即座にクリスタル表示画面へ遷移
-    Future.delayed(const Duration(milliseconds: 500), () {
+    // レスポンスの有無に関わらず、アニメーション完了で少し待ってからクリスタル表示画面へ遷移
+    Future.delayed(const Duration(milliseconds: 1500), () {
       if (mounted) {
         setState(() {
           _phase = _ScreenPhase.crystalDisplay;
