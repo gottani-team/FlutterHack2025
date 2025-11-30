@@ -14,7 +14,7 @@
   },
   "firestore": [
     {
-      "database": "gottani-2025",
+      "database": "chimyaku",
       "rules": "firestore.rules",
       "indexes": "firestore.indexes.json"
     }

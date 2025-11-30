@@ -30,10 +30,16 @@ class CrystalRepositoryImpl implements CrystalRepository {
     try {
       dev.log('[CrystalRepo] getRandomAvailableCrystals: limit=$limit');
 
+      if (_authRepository.cachedUserId == null) {
+        await _authRepository.getCurrentSession();
+      }
+
       // Note: Firestoreフィールドはsnake_case
       // 全ての利用可能なクリスタルを取得してランダムに選択
+      // - 自分が作成したもの以外
       final snapshot = await _crystalsRef
           .where('status', isEqualTo: 'available')
+          .where('created_by', isNotEqualTo: _authRepository.cachedUserId!)
           .get();
 
       dev.log(
@@ -184,7 +190,9 @@ class CrystalRepositoryImpl implements CrystalRepository {
       );
       return Result.success(crystals);
     }).handleError((error) {
-      dev.log('[CrystalRepo] watchRandomAvailableCrystals: Stream error: $error');
+      dev.log(
+        '[CrystalRepo] watchRandomAvailableCrystals: Stream error: $error',
+      );
       if (error is FirebaseException) {
         return Result.failure(
           CoreFailure.network(
