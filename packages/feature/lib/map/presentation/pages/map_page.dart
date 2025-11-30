@@ -4,12 +4,14 @@ import 'dart:ui';
 import 'package:core/data/providers.dart';
 import 'package:core/domain/common/result.dart';
 import 'package:core/presentation/widgets/glass_app_bar_widget.dart';
+import 'package:core/presentation/widgets/glass_card_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_hooks/flutter_hooks.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:hooks_riverpod/hooks_riverpod.dart';
 import 'package:mapbox_maps_flutter/mapbox_maps_flutter.dart';
+import 'package:visibility_detector/visibility_detector.dart';
 
 import '../../../crystal/presentation/pages/crystal_display_page.dart';
 import '../../../repository_test/presentation/pages/repository_test_page.dart';
@@ -83,11 +85,20 @@ class MapPage extends HookConsumerWidget {
     useEffect(
       () {
         if (mapState.isMapStyleLoaded && mapState.hasSetInitialLocation) {
-          Future.microtask(() {
+          Future.microtask(() async {
             debugPrint(
               '[MapPage] Loading crystals after map ready and initial location set',
             );
             viewModel.loadVisibleCrystallizationAreas();
+
+            // Automatically load remote crystals on initial load
+            await viewModel.loadRemoteCrystals(limit: 5);
+            await _updateCrystalMarkers(
+              mapboxMapRef.value,
+              ref,
+              existing3DModelLayers.value,
+              context,
+            );
           });
         }
         return null;
@@ -123,95 +134,110 @@ class MapPage extends HookConsumerWidget {
       }
     });
 
-    return Scaffold(
-      body: Stack(
-        children: [
-          // Mapbox Map
-          _buildMap(
-            context,
-            mapState,
-            viewModel,
-            mapboxMapRef,
-            isProgrammaticCameraUpdate,
-            existing3DModelLayers,
-            ref,
-          ),
-
-          // Glass App Bar
-          Positioned(
-            top: MediaQuery.of(context).padding.top + 8,
-            left: 16,
-            right: 16,
-            child: GlassAppBarWidget(
-              title: 'HIMITSU no SECRET',
-              icon: Icons.grid_view,
-              onIconPressed: () {
-                context.push('/crystals');
-              },
-            ),
-          ),
-
-          // GPS Warning Banner
-          if (mapState.shouldShowGpsWarning)
-            Positioned(
-              top: MediaQuery.of(context).padding.top + 70,
-              left: 16,
-              right: 16,
-              child: const GpsWarningBanner(),
+    return VisibilityDetector(
+      key: const Key('map_page_visibility_detector'),
+      onVisibilityChanged: (info) {
+        // Reload karma when page becomes visible (visibility > 50%)
+        if (info.visibleFraction > 0.5) {
+          viewModel.loadKarma();
+        }
+      },
+      child: Scaffold(
+        body: Stack(
+          children: [
+            // Mapbox Map
+            _buildMap(
+              context,
+              mapState,
+              viewModel,
+              mapboxMapRef,
+              isProgrammaticCameraUpdate,
+              existing3DModelLayers,
+              ref,
             ),
 
-          // Loading Indicator
-          if (mapState.isLoading) _buildLoadingOverlay(),
-
-          // Error Banner
-          if (mapState.errorMessage != null)
+            // Glass App Bar
             Positioned(
-              bottom: 100,
+              top: MediaQuery.of(context).padding.top + 8,
               left: 16,
               right: 16,
-              child: ErrorBanner(
-                message: mapState.errorMessage!,
-                onDismiss: () => viewModel.clearError(),
+              child: GlassAppBarWidget(
+                title: 'HIMITSU no SECRET',
+                icon: Icons.grid_view,
+                onIconPressed: () {
+                  context.push('/crystals');
+                },
               ),
             ),
 
-          // Permission Request Overlay
-          if (mapState.permissionStatus == LocationPermissionStatus.denied ||
-              mapState.permissionStatus ==
-                  LocationPermissionStatus.notDetermined)
-            _buildPermissionOverlay(context, viewModel),
+            // Top Right Actions (Scan & Recenter)
+            _TopRightActions(
+              topPadding: MediaQuery.of(context).padding.top + 70,
+              isFollowingUser: mapState.isFollowingUser,
+              onRecenterPressed: () => _recenterOnUser(
+                mapboxMapRef.value,
+                viewModel,
+                mapState,
+                isProgrammaticCameraUpdate,
+              ),
+              onScanPressed: () => _scanForCrystals(
+                mapboxMapRef.value,
+                viewModel,
+                ref,
+                existing3DModelLayers.value,
+                context,
+              ),
+            ),
 
-          // Bottom Left Actions
-          _BottomLeftActions(
-            karma: mapState.currentKarma,
-            onDebugPressed: () {
-              Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (context) => const _DebugRepositoryTestPage(),
+            // GPS Warning Banner
+            if (mapState.shouldShowGpsWarning)
+              Positioned(
+                top: MediaQuery.of(context).padding.top + 130,
+                left: 16,
+                right: 16,
+                child: const GpsWarningBanner(),
+              ),
+
+            // Loading Indicator
+            if (mapState.isLoading)
+              _buildLoadingOverlay(mapState.loadingMessage),
+
+            // Error Banner
+            if (mapState.errorMessage != null)
+              Positioned(
+                bottom: 100,
+                left: 16,
+                right: 16,
+                child: ErrorBanner(
+                  message: mapState.errorMessage!,
+                  onDismiss: () => viewModel.clearError(),
                 ),
-              );
-            },
-          ),
+              ),
 
-          // Bottom Right Actions
-          _BottomRightActions(
-            isFollowingUser: mapState.isFollowingUser,
-            onRecenterPressed: () => _recenterOnUser(
-              mapboxMapRef.value,
-              viewModel,
-              mapState,
-              isProgrammaticCameraUpdate,
+            // Permission Request Overlay
+            if (mapState.permissionStatus == LocationPermissionStatus.denied ||
+                mapState.permissionStatus ==
+                    LocationPermissionStatus.notDetermined)
+              _buildPermissionOverlay(context, viewModel),
+
+            // Bottom Left Actions
+            _BottomLeftActions(
+              karma: mapState.currentKarma,
+              onDebugPressed: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (context) => const _DebugRepositoryTestPage(),
+                  ),
+                );
+              },
             ),
-            onScanPressed: () => _scanForCrystals(
-              mapboxMapRef.value,
-              viewModel,
-              ref,
-              existing3DModelLayers.value,
-              context,
+
+            // Bottom Right Actions
+            _BottomRightActions(
+              onCrystalSublimationPressed: () => context.push('/memory-burial'),
             ),
-            onCrystalSublimationPressed: () => context.push('/memory-burial'),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -574,9 +600,7 @@ Future<void> _update3DModels(
         final scale = baseScale * math.pow(17.5 / zoomLevel, 3);
         modelLayer.modelScale = [scale, scale, scale];
         modelLayer.modelRotation = [0.0, 0.0, 0.0];
-        // Offset Y axis to align model bottom with ground level
-        // GLB bounding box: Y min = -0.174, so offset by -0.174 to place bottom at Y=0
-        modelLayer.modelTranslation = [0.0, _modelYOffset * scale, 0.0];
+        modelLayer.modelTranslation = [0.0, 0.0, 0.0];
         modelLayer.modelType = ModelType.COMMON_3D;
 
         await style.addLayer(modelLayer);
@@ -756,49 +780,68 @@ Future<void> _purchaseCrystal(
   String crystalId,
   Set<String> existing3DModelLayers,
 ) async {
-  final authRepository = ref.read(authRepositoryProvider);
-  final sessionResult = await authRepository.getCurrentSession();
+  final viewModel = ref.read(mapViewModelProvider.notifier);
 
-  switch (sessionResult) {
-    case Success():
-      final deciphermentRepository = ref.read(deciphermentRepositoryProvider);
-      final result =
-          await deciphermentRepository.decipher(crystalId: crystalId);
+  // Start loading with mining message
+  viewModel.setLoading(true, message: '採掘中...');
 
-      switch (result) {
-        case Success():
-          final viewModel = ref.read(mapViewModelProvider.notifier);
-          viewModel.removeCrystal(crystalId);
+  try {
+    final authRepository = ref.read(authRepositoryProvider);
+    final sessionResult = await authRepository.getCurrentSession();
 
-          await _remove3DModel(mapboxMap, crystalId, existing3DModelLayers);
+    switch (sessionResult) {
+      case Success():
+        final deciphermentRepository = ref.read(deciphermentRepositoryProvider);
+        final result =
+            await deciphermentRepository.decipher(crystalId: crystalId);
 
-          if (context.mounted) {
-            Navigator.of(context).push(
-              MaterialPageRoute<void>(
-                builder: (context) =>
-                    CrystalDisplayPage(crystalId: crystalId, tap: true),
+        switch (result) {
+          case Success():
+            viewModel.removeCrystal(crystalId);
+
+            await _remove3DModel(mapboxMap, crystalId, existing3DModelLayers);
+
+            if (context.mounted) {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (context) => CrystalDisplayPage(
+                    crystalId: crystalId,
+                    tap: true,
+                  ),
+                ),
+              );
+            }
+          case Failure(error: final failure):
+            if (context.mounted) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  content: Text(
+                    '購入に失敗しました: ${failure.message}',
+                    style: const TextStyle(color: Colors.black),
+                  ),
+                  backgroundColor: Colors.white,
+                  behavior: SnackBarBehavior.floating,
+                ),
+              );
+            }
+        }
+      case Failure(error: final failure):
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                'ログインが必要です: ${failure.message}',
+                style: const TextStyle(color: Colors.black),
               ),
-            );
-          }
-        case Failure(error: final failure):
-          if (context.mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(
-                content: Text('Purchase failed: ${failure.message}'),
-                backgroundColor: Colors.red,
-              ),
-            );
-          }
-      }
-    case Failure(error: final failure):
-      if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('Not logged in: ${failure.message}'),
-            backgroundColor: Colors.red,
-          ),
-        );
-      }
+              backgroundColor: Colors.white,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+    }
+  } finally {
+    // Stop loading
+    viewModel.setLoading(false);
   }
 }
 
@@ -1023,8 +1066,8 @@ Future<void> _updateCameraToFollowUser(
   }
 }
 
-Widget _buildLoadingOverlay() {
-  return const MagicalLoadingOverlay(message: '地脈を探索中...');
+Widget _buildLoadingOverlay(String message) {
+  return MagicalLoadingOverlay(message: message);
 }
 
 Widget _buildPermissionOverlay(BuildContext context, MapViewModel viewModel) {
@@ -1124,55 +1167,99 @@ class _DebugRepositoryTestPage extends ConsumerWidget {
   }
 }
 
-/// Widget to display the user's current karma balance
-class _KarmaBalanceWidget extends StatelessWidget {
+/// Widget to display the user's current karma balance with slot animation
+class _KarmaBalanceWidget extends StatefulWidget {
   const _KarmaBalanceWidget({required this.karma});
 
   final int? karma;
 
   @override
+  State<_KarmaBalanceWidget> createState() => _KarmaBalanceWidgetState();
+}
+
+class _KarmaBalanceWidgetState extends State<_KarmaBalanceWidget>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _animationController;
+  int _displayedValue = 0;
+  int _previousValue = 0;
+  int _targetValue = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _animationController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1000),
+    );
+
+    // Initialize with current karma value
+    if (widget.karma != null) {
+      _displayedValue = widget.karma!;
+      _previousValue = widget.karma!;
+      _targetValue = widget.karma!;
+    }
+
+    _animationController.addListener(_onAnimationTick);
+  }
+
+  @override
+  void didUpdateWidget(_KarmaBalanceWidget oldWidget) {
+    super.didUpdateWidget(oldWidget);
+
+    // Animate when karma value changes
+    if (widget.karma != null && widget.karma != _targetValue) {
+      _previousValue = _displayedValue;
+      _targetValue = widget.karma!;
+      _animationController.forward(from: 0);
+    }
+  }
+
+  void _onAnimationTick() {
+    if (mounted) {
+      setState(() {
+        // Use easeOutCubic curve for smooth deceleration
+        final curvedValue = Curves.easeOutCubic.transform(
+          _animationController.value,
+        );
+        _displayedValue =
+            (_previousValue + ((_targetValue - _previousValue) * curvedValue))
+                .round();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _animationController.removeListener(_onAnimationTick);
+    _animationController.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.7),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(
-          color: const Color(0xFFFFD700).withOpacity(0.5),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFFFD700).withOpacity(0.2),
-            blurRadius: 8,
-            spreadRadius: 1,
-          ),
-        ],
-      ),
+    final displayText = widget.karma != null ? '$_displayedValue' : '--';
+
+    return GlassCardWidget(
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+      borderRadius: 24,
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
-            Icons.auto_awesome,
-            color: Color(0xFFFFD700),
-            size: 20,
-          ),
-          const SizedBox(width: 8),
           Text(
-            karma != null ? '$karma' : '--',
+            displayText,
             style: GoogleFonts.notoSansJp(
-              fontSize: 16,
+              fontSize: 20,
               fontWeight: FontWeight.bold,
-              color: Colors.white,
+              color: Colors.black,
             ),
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: 6),
           Text(
-            'Karma',
+            'P',
             style: GoogleFonts.notoSansJp(
-              fontSize: 12,
+              fontSize: 18,
               fontWeight: FontWeight.w500,
-              color: Colors.white70,
+              color: Colors.black.withOpacity(0.7),
             ),
           ),
         ],
@@ -1224,22 +1311,57 @@ class _BottomLeftActions extends StatelessWidget {
   }
 }
 
-/// Widget to display bottom right action buttons
-class _BottomRightActions extends StatelessWidget {
-  const _BottomRightActions({
+/// Widget to display top right action buttons (below app bar)
+class _TopRightActions extends StatelessWidget {
+  const _TopRightActions({
+    required this.topPadding,
     required this.isFollowingUser,
     required this.onRecenterPressed,
     required this.onScanPressed,
-    required this.onCrystalSublimationPressed,
   });
 
+  final double topPadding;
   final bool isFollowingUser;
   final VoidCallback onRecenterPressed;
   final VoidCallback onScanPressed;
+
+  static const double _buttonSpacing = 12.0;
+  static const double _horizontalPadding = 16.0;
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      top: topPadding,
+      right: _horizontalPadding,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          // Recenter Button
+          _GlassActionButton(
+            onPressed: onRecenterPressed,
+            icon: isFollowingUser ? Icons.gps_fixed : Icons.gps_not_fixed,
+          ),
+          const SizedBox(height: _buttonSpacing),
+          // Scan Button
+          _GlassActionButton(
+            onPressed: onScanPressed,
+            icon: Icons.radar,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Widget to display bottom right action buttons
+class _BottomRightActions extends StatelessWidget {
+  const _BottomRightActions({
+    required this.onCrystalSublimationPressed,
+  });
+
   final VoidCallback onCrystalSublimationPressed;
 
-  // Spacing between buttons
-  static const double _buttonSpacing = 12.0;
   static const double _bottomPadding = 48.0;
   static const double _horizontalPadding = 16.0;
 
@@ -1248,78 +1370,74 @@ class _BottomRightActions extends StatelessWidget {
     return Positioned(
       bottom: _bottomPadding,
       right: _horizontalPadding,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          // Crystal Sublimation Button
-          _StyledActionButton(
-            heroTag: 'crystal-sublimation',
-            onPressed: onCrystalSublimationPressed,
-            icon: Icons.auto_awesome,
-          ),
-          const SizedBox(height: _buttonSpacing),
-          // Scan Button
-          _StyledActionButton(
-            heroTag: 'scan',
-            onPressed: onScanPressed,
-            icon: Icons.radar,
-          ),
-          const SizedBox(height: _buttonSpacing),
-          // Recenter Button
-          _StyledActionButton(
-            heroTag: 'recenter',
-            onPressed: onRecenterPressed,
-            icon: isFollowingUser ? Icons.gps_fixed : Icons.gps_not_fixed,
-          ),
-        ],
+      child: _OrangeGlassActionButton(
+        onPressed: onCrystalSublimationPressed,
+        icon: Icons.add,
       ),
     );
   }
 }
 
-/// Styled action button matching _KarmaBalanceWidget color scheme
-class _StyledActionButton extends StatelessWidget {
-  const _StyledActionButton({
-    required this.heroTag,
+/// Glass action button with transparent/white glassmorphism style
+class _GlassActionButton extends StatelessWidget {
+  const _GlassActionButton({
     required this.onPressed,
     required this.icon,
   });
 
-  final String heroTag;
   final VoidCallback onPressed;
   final IconData icon;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 56.0,
-      height: 56.0,
-      decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.7),
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: const Color(0xFFFFD700).withOpacity(0.5),
-          width: 1.5,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFFFD700).withOpacity(0.2),
-            blurRadius: 8,
-            spreadRadius: 1,
-          ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: onPressed,
-          borderRadius: BorderRadius.circular(28),
+    return GestureDetector(
+      onTap: onPressed,
+      child: SizedBox(
+        width: 44.0,
+        height: 44.0,
+        child: GlassCardWidget(
+          borderRadius: 22,
           child: Center(
             child: Icon(
               icon,
-              color: const Color(0xFFFFD700),
-              size: 24,
+              color: Colors.black,
+              size: 22,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Orange glass action button with glassmorphism style
+class _OrangeGlassActionButton extends StatelessWidget {
+  const _OrangeGlassActionButton({
+    required this.onPressed,
+    required this.icon,
+  });
+
+  final VoidCallback onPressed;
+  final IconData icon;
+
+  static const Color _orangeColor = Color(0xFFFF6B35);
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onPressed,
+      child: SizedBox(
+        width: 56.0,
+        height: 56.0,
+        child: GlassCardWidget(
+          borderRadius: 28,
+          backgroundColor: _orangeColor.withOpacity(0.85),
+          borderColor: _orangeColor,
+          child: Center(
+            child: Icon(
+              icon,
+              color: Colors.white,
+              size: 28,
             ),
           ),
         ),

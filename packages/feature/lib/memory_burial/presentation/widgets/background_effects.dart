@@ -82,8 +82,8 @@ class ConcentricRingsPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    // クリスタルの位置を中心に
-    final centerPoint = center ?? Offset(size.width / 2, size.height * 0.43);
+    // クリスタルの位置を中心に（Spacer flex 4:3 で約57%の位置）
+    final centerPoint = center ?? Offset(size.width / 2, size.height * 0.57);
 
     // リングの設定: [半径, 開始角度(度), 回転方向(1 or -1), 周回数(整数)]
     // 半径にばらつきを持たせる（等間隔ではない）

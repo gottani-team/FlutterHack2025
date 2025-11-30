@@ -44,6 +44,9 @@ mixin _$MapViewState {
   /// Whether map is currently loading
   bool get isLoading;
 
+  /// Loading message to display, defaults to '地脈を探索中...'
+  String get loadingMessage;
+
   /// Error message if any operation failed
   String? get errorMessage;
 
@@ -109,6 +112,8 @@ mixin _$MapViewState {
                 other.isHapticActive == isHapticActive) &&
             (identical(other.isLoading, isLoading) ||
                 other.isLoading == isLoading) &&
+            (identical(other.loadingMessage, loadingMessage) ||
+                other.loadingMessage == loadingMessage) &&
             (identical(other.errorMessage, errorMessage) ||
                 other.errorMessage == errorMessage) &&
             (identical(other.isBackgroundMode, isBackgroundMode) ||
@@ -144,6 +149,7 @@ mixin _$MapViewState {
         pulseIntensity,
         isHapticActive,
         isLoading,
+        loadingMessage,
         errorMessage,
         isBackgroundMode,
         mapCenterLatitude,
@@ -158,7 +164,7 @@ mixin _$MapViewState {
 
   @override
   String toString() {
-    return 'MapViewState(userLocation: $userLocation, permissionStatus: $permissionStatus, gpsAccuracyLevel: $gpsAccuracyLevel, visibleCrystallizationAreas: $visibleCrystallizationAreas, proximityPhase: $proximityPhase, approachingCrystal: $approachingCrystal, distanceToClosestCrystal: $distanceToClosestCrystal, pulseIntensity: $pulseIntensity, isHapticActive: $isHapticActive, isLoading: $isLoading, errorMessage: $errorMessage, isBackgroundMode: $isBackgroundMode, mapCenterLatitude: $mapCenterLatitude, mapCenterLongitude: $mapCenterLongitude, mapZoomLevel: $mapZoomLevel, isFollowingUser: $isFollowingUser, remoteCrystals: $remoteCrystals, currentKarma: $currentKarma, isMapStyleLoaded: $isMapStyleLoaded, hasSetInitialLocation: $hasSetInitialLocation)';
+    return 'MapViewState(userLocation: $userLocation, permissionStatus: $permissionStatus, gpsAccuracyLevel: $gpsAccuracyLevel, visibleCrystallizationAreas: $visibleCrystallizationAreas, proximityPhase: $proximityPhase, approachingCrystal: $approachingCrystal, distanceToClosestCrystal: $distanceToClosestCrystal, pulseIntensity: $pulseIntensity, isHapticActive: $isHapticActive, isLoading: $isLoading, loadingMessage: $loadingMessage, errorMessage: $errorMessage, isBackgroundMode: $isBackgroundMode, mapCenterLatitude: $mapCenterLatitude, mapCenterLongitude: $mapCenterLongitude, mapZoomLevel: $mapZoomLevel, isFollowingUser: $isFollowingUser, remoteCrystals: $remoteCrystals, currentKarma: $currentKarma, isMapStyleLoaded: $isMapStyleLoaded, hasSetInitialLocation: $hasSetInitialLocation)';
   }
 }
 
@@ -179,6 +185,7 @@ abstract mixin class $MapViewStateCopyWith<$Res> {
       double pulseIntensity,
       bool isHapticActive,
       bool isLoading,
+      String loadingMessage,
       String? errorMessage,
       bool isBackgroundMode,
       double? mapCenterLatitude,
@@ -213,6 +220,7 @@ class _$MapViewStateCopyWithImpl<$Res> implements $MapViewStateCopyWith<$Res> {
     Object? pulseIntensity = null,
     Object? isHapticActive = null,
     Object? isLoading = null,
+    Object? loadingMessage = null,
     Object? errorMessage = freezed,
     Object? isBackgroundMode = null,
     Object? mapCenterLatitude = freezed,
@@ -265,6 +273,10 @@ class _$MapViewStateCopyWithImpl<$Res> implements $MapViewStateCopyWith<$Res> {
           ? _self.isLoading
           : isLoading // ignore: cast_nullable_to_non_nullable
               as bool,
+      loadingMessage: null == loadingMessage
+          ? _self.loadingMessage
+          : loadingMessage // ignore: cast_nullable_to_non_nullable
+              as String,
       errorMessage: freezed == errorMessage
           ? _self.errorMessage
           : errorMessage // ignore: cast_nullable_to_non_nullable
@@ -411,6 +423,7 @@ extension MapViewStatePatterns on MapViewState {
             double pulseIntensity,
             bool isHapticActive,
             bool isLoading,
+            String loadingMessage,
             String? errorMessage,
             bool isBackgroundMode,
             double? mapCenterLatitude,
@@ -438,6 +451,7 @@ extension MapViewStatePatterns on MapViewState {
             _that.pulseIntensity,
             _that.isHapticActive,
             _that.isLoading,
+            _that.loadingMessage,
             _that.errorMessage,
             _that.isBackgroundMode,
             _that.mapCenterLatitude,
@@ -479,6 +493,7 @@ extension MapViewStatePatterns on MapViewState {
             double pulseIntensity,
             bool isHapticActive,
             bool isLoading,
+            String loadingMessage,
             String? errorMessage,
             bool isBackgroundMode,
             double? mapCenterLatitude,
@@ -505,6 +520,7 @@ extension MapViewStatePatterns on MapViewState {
             _that.pulseIntensity,
             _that.isHapticActive,
             _that.isLoading,
+            _that.loadingMessage,
             _that.errorMessage,
             _that.isBackgroundMode,
             _that.mapCenterLatitude,
@@ -543,6 +559,7 @@ extension MapViewStatePatterns on MapViewState {
             double pulseIntensity,
             bool isHapticActive,
             bool isLoading,
+            String loadingMessage,
             String? errorMessage,
             bool isBackgroundMode,
             double? mapCenterLatitude,
@@ -569,6 +586,7 @@ extension MapViewStatePatterns on MapViewState {
             _that.pulseIntensity,
             _that.isHapticActive,
             _that.isLoading,
+            _that.loadingMessage,
             _that.errorMessage,
             _that.isBackgroundMode,
             _that.mapCenterLatitude,
@@ -600,6 +618,7 @@ class _MapViewState extends MapViewState {
       this.pulseIntensity = 0.0,
       this.isHapticActive = false,
       this.isLoading = true,
+      this.loadingMessage = '地脈を探索中...',
       this.errorMessage,
       this.isBackgroundMode = false,
       this.mapCenterLatitude,
@@ -668,6 +687,11 @@ class _MapViewState extends MapViewState {
   @override
   @JsonKey()
   final bool isLoading;
+
+  /// Loading message to display, defaults to '地脈を探索中...'
+  @override
+  @JsonKey()
+  final String loadingMessage;
 
   /// Error message if any operation failed
   @override
@@ -757,6 +781,8 @@ class _MapViewState extends MapViewState {
                 other.isHapticActive == isHapticActive) &&
             (identical(other.isLoading, isLoading) ||
                 other.isLoading == isLoading) &&
+            (identical(other.loadingMessage, loadingMessage) ||
+                other.loadingMessage == loadingMessage) &&
             (identical(other.errorMessage, errorMessage) ||
                 other.errorMessage == errorMessage) &&
             (identical(other.isBackgroundMode, isBackgroundMode) ||
@@ -792,6 +818,7 @@ class _MapViewState extends MapViewState {
         pulseIntensity,
         isHapticActive,
         isLoading,
+        loadingMessage,
         errorMessage,
         isBackgroundMode,
         mapCenterLatitude,
@@ -806,7 +833,7 @@ class _MapViewState extends MapViewState {
 
   @override
   String toString() {
-    return 'MapViewState(userLocation: $userLocation, permissionStatus: $permissionStatus, gpsAccuracyLevel: $gpsAccuracyLevel, visibleCrystallizationAreas: $visibleCrystallizationAreas, proximityPhase: $proximityPhase, approachingCrystal: $approachingCrystal, distanceToClosestCrystal: $distanceToClosestCrystal, pulseIntensity: $pulseIntensity, isHapticActive: $isHapticActive, isLoading: $isLoading, errorMessage: $errorMessage, isBackgroundMode: $isBackgroundMode, mapCenterLatitude: $mapCenterLatitude, mapCenterLongitude: $mapCenterLongitude, mapZoomLevel: $mapZoomLevel, isFollowingUser: $isFollowingUser, remoteCrystals: $remoteCrystals, currentKarma: $currentKarma, isMapStyleLoaded: $isMapStyleLoaded, hasSetInitialLocation: $hasSetInitialLocation)';
+    return 'MapViewState(userLocation: $userLocation, permissionStatus: $permissionStatus, gpsAccuracyLevel: $gpsAccuracyLevel, visibleCrystallizationAreas: $visibleCrystallizationAreas, proximityPhase: $proximityPhase, approachingCrystal: $approachingCrystal, distanceToClosestCrystal: $distanceToClosestCrystal, pulseIntensity: $pulseIntensity, isHapticActive: $isHapticActive, isLoading: $isLoading, loadingMessage: $loadingMessage, errorMessage: $errorMessage, isBackgroundMode: $isBackgroundMode, mapCenterLatitude: $mapCenterLatitude, mapCenterLongitude: $mapCenterLongitude, mapZoomLevel: $mapZoomLevel, isFollowingUser: $isFollowingUser, remoteCrystals: $remoteCrystals, currentKarma: $currentKarma, isMapStyleLoaded: $isMapStyleLoaded, hasSetInitialLocation: $hasSetInitialLocation)';
   }
 }
 
@@ -829,6 +856,7 @@ abstract mixin class _$MapViewStateCopyWith<$Res>
       double pulseIntensity,
       bool isHapticActive,
       bool isLoading,
+      String loadingMessage,
       String? errorMessage,
       bool isBackgroundMode,
       double? mapCenterLatitude,
@@ -864,6 +892,7 @@ class __$MapViewStateCopyWithImpl<$Res>
     Object? pulseIntensity = null,
     Object? isHapticActive = null,
     Object? isLoading = null,
+    Object? loadingMessage = null,
     Object? errorMessage = freezed,
     Object? isBackgroundMode = null,
     Object? mapCenterLatitude = freezed,
@@ -916,6 +945,10 @@ class __$MapViewStateCopyWithImpl<$Res>
           ? _self.isLoading
           : isLoading // ignore: cast_nullable_to_non_nullable
               as bool,
+      loadingMessage: null == loadingMessage
+          ? _self.loadingMessage
+          : loadingMessage // ignore: cast_nullable_to_non_nullable
+              as String,
       errorMessage: freezed == errorMessage
           ? _self.errorMessage
           : errorMessage // ignore: cast_nullable_to_non_nullable
