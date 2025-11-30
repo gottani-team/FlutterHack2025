@@ -490,6 +490,7 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
 
           // メインコンテンツ
           SafeArea(
+            bottom: false,
             child: _buildContent(
               nickname: nickname,
               memoryText: memoryText,
@@ -689,7 +690,8 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
   }
 
   /// カルマ値に応じたクリスタル画像パスを取得
-  String _getCrystalImagePath(int karmaValue) {
+  String _getCrystalImagePath(int? karmaValue) {
+    if (karmaValue == null) return 'assets/images/hide.png';
     return CrystalTier.fromKarmaValue(karmaValue).imageUrl;
   }
 
@@ -764,7 +766,7 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
                     child: Image.asset(
                       // 入場時は最小tier（karmaValue=0）、評価結果が来たら本来のtier
                       _getCrystalImagePath(
-                        _evaluationResult?.karmaToEarn ?? 0,
+                        _evaluationResult?.karmaToEarn,
                       ),
                       width: 100,
                       height: 100,

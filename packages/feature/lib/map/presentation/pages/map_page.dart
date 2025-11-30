@@ -67,6 +67,7 @@ class MapPage extends HookConsumerWidget {
     final mapboxMapRef = useRef<MapboxMap?>(null);
     final isProgrammaticCameraUpdate = useState(false);
     final existing3DModelLayers = useRef<Set<String>>({});
+    final hasInitialFetchCompleted = useState(false);
 
     // Handle app lifecycle changes
     useOnAppLifecycleStateChange((previous, current) {
@@ -85,7 +86,12 @@ class MapPage extends HookConsumerWidget {
     // Effect to load crystals after map style is loaded AND initial location is set
     useEffect(
       () {
-        if (mapState.isMapStyleLoaded && mapState.hasSetInitialLocation) {
+        if (mapState.isMapStyleLoaded &&
+            mapState.hasSetInitialLocation &&
+            !hasInitialFetchCompleted.value) {
+          // Mark as completed immediately to prevent multiple calls
+          hasInitialFetchCompleted.value = true;
+
           Future.microtask(() async {
             debugPrint(
               '[MapPage] Loading crystals after map ready and initial location set',
@@ -93,13 +99,17 @@ class MapPage extends HookConsumerWidget {
             viewModel.loadVisibleCrystallizationAreas();
 
             // Automatically load remote crystals on initial load
+            debugPrint('[MapPage] Auto-loading remote crystals...');
             await viewModel.loadRemoteCrystals(limit: 5);
-            await _updateCrystalMarkers(
-              mapboxMapRef.value,
-              ref,
-              existing3DModelLayers.value,
-              context,
-            );
+
+            if (context.mounted) {
+              await _updateCrystalMarkers(
+                mapboxMapRef.value,
+                ref,
+                existing3DModelLayers.value,
+                context,
+              );
+            }
           });
         }
         return null;
@@ -691,7 +701,7 @@ void _showCrystalDialog(
                     ),
                     const SizedBox(height: 24),
                     Image.asset(
-                      crystal?.tier.imageUrl ?? 'assets/images/stone.png',
+                      'assets/images/hide.png',
                       width: 80,
                       height: 80,
                     ),
@@ -938,8 +948,10 @@ Future<void> _purchaseCrystal(
             if (context.mounted) {
               Navigator.of(context).push(
                 MaterialPageRoute<void>(
-                  builder: (context) =>
-                      CrystalDisplayPage(crystalId: crystalId),
+                  builder: (context) => CrystalDisplayPage(
+                    crystalId: crystalId,
+                    tap: true,
+                  ),
                 ),
               );
             }

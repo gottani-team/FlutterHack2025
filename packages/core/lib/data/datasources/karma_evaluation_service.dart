@@ -75,14 +75,35 @@ class KarmaEvaluationService {
     );
 
     // Firebase AI で評価を実行
-    final model = FirebaseAI.googleAI().generativeModel(model: modelName);
+    final model = FirebaseAI.googleAI().generativeModel(
+      model: modelName,
+      generationConfig: GenerationConfig(
+        responseMimeType: 'application/json',
+        responseSchema: Schema.object(
+          properties: {
+            'emotion': Schema.enumString(
+              enumValues: [
+                'happiness',
+                'enjoyment',
+                'relief',
+                'anticipation',
+                'sadness',
+                'embarrassment',
+                'anger',
+                'emptiness',
+              ],
+            ),
+            'score': Schema.integer(),
+          },
+        ),
+        thinkingConfig: ThinkingConfig(thinkingBudget: 2000),
+      ),
+    );
 
     final response = await model.generateContent(
       [
         Content.text(renderedPrompt),
       ],
-      generationConfig: GenerationConfig(
-          thinkingConfig: ThinkingConfig(thinkingBudget: 1000)),
     );
 
     final responseText = response.text;
