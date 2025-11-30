@@ -162,7 +162,7 @@ class _CrystalDisplayPageState extends ConsumerState<CrystalDisplayPage>
                       ),
                       // Crystal image centered
                       CrystalImageWidget(
-                        imageUrl: crystal.aiMetadata.imageUrl,
+                        imageUrl: crystal.tier.imageUrl,
                         size: crystalSize,
                       ),
                     ],

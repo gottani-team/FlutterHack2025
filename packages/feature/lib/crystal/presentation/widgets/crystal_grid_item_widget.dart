@@ -66,7 +66,7 @@ class CrystalGridItemWidget extends StatelessWidget {
                       ),
                       // Crystal image
                       CrystalImageWidget(
-                        imageUrl: crystal.aiMetadata.imageUrl,
+                        imageUrl: crystal.tier.imageUrl,
                         size: size,
                       ),
                     ],
