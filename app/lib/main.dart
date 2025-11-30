@@ -23,7 +23,9 @@ void main() async {
       androidProvider:
           kDebugMode ? AndroidProvider.debug : AndroidProvider.playIntegrity,
       // ignore: deprecated_member_use
-      appleProvider: kDebugMode ? AppleProvider.debug : AppleProvider.appAttest,
+      appleProvider: kDebugMode
+          ? AppleProvider.debug
+          : AppleProvider.appAttestWithDeviceCheckFallback,
     );
   } catch (e) {
     debugPrint('App Check initialization failed: $e');
