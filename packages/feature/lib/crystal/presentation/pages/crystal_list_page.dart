@@ -34,7 +34,7 @@ class CrystalListPage extends ConsumerWidget {
               right: 16,
               child: GlassAppBarWidget(
                 title: 'HIMITSU no SECRET',
-                icon: Icons.arrow_back,
+                icon: Icons.close,
                 onIconPressed: () {
                   context.pop();
                 },
