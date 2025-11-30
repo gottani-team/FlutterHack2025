@@ -490,6 +490,7 @@ class _MemoryBurialPageState extends ConsumerState<MemoryBurialPage>
 
           // メインコンテンツ
           SafeArea(
+            bottom: false,
             child: _buildContent(
               nickname: nickname,
               memoryText: memoryText,
